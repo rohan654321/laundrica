@@ -7,6 +7,7 @@ import { WhyChooseUs } from '@/components/home/why-choose-us';
 import { MembershipPlans } from '@/components/home/membership-plans';
 import { Testimonials } from '@/components/home/testimonials';
 import { CTASection } from '@/components/home/cta-section';
+import ServicesSlider from '@/components/home/ServicesSlider';
 
 export default function Home() {
   return (
@@ -14,6 +15,7 @@ export default function Home() {
       <Header />
       <HeroSection />
       <HowItWorks />
+      <ServicesSlider />
       <ServicesGrid />
       <WhyChooseUs />
       <MembershipPlans />
