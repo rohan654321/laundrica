@@ -6,6 +6,7 @@ import {
   motion,
   useScroll,
   useTransform,
+  useMotionTemplate,
 } from 'framer-motion';
 
 interface Service {
@@ -20,11 +21,6 @@ const services: Service[] = [
   { id: 3, title: 'Curtain Cleaning', image: '/services/service3.jpg' },
   { id: 4, title: 'Soft Toy Cleaning', image: '/services/service4.jpg' },
   { id: 5, title: 'Steam Pressing', image: '/services/service5.jpg' },
-  { id: 6, title: 'Commercial Laundry', image: '/services/service1.jpg' },
-  { id: 7, title: 'Carpet Cleaning', image: '/services/service2.jpg' },
-  { id: 8, title: 'Curtain Cleaning', image: '/services/service3.jpg' },
-  { id: 9, title: 'Soft Toy Cleaning', image: '/services/service4.jpg' },
-  { id: 10, title: 'Steam Pressing', image: '/services/service5.jpg' },
 ];
 
 const duplicated = [...services, ...services];
@@ -37,23 +33,29 @@ export default function ServicesSlider() {
     offset: ['start end', 'end start'],
   });
 
-  // Animate curve height
-  const curveHeight = useTransform(
+  // Animate circle reveal size
+  const circleSize = useTransform(
     scrollYProgress,
     [0, 1],
-    ['180px', '450px']
+    ['40%', '140%']
   );
+
+  const maskImage = useMotionTemplate`
+    radial-gradient(circle at 50% 0%, black ${circleSize}, transparent calc(${circleSize} + 1px))
+  `;
 
   return (
     <section
       ref={sectionRef}
-      className="relative bg-background pt-40 pb-32 overflow-hidden"
+      className="relative bg-background py-40 overflow-hidden"
     >
-      {/* Animated Curved Background */}
+      {/* MASK LAYER */}
       <motion.div
-        style={{ height: curveHeight }}
-        className="absolute top-0 left-1/2 -translate-x-1/2 
-                   w-[200%] bg-muted rounded-b-[100%] z-0"
+        style={{
+          WebkitMaskImage: maskImage,
+          maskImage: maskImage,
+        }}
+        className="absolute inset-0 bg-muted z-0"
       />
 
       <div className="relative z-10 max-w-7xl mx-auto px-8">
@@ -87,7 +89,7 @@ export default function ServicesSlider() {
                 transition={{ type: 'spring', stiffness: 180 }}
                 className="relative min-w-[380px] h-[460px] 
                            rounded-[40px] overflow-hidden 
-                           flex-shrink-0 shadow-2xl bg-card"
+                           flex-shrink-0 shadow-2xl"
               >
                 <Image
                   src={service.image}
@@ -107,7 +109,7 @@ export default function ServicesSlider() {
             ))}
           </motion.div>
 
-          {/* Edge fades */}
+          {/* Edge fade */}
           <div className="pointer-events-none absolute left-0 top-0 h-full w-40 bg-gradient-to-r from-background to-transparent" />
           <div className="pointer-events-none absolute right-0 top-0 h-full w-40 bg-gradient-to-l from-background to-transparent" />
 
