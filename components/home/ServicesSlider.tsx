@@ -1,8 +1,13 @@
 'use client';
 
-import Image from 'next/image';
-import { motion, useScroll, useTransform } from 'framer-motion';
 import { useRef } from 'react';
+import Image from 'next/image';
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useMotionTemplate,
+} from 'framer-motion';
 
 interface Service {
   id: number;
@@ -23,8 +28,8 @@ const services: Service[] = [
   { id: 10, title: 'Steam Pressing', image: '/services/service5.jpg' },
 ];
 
-// Duplicate for seamless loop
-const duplicated = [...services, ...services];
+// Duplicate for seamless infinite loop
+const duplicatedServices = [...services, ...services];
 
 export default function ServicesSlider() {
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -34,21 +39,25 @@ export default function ServicesSlider() {
     offset: ['start end', 'end start'],
   });
 
+  // More dramatic visible curve
   const ellipseY = useTransform(
     scrollYProgress,
-    [0, 0.5, 1],
-    ['40%', '70%', '100%']
+    [0, 1],
+    ['20%', '120%']
   );
 
+  // Proper motion template for clip-path
+  const clipPath = useMotionTemplate`
+    ellipse(150% ${ellipseY} at 50% 0%)
+  `;
+
   return (
-    <div className="py-32 bg-background">
+    <div className="py-32 bg-muted">
 
       <motion.section
         ref={sectionRef}
-        className="relative py-24 overflow-hidden"
-        style={{
-          clipPath: `ellipse(150% ${ellipseY} at 50% 50%)`,
-        }}
+        style={{ clipPath }}
+        className="relative py-24 overflow-hidden bg-background"
       >
         <div className="max-w-7xl mx-auto px-6">
 
@@ -62,23 +71,23 @@ export default function ServicesSlider() {
             </h2>
           </div>
 
-          {/* AUTO CAROUSEL */}
+          {/* Auto Infinite Carousel */}
           <div className="relative overflow-hidden">
 
             <motion.div
               className="flex gap-8 w-max"
-              animate={{
-                x: ['0%', '-50%'],
-              }}
+              animate={{ x: ['0%', '-50%'] }}
               transition={{
                 duration: 25,
                 ease: 'linear',
                 repeat: Infinity,
               }}
             >
-              {duplicated.map((service, index) => (
-                <div
+              {duplicatedServices.map((service, index) => (
+                <motion.div
                   key={index}
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ type: 'spring', stiffness: 200 }}
                   className="relative min-w-[350px] h-[420px] rounded-[2rem] overflow-hidden shadow-xl flex-shrink-0"
                 >
                   <Image
@@ -88,18 +97,24 @@ export default function ServicesSlider() {
                     className="object-cover"
                   />
 
-                  {/* Glass Overlay */}
-                  <div className="absolute inset-0 bg-black/20"></div>
+                  {/* Dark Overlay */}
+                  <div className="absolute inset-0 bg-black/20" />
 
-                  {/* Bottom Bar */}
+                  {/* Bottom Title Bar */}
                   <div className="absolute bottom-0 w-full bg-primary py-5 text-center">
                     <h3 className="text-primary-foreground font-semibold text-lg tracking-wide">
                       {service.title}
                     </h3>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </motion.div>
+
+            {/* Left Fade */}
+            <div className="pointer-events-none absolute left-0 top-0 h-full w-32 bg-gradient-to-r from-background to-transparent" />
+
+            {/* Right Fade */}
+            <div className="pointer-events-none absolute right-0 top-0 h-full w-32 bg-gradient-to-l from-background to-transparent" />
 
           </div>
         </div>
