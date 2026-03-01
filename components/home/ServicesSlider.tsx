@@ -1,6 +1,8 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 import { ChevronLeft, ChevronRight, MessageCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -79,7 +81,7 @@ function ServiceCard({ service }: { service: typeof serviceSlides[0] }) {
   );
 }
 
-export default function ServiceSlider() {
+export default function ServicesSlider() {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
