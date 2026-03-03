@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, use } from 'react';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Button } from '@/components/ui/button';
@@ -10,8 +10,9 @@ import { ChevronLeft, Check, Clock, AlertCircle } from 'lucide-react';
 import { services, getServiceById } from '@/lib/services-data';
 import { useCart } from '@/context/cart-context';
 
-export default function ServiceDetailPage({ params }: { params: { id: string } }) {
-  const service = getServiceById(params.id);
+export default function ServiceDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  const service = getServiceById(id);
   const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
   const containerRef = useRef(null);
