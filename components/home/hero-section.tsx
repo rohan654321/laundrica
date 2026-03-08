@@ -1,267 +1,255 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Autoplay, EffectFade, Navigation, Pagination } from 'swiper/modules';
-import 'swiper/css';
-import 'swiper/css/effect-fade';
-import 'swiper/css/navigation';
-import 'swiper/css/pagination';
 
 const heroSlides = [
   {
-    title: 'Your Clothes, Our Care',
-    subtitle: 'Professional laundry services delivered to your doorstep in 24 hours',
-    gradient: 'from-emerald-700/30 via-emerald-800 to-emerald-900/40',
-    highlight: 'Our Care',
+    tag: 'Laundry Service in Dubai That Cares for Every Detail',
+    title: 'Freshness That Lasts',
+    description: 'Advanced cleaning methods, gentle detergents, and expert hands, your clothes stay fresh, clean, and ready to wear longer.',
+    cta: 'Schedule a Pickup',
+    image: 'https://images.unsplash.com/photo-1545173168-9f1947eebb7f?w=600&h=600&fit=crop',
+    imagePosition: 'left',
+    bgGradient: 'from-primary/30 via-primary/20 to-transparent',
   },
   {
-    title: 'Premium Care for Every Fabric',
-    subtitle: 'Expert treatment for delicate and everyday garments with professional expertise',
-    gradient: 'from-emerald-600/25 via-emerald-800 to-emerald-900/35',
-    highlight: 'Every Fabric',
+    tag: 'Premium Laundry Service in Dubai, Made Easy',
+    title: 'Convenience at Your Fingertips',
+    description: 'Enjoy free pickup and delivery anywhere in Dubai. While you focus on life, we handle your laundry with precision and care',
+    cta: 'Book Free Pickup',
+    image: 'https://images.unsplash.com/photo-1582735689369-4fe89db7114c?w=600&h=600&fit=crop',
+    imagePosition: 'right',
+    bgGradient: 'from-accent/30 via-accent/20 to-transparent',
   },
   {
-    title: 'Eco-Friendly & Sustainable',
-    subtitle: 'We use environmentally conscious methods without compromising on quality',
-    gradient: 'from-emerald-700/28 via-emerald-800 to-emerald-900/38',
-    highlight: 'Sustainable',
+    tag: 'Professional Laundry Service That You Can Rely On',
+    title: 'Fast. Clean. Reliable.',
+    description: 'Quick turnaround and on-time delivery - because laundry should fit your lifestyle, not interrupt it',
+    cta: 'Try Our Express Service',
+    image: 'https://images.unsplash.com/photo-1517677208171-0bc6725a3e60?w=600&h=600&fit=crop',
+    imagePosition: 'left',
+    bgGradient: 'from-primary/30 via-primary/20 to-transparent',
+  },
+  {
+    tag: 'Dry Cleaning Services with a Personal Touch',
+    title: 'Gentle Care, Premium Results',
+    description: 'From abayas to designer suits, delicate garments are treated with expert care to preserve their beauty and texture.',
+    cta: 'Experience Premium Care',
+    image: 'https://images.unsplash.com/photo-1604335399105-b0fc5857d7a3?w=600&h=600&fit=crop',
+    imagePosition: 'right',
+    bgGradient: 'from-accent/30 via-accent/20 to-transparent',
   },
 ];
 
-function WashingMachineAnimation() {
-  return (
-    <motion.div
-      className="relative w-32 h-32 md:w-48 md:h-48 mx-auto"
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.8 }}
-    >
-      {/* Outer washing machine body */}
-      <motion.div
-        className="absolute inset-0 border-4 border-emerald-400/40 rounded-3xl bg-gradient-to-br from-emerald-400/5 to-transparent"
-        animate={{ rotateZ: 360 }}
-        transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-      />
-
-      {/* Inner drum with rotation */}
-      <motion.div
-        className="absolute inset-4 border-2 border-emerald-400/30 rounded-full bg-emerald-400/5"
-        animate={{ rotateZ: -360 }}
-        transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
-      >
-        <div className="absolute inset-0 rounded-full border border-emerald-400/20 m-2" />
-      </motion.div>
-
-      {/* Floating particles */}
-      {[...Array(6)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute w-1.5 h-1.5 bg-emerald-400/60 rounded-full"
-          animate={{
-            x: [0, Math.cos((i / 6) * Math.PI * 2) * 40, 0],
-            y: [0, Math.sin((i / 6) * Math.PI * 2) * 40, 0],
-            opacity: [0, 1, 0],
-          }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-            delay: (i * 0.5),
-          }}
-          style={{
-            left: '50%',
-            top: '50%',
-            transform: 'translate(-50%, -50%)',
-          }}
-        />
-      ))}
-
-      {/* Center sparkle */}
-      <motion.div
-        className="absolute inset-0 flex items-center justify-center"
-        animate={{ rotate: 360 }}
-        transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-      >
-        <Sparkles className="w-6 h-6 md:w-8 md:h-8 text-emerald-300" />
-      </motion.div>
-    </motion.div>
-  );
-}
-
 export function HeroSection() {
-  const [isReady, setIsReady] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
   useEffect(() => {
-    setIsReady(true);
-  }, []);
+    if (!isAutoPlaying) return;
+    
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 5000);
+    
+    return () => clearInterval(interval);
+  }, [isAutoPlaying]);
+
+  const goToSlide = (index: number) => {
+    setCurrentSlide(index);
+    setIsAutoPlaying(false);
+    // Resume autoplay after 10 seconds of inactivity
+    setTimeout(() => setIsAutoPlaying(true), 10000);
+  };
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+    setIsAutoPlaying(false);
+    setTimeout(() => setIsAutoPlaying(true), 10000);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
+    setIsAutoPlaying(false);
+    setTimeout(() => setIsAutoPlaying(true), 10000);
+  };
 
   return (
-    <section className="relative w-full h-screen overflow-hidden">
-      {/* Swiper Carousel */}
-      {isReady && (
-        <Swiper
-          modules={[Autoplay, EffectFade, Navigation, Pagination]}
-          effect="fade"
-          autoplay={{
-            delay: 5000,
-            disableOnInteraction: false,
-          }}
-          pagination={{
-            clickable: true,
-            renderBullet: (index, className) => (
-              `<span class="${className} !bg-white !opacity-50 hover:!opacity-100 transition-opacity"></span>`
-            ),
-          }}
-          navigation={{
-            nextEl: '.swiper-button-next-custom',
-            prevEl: '.swiper-button-prev-custom',
-          }}
-          loop
-          className="w-full h-full"
-        >
-          {heroSlides.map((slide, index) => (
-            <SwiperSlide key={index} className="!flex items-center justify-center">
-              {({ isActive }) => (
-                <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
-                  {/* Animated gradient background */}
-                  <div className="absolute inset-0">
+    <section className="relative w-full min-h-[600px] md:h-[650px] lg:h-[700px] bg-gradient-to-b from-primary/5 to-accent/5 overflow-hidden">
+      {/* Background blur circles */}
+      <div className="absolute -top-40 -right-40 w-[600px] h-[600px] bg-primary/20 rounded-full blur-[120px] pointer-events-none"></div>
+      <div className="absolute top-40 -left-20 w-[400px] h-[400px] bg-accent/20 rounded-full blur-[100px] pointer-events-none"></div>
+      
+      {/* Hero Slides */}
+      <AnimatePresence mode="wait">
+        {heroSlides.map((slide, index) => (
+          index === currentSlide && (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5 }}
+              className="absolute inset-0 w-full h-full"
+            >
+              <div className={`absolute inset-0 bg-gradient-to-br ${slide.bgGradient}`} />
+              
+              <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center h-full">
+                  {/* Content */}
+                  <motion.div
+                    initial={{ opacity: 0, x: slide.imagePosition === 'left' ? -30 : 30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.7, delay: 0.2 }}
+                    className={`order-2 lg:order-1 text-center lg:text-left ${
+                      slide.imagePosition === 'left' ? 'lg:order-1' : 'lg:order-2'
+                    }`}
+                  >
                     <motion.div
-                      className={`absolute inset-0 bg-gradient-to-br ${slide.gradient}`}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: isActive ? 1 : 0 }}
-                      transition={{ duration: 0.8 }}
-                    />
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.3 }}
+                      className="inline-flex items-center gap-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 px-4 py-1.5 mb-5"
+                    >
+                      <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse"></span>
+                      <span className="text-xs font-semibold uppercase tracking-wide text-foreground">
+                        {slide.tag}
+                      </span>
+                    </motion.div>
 
-                    {/* Animated blobs */}
-                    <motion.div
-                      className="absolute top-10 md:top-20 -left-40 w-80 h-80 bg-emerald-500/15 rounded-full blur-3xl"
-                      animate={{ y: [0, 50, 0] }}
-                      transition={{ duration: 8, repeat: Infinity }}
-                    />
-                    <motion.div
-                      className="absolute bottom-10 md:bottom-20 -right-40 w-80 h-80 bg-emerald-400/10 rounded-full blur-3xl"
-                      animate={{ y: [0, -50, 0] }}
-                      transition={{ duration: 8, repeat: Infinity }}
-                    />
-                  </div>
+                    <motion.h1
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.4 }}
+                      className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight text-foreground leading-[1.1] mb-3"
+                    >
+                      {slide.title}
+                    </motion.h1>
 
-                  {/* Content container */}
-                  <div className="relative z-10 container mx-auto px-4">
-                    <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-center max-w-6xl mx-auto">
-                      {/* Left content */}
-                      <motion.div
-                        initial={{ opacity: 0, x: -30 }}
-                        animate={isActive ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }}
-                        transition={{ duration: 0.7, delay: 0.1 }}
-                      >
-                        {/* Badge */}
-                        <motion.div
-                          className="inline-flex items-center gap-2 px-4 py-2 mb-6 bg-white/10 backdrop-blur-md border border-white/20 rounded-full"
-                          whileHover={{ scale: 1.05 }}
+                    <motion.p
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.5 }}
+                      className="text-base sm:text-lg text-foreground/70 max-w-2xl mx-auto lg:mx-0 font-light leading-relaxed mb-8"
+                    >
+                      {slide.description}
+                    </motion.p>
+
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.6 }}
+                      className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start"
+                    >
+                      <Link href="/services/professional-laundry-services-in-dubai/orders">
+                        <Button 
+                          size="lg" 
+                          className="w-full sm:w-auto gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-sm sm:text-base h-14 px-8 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-500"
                         >
-                          <Sparkles className="w-4 h-4 text-emerald-300" />
-                          <span className="text-sm font-medium text-white">Premium Service</span>
-                        </motion.div>
-
-                        {/* Title */}
-                        <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
-                          {slide.title.split(slide.highlight)[0]}
-                          <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-emerald-200">
-                            {slide.highlight}
-                          </span>
-                        </h1>
-
-                        {/* Subtitle */}
-                        <p className="text-lg md:text-xl text-white/80 mb-8 leading-relaxed max-w-lg">
-                          {slide.subtitle}
-                        </p>
-
-                        {/* CTA Buttons */}
-                        <div className="flex flex-col sm:flex-row gap-4">
-                          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                            <Link href="/services">
-                              <Button size="lg" className="gap-2 rounded-full px-8 font-semibold bg-emerald-500 hover:bg-emerald-600 text-white">
-                                Shop Services <ArrowRight className="w-4 h-4" />
-                              </Button>
-                            </Link>
-                          </motion.div>
-                          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                            <Link href="/about">
-                              <Button 
-                                size="lg" 
-                                variant="outline" 
-                                className="rounded-full px-8 font-semibold border-2 border-white text-white hover:bg-white/10"
-                              >
-                                Learn More
-                              </Button>
-                            </Link>
-                          </motion.div>
-                        </div>
-
-                        {/* Stats row */}
-                        <motion.div
-                          className="grid grid-cols-3 gap-4 mt-12"
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={isActive ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                          transition={{ duration: 0.6, delay: 0.3 }}
+                          {slide.cta}
+                        </Button>
+                      </Link>
+                      <Link href="/pricing">
+                        <Button 
+                          size="lg" 
+                          variant="outline"
+                          className="w-full sm:w-auto gap-2 border-2 border-primary text-primary hover:bg-primary/10 font-bold text-sm sm:text-base h-14 px-8 rounded-lg transform hover:-translate-y-1 transition-all duration-500"
                         >
-                          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4">
-                            <div className="text-2xl font-bold text-emerald-300">10K+</div>
-                            <p className="text-xs text-white/60">Customers</p>
-                          </div>
-                          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4">
-                            <div className="text-2xl font-bold text-emerald-300">24h</div>
-                            <p className="text-xs text-white/60">Delivery</p>
-                          </div>
-                          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4">
-                            <div className="text-2xl font-bold text-emerald-300">100%</div>
-                            <p className="text-xs text-white/60">Guaranteed</p>
-                          </div>
-                        </motion.div>
-                      </motion.div>
+                          View Pricing
+                        </Button>
+                      </Link>
+                    </motion.div>
+                  </motion.div>
 
-                      {/* Right side - 3D Washing Machine */}
+                  {/* Image */}
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.7, delay: 0.3 }}
+                    className={`order-1 lg:order-2 flex justify-center ${
+                      slide.imagePosition === 'left' ? 'lg:order-2' : 'lg:order-1'
+                    }`}
+                  >
+                    <div className="relative w-full max-w-md lg:max-w-lg">
+                      <div className="relative aspect-square">
+                        <Image
+                          src={slide.image}
+                          alt="Laundry Service"
+                          fill
+                          className="object-contain drop-shadow-2xl"
+                          priority
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        />
+                      </div>
+                      
+                      {/* Decorative elements */}
                       <motion.div
-                        className="hidden md:flex justify-center"
-                        initial={{ opacity: 0, x: 30, y: 20 }}
-                        animate={isActive ? { opacity: 1, x: 0, y: 0 } : { opacity: 0, x: 30, y: 20 }}
-                        transition={{ duration: 0.7, delay: 0.2 }}
-                      >
-                        <WashingMachineAnimation />
-                      </motion.div>
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                        className="absolute -top-10 -right-10 w-32 h-32 border-2 border-primary/20 rounded-full"
+                      />
+                      <motion.div
+                        animate={{ rotate: -360 }}
+                        transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                        className="absolute -bottom-10 -left-10 w-24 h-24 border-2 border-accent/20 rounded-full"
+                      />
                     </div>
-                  </div>
+                  </motion.div>
                 </div>
-              )}
-            </SwiperSlide>
-          ))}
+              </div>
+            </motion.div>
+          )
+        ))}
+      </AnimatePresence>
 
-          {/* Navigation buttons */}
-          <div className="swiper-button-prev-custom absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center cursor-pointer hover:bg-white/20 transition-colors">
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </div>
-          <div className="swiper-button-next-custom absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center cursor-pointer hover:bg-white/20 transition-colors">
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
-        </Swiper>
-      )}
+      {/* Navigation Arrows */}
+      <button
+        onClick={prevSlide}
+        className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-30 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center cursor-pointer hover:bg-white/20 transition-colors"
+        aria-label="Previous slide"
+      >
+        <svg className="w-5 h-5 md:w-6 md:h-6 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+      <button
+        onClick={nextSlide}
+        className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-30 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center cursor-pointer hover:bg-white/20 transition-colors"
+        aria-label="Next slide"
+      >
+        <svg className="w-5 h-5 md:w-6 md:h-6 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+
+      {/* Slide Indicators */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex gap-2">
+        {heroSlides.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => goToSlide(index)}
+            className={`transition-all duration-300 ${
+              currentSlide === index 
+                ? 'w-8 bg-primary' 
+                : 'w-2 bg-foreground/30 hover:bg-primary/50'
+            } h-2 rounded-full`}
+            aria-label={`Go to slide ${index + 1}`}
+          />
+        ))}
+      </div>
 
       {/* Scroll indicator */}
       <motion.div
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2"
+        className="absolute bottom-8 right-8 z-20 hidden md:flex flex-col items-center gap-2"
         animate={{ y: [0, 10, 0] }}
         transition={{ duration: 2, repeat: Infinity }}
       >
-        <p className="text-sm text-white/60 font-medium">Scroll to explore</p>
-        <svg className="w-5 h-5 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <p className="text-sm text-foreground/60 font-medium">Scroll</p>
+        <svg className="w-4 h-4 text-foreground/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
         </svg>
       </motion.div>
