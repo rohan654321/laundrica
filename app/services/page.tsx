@@ -20,7 +20,7 @@ export default function ServicesPage() {
 
       {/* Hero Banner */}
       <section className="relative h-48 sm:h-56 md:h-64 lg:h-72 bg-cover bg-center flex items-center justify-center px-6" 
-        style={{ backgroundImage: "url('/images/redesign/about-banner.png')" }}>
+        style={{ backgroundImage: "url('https://indexlaundry.ae/wp-content/uploads/2024/10/clothes-on-hangers-and-washing-machine-at-home-e1619659651363-1568x1047.jpg')" }}>
         <div className="text-white text-base sm:text-2xl md:text-3xl font-medium text-center z-30">
           <p>Professional Laundry <span className="text-[#FFFF00]">Services Designed for Your Lifestyle</span></p>
         </div>
