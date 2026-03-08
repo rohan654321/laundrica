@@ -1,8 +1,10 @@
+// context/cart-context.tsx
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-export type CartCategory = 'service' | 'print-store' | 'membership';
+// Update CartCategory to include all possible categories
+export type CartCategory = 'service' | 'print-store' | 'membership' | 'men' | 'women' | 'children' | 'household';
 
 export interface CartItem {
   id: string;
@@ -11,6 +13,10 @@ export interface CartItem {
   quantity: number;
   image: string;
   category: CartCategory;
+  description?: string; // Make optional
+  unit?: string; // Add unit field
+  serviceId?: string; // Add serviceId for reference
+  itemId?: string; // Add original itemId
 }
 
 interface CartContextType {
@@ -20,6 +26,7 @@ interface CartContextType {
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
   getTotalPrice: () => number;
+  getItemsByCategory: (category: CartCategory) => CartItem[];
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -91,6 +98,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     );
   };
 
+  const getItemsByCategory = (category: CartCategory) => {
+    return cartItems.filter(item => item.category === category);
+  };
+
   return (
     <CartContext.Provider
       value={{
@@ -100,6 +111,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         updateQuantity,
         clearCart,
         getTotalPrice,
+        getItemsByCategory,
       }}
     >
       {children}
