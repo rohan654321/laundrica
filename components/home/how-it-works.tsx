@@ -1,224 +1,255 @@
+// components/home/how-it-works.tsx
 'use client';
 
 import { motion, useInView } from 'framer-motion';
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
-const services = [
-  {
-    title: "Clean & Press",
-    icon: "/icons/cleanpress.svg",
-    description: "We ensures your clothes are treated and steamed with expert attention from tailored suits and dress shirts to silks and fine fabrics.",
-    pricing: "Priced per item:",
-    items: [
-      { name: "Shirts", price: "₹18" },
-      { name: "Pants", price: "₹23" },
-      { name: "Suits", price: "₹52" }
-    ],
-    color: "green",
-    image: "/images/clean-press.jpg",
-    imageAlt: "Smiling woman holding a pink shirt covered in a transparent garment bag",
-    link: "/services/clean-and-press"
-  },
-  {
-    title: "Wash & Fold",
-    icon: "/icons/washfold.svg",
-    description: "We wash and fold your everyday laundry. You can send up to 12 kg of laundry for just ₹75. Perfect for sportswear, casualwear, and loungewear.",
-    color: "blue",
-    image: "/images/wash-fold.jpg",
-    imageAlt: "Man folding white socks next to a stack of folded clothes",
-    link: "/services/wash-and-fold"
-  },
-  {
-    title: "Press Only",
-    icon: "/icons/pressonly.svg",
-    description: "Already washed? Let us handle the wrinkles. Our Steam-Press Service gives pre-cleaned garments a crisp, polished look. Priced per item.",
-    color: "gray",
-    image: "/images/press-only.jpg",
-    imageAlt: "Man holding a covered brown shirt labeled 'wishmen'",
-    link: "/services/press-only"
-  },
-  {
-    title: "Bed & Bath",
-    icon: "/icons/homecare.svg",
-    description: "We turn your home linens into crisp, fresh pieces. You can send up to 15 home linens for ₹85. Perfect for bedsheets, duvets, towels.",
-    color: "purple",
-    image: "/images/bed-bath.jpg",
-    imageAlt: "Smiling woman arranging a decorative pillow on a neatly made bed",
-    link: "/services/bed-and-bath"
-  },
-  {
-    title: "Shoe Care",
-    icon: "/icons/shoecare.svg",
-    description: "We clean, repair, and restore all types of shoes from sneakers to leather shoes, formal heels, and casual loafers. Priced per pair.",
-    color: "orange",
-    image: "/images/shoe-care.jpg",
-    imageAlt: "Pair of beige leather slide sandals",
-    beforeAfter: true,
-    link: "/services/shoecare"
-  },
-  {
-    title: "Bag Care",
-    icon: "/icons/bagcare.svg",
-    description: "We handle bag cleaning, strap repair, interior stain removal, color touch-ups, and protective finishing. Priced per item.",
-    color: "orange",
-    image: "/images/bag-care.jpg",
-    imageAlt: "Yellow designer handbag with logo",
-    beforeAfter: true,
-    link: "/services/bagcare"
-  }
-];
-
-const ArrowIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M18.9159 13.2096H2.70736C2.45869 13.2096 2.25361 13.1288 2.09211 12.9671C1.93044 12.8055 1.84961 12.6024 1.84961 12.3579C1.84961 12.1134 1.93044 11.9103 2.09211 11.7486C2.25361 11.587 2.45869 11.5061 2.70736 11.5061H18.9099L14.3964 6.99865C14.2265 6.82865 14.1416 6.62873 14.1416 6.3989C14.1416 6.16906 14.2265 5.96915 14.3964 5.79915C14.5664 5.62932 14.7663 5.5454 14.9961 5.5474C15.2259 5.5494 15.4259 5.63531 15.5959 5.80515L21.5519 11.7611C21.6432 11.8525 21.7085 11.9468 21.7479 12.0441C21.787 12.1413 21.8066 12.2479 21.8066 12.3639C21.8066 12.4759 21.787 12.5805 21.7479 12.6776C21.7085 12.775 21.6432 12.8693 21.5519 12.9606L15.5959 18.9166C15.4259 19.0865 15.2259 19.1724 14.9961 19.1744C14.7663 19.1764 14.5664 19.0905 14.3964 18.9166C14.2265 18.7466 14.1416 18.5477 14.1416 18.3199C14.1416 18.0919 14.2265 17.893 14.3964 17.7231L18.9159 13.2096Z" fill="currentColor"/>
+const CalendarIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M8 2V6M16 2V6M3 10H21M5 4H19C20.1046 4 21 4.89543 21 6V20C21 21.1046 20.1046 22 19 22H5C3.89543 22 3 21.1046 3 20V6C3 4.89543 3.89543 4 5 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
   </svg>
 );
 
-export function ServicesPricing() {
-  const [currentSlide, setCurrentSlide] = useState(0);
+const BagIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M20 12V18C20 19.1046 19.1046 20 18 20H6C4.89543 20 4 19.1046 4 18V12M12 12V4M12 4L9 7M12 4L15 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+);
+
+const FacilityIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M3 9L12 3L21 9V20H3V9Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    <path d="M9 20V14H15V20" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+);
+
+const DeliveryIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M16 16H8M16 16C16 17.1046 16.8954 18 18 18C19.1046 18 20 17.1046 20 16C20 14.8954 19.1046 14 18 14C16.8954 14 16 14.8954 16 16ZM8 16C8 14.8954 7.10457 14 6 14C4.89543 14 4 14.8954 4 16C4 17.1046 4.89543 18 6 18C7.10457 18 8 17.1046 8 16ZM4 8H12M4 12H10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+);
+
+export function HowItWorks() {
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.2 });
 
-  const getColorClass = (color: string) => {
-    const colors: Record<string, string> = {
-      green: 'bg-emerald-50 border-emerald-200',
-      blue: 'bg-blue-50 border-blue-200',
-      gray: 'bg-gray-50 border-gray-200',
-      purple: 'bg-purple-50 border-purple-200',
-      orange: 'bg-orange-50 border-orange-200'
-    };
-    return colors[color] || colors.blue;
-  };
-
-  const totalSlides = Math.ceil(services.length / 3);
+  const steps = [
+    {
+      step: "Step 1",
+      title: "Place Your Order on the App",
+      description: "Download the Washmen app, schedule a pickup time that suits you, and we'll collect your laundry right from your doorstep.",
+      icon: CalendarIcon,
+      image: "/images/step1.jpg",
+      imageAlt: "A woman sitting on a yellow couch, looking at her smartphone with a slight smile",
+      badges: [
+        {
+          position: "bottom-right",
+          className: "is-bottom-right"
+        },
+        {
+          position: "top-left",
+          className: "is-top-left rounded-corners"
+        }
+      ]
+    },
+    {
+      step: "Step 2",
+      title: "Prepare Your Order",
+      description: "Fill the laundry bags based on the services you need and leave the bags outside your door or hand the bags to the driver.",
+      icon: BagIcon,
+      image: "/images/step2.jpg",
+      imageAlt: "A woman seated on a chair, holding a decorative pillow, with a pink shipping bag placed beside her",
+      badges: []
+    },
+    {
+      step: "Step 3",
+      title: "Cleaned at Our State-of-the-Art Facility",
+      description: "Your items are taken to our award-winning facility, cleaned with over 50 specialized programs, and returned fresh, folded, or pressed – within 48 hours.",
+      icon: FacilityIcon,
+      image: "/images/step3.jpg",
+      imageAlt: "A white dress shirt displayed on a mannequin in a modern laundry facility",
+      badges: []
+    },
+    {
+      step: "Step 4",
+      title: "Next-Day Delivery Available",
+      description: "Get your items back fresh and ready to wear in as little as 24 hours. Simply select next-day delivery when setting up your order and enjoy the convenience of a quick turnaround.",
+      icon: DeliveryIcon,
+      image: "/images/step4.jpg",
+      imageAlt: "A man wearing a blue polo shirt holds a suit covered in plastic garment bag",
+      badges: [
+        {
+          position: "top-right",
+          className: "is-top-right z-index-0"
+        },
+        {
+          position: "bottom-left",
+          className: "is-bottom-left z-index-2"
+        }
+      ]
+    }
+  ];
 
   return (
-    <section ref={sectionRef} id="services" className="bg-white py-16 sm:py-20 lg:py-24 overflow-hidden">
+    <section ref={sectionRef} id="how-it-works" className="bg-white py-16 sm:py-20 lg:py-24 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header with navigation - Exactly like Washmen */}
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold">Services & Pricing</h2>
-          
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={() => setCurrentSlide(prev => Math.max(0, prev - 1))}
-              className="w-10 h-10 rounded-full border border-forest/20 flex items-center justify-center hover:bg-forest/5 transition-colors disabled:opacity-40"
-              disabled={currentSlide === 0}
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3.31066 8.75001L9.03033 14.4697L7.96967 15.5303L0.439339 8.00001L7.96967 0.469676L9.03033 1.53034L3.31066 7.25001L15.5 7.25L15.5 8.75L3.31066 8.75001Z" fill="currentColor"/>
-              </svg>
-            </button>
-            <button 
-              onClick={() => setCurrentSlide(prev => Math.min(totalSlides - 1, prev + 1))}
-              className="w-10 h-10 rounded-full border border-forest/20 flex items-center justify-center hover:bg-forest/5 transition-colors disabled:opacity-40"
-              disabled={currentSlide === totalSlides - 1}
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12.6893 7.25L6.96967 1.53033L8.03033 0.469666L15.5607 8L8.03033 15.5303L6.96967 14.4697L12.6893 8.75H0.5V7.25H12.6893Z" fill="currentColor"/>
-              </svg>
-            </button>
+        {/* Header */}
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-12 lg:mb-16">
+          <div className="lg:w-1/2">
+            <span className="text-sm font-semibold text-forest uppercase tracking-wider mb-2 block">How It Works</span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight">
+              Laundry day, simplified. <span className="text-forest">Four steps and you're done.</span>
+            </h2>
           </div>
+          <Link 
+            href="/download" 
+            className="hidden lg:inline-flex items-center gap-2 text-forest font-semibold hover:gap-3 transition-all group"
+          >
+            <span>Download Laundrica</span>
+            <span className="w-5 h-5 group-hover:translate-x-1 transition-transform">
+              <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </span>
+          </Link>
         </div>
 
-        {/* Slider */}
-        <div className="relative">
-          <div className="overflow-hidden">
-            <motion.div 
-              className="flex gap-6"
-              animate={{ x: `-${currentSlide * 100}%` }}
-              transition={{ duration: 0.5, ease: "easeInOut" }}
-            >
-              {Array.from({ length: totalSlides }).map((_, slideIndex) => (
-                <div key={slideIndex} className="min-w-full flex gap-6">
-                  {services.slice(slideIndex * 3, slideIndex * 3 + 3).map((service, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={isInView ? { opacity: 1, y: 0 } : {}}
-                      transition={{ duration: 0.5, delay: index * 0.1 }}
-                      className="flex-1"
-                    >
-                      <div className={`rounded-2xl border-2 ${getColorClass(service.color)} overflow-hidden h-full flex flex-col`}>
-                        {/* Card Content */}
-                        <div className="p-6 flex-1">
-                          <div className="flex items-start justify-between mb-4">
-                            <h3 className="text-xl sm:text-2xl font-bold text-forest">{service.title}</h3>
-                            <div className="w-10 h-10 sm:w-12 sm:h-12">
-                              <img src={service.icon} alt={service.title} className="w-full h-full" />
-                            </div>
-                          </div>
-                          
-                          <p className="text-foreground/70 text-sm mb-4 line-clamp-3">
-                            {service.description}
-                          </p>
-                          
-                          {service.pricing && (
-                            <>
-                              <p className="text-xs font-medium text-forest/70 mb-2">{service.pricing}</p>
-                              <div className="flex flex-wrap gap-1.5 mb-4">
-                                {service.items?.map((item, idx) => (
-                                  <span key={idx} className="px-2 py-1 bg-forest/5 text-forest rounded-full text-xs border border-forest/10">
-                                    {item.name}: {item.price}
-                                  </span>
-                                ))}
-                              </div>
-                            </>
-                          )}
-                          
-                          <Link 
-                            href={service.link}
-                            className="inline-flex items-center gap-1 text-forest font-semibold hover:gap-2 transition-all group text-sm"
-                          >
-                            <span>Learn More</span>
-                            <span className="w-4 h-4 group-hover:translate-x-1 transition-transform">
-                              <ArrowIcon />
-                            </span>
-                          </Link>
-                        </div>
-                        
-                        {/* Image Section */}
-                        <div className="relative h-40 sm:h-44 bg-forest/5">
-                          <div className="absolute inset-0 flex items-center justify-center text-forest/20">
-                            <img src={service.icon} alt="" className="w-12 h-12 opacity-20" />
-                          </div>
-                          {service.beforeAfter && (
-                            <>
-                              <span className="absolute top-2 left-2 bg-forest/80 text-white text-xs px-2 py-1 rounded">Before</span>
-                              <span className="absolute top-2 right-2 bg-forest text-white text-xs px-2 py-1 rounded">After</span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              ))}
-            </motion.div>
-          </div>
-
-          {/* Pagination Dots - Exactly like Washmen */}
-          <div className="flex justify-center gap-2 mt-8">
-            {Array.from({ length: totalSlides }).map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentSlide(index)}
-                className={`h-1.5 rounded-full transition-all ${
-                  currentSlide === index 
-                    ? 'w-8 bg-forest' 
-                    : 'w-1.5 bg-forest/30 hover:bg-forest/50'
-                }`}
+        {/* Steps Grid */}
+        <div className="grid lg:grid-cols-[auto,1fr] gap-8 lg:gap-12">
+          {/* Progress Line Column */}
+          <div className="hidden lg:block relative w-12">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0.5 h-full bg-forest/10">
+              <motion.div 
+                className="w-full bg-forest origin-top"
+                initial={{ scaleY: 0 }}
+                animate={isInView ? { scaleY: 1 } : {}}
+                transition={{ duration: 1.5, ease: "easeInOut", delay: 0.3 }}
+                style={{ height: "100%" }}
               />
-            ))}
+            </div>
+            
+            {/* Step Circles */}
+            <div className="relative flex flex-col items-center">
+              {steps.map((step, index) => {
+                const IconComponent = step.icon;
+                return (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={isInView ? { opacity: 1, scale: 1 } : {}}
+                    transition={{ duration: 0.5, delay: index * 0.2 }}
+                    className="relative z-10 mb-32 last:mb-0"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-forest/10 flex items-center justify-center text-forest">
+                      <IconComponent />
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Slide Counter - Like Washmen */}
-          <div className="absolute bottom-0 right-0 text-sm text-forest/60">
-            {currentSlide + 1}/{totalSlides}
+          {/* Steps Content */}
+          <div className="space-y-16 lg:space-y-24">
+            {steps.map((step, index) => {
+              const IconComponent = step.icon;
+              
+              return (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={isInView ? { opacity: 1, y: 0 } : {}}
+                  transition={{ duration: 0.6, delay: index * 0.2 }}
+                  className="relative"
+                >
+                  {/* Mobile Step Indicator */}
+                  <div className="flex items-center gap-3 mb-4 lg:hidden">
+                    <div className="w-10 h-10 rounded-full bg-forest/10 flex items-center justify-center text-forest">
+                      <IconComponent />
+                    </div>
+                    <span className="text-sm font-semibold text-forest/60">{step.step}</span>
+                  </div>
+
+                  <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+                    {/* Content */}
+                    <div className={index % 2 === 1 ? 'lg:order-2' : ''}>
+                      <span className="hidden lg:block text-sm font-semibold text-forest/60 mb-2">{step.step}</span>
+                      <h3 className="text-2xl sm:text-3xl font-bold text-forest mb-4">{step.title}</h3>
+                      <p className="text-foreground/70 leading-relaxed mb-6 max-w-xl">
+                        {step.description}
+                      </p>
+                      
+                      {index === 0 && (
+                        <Link 
+                          href="/download" 
+                          className="inline-flex items-center px-6 py-3 bg-forest text-white rounded-lg font-semibold hover:bg-forest/90 transition-colors shadow-lg lg:hidden"
+                        >
+                          Download Laundrica
+                        </Link>
+                      )}
+                    </div>
+
+                    {/* Image Card with Badges */}
+                    <div className={`relative ${index % 2 === 1 ? 'lg:order-1' : ''}`}>
+                      <div className="relative rounded-2xl overflow-hidden shadow-xl">
+                        {/* Image Placeholder */}
+                        <div className="aspect-[4/3] relative bg-gradient-to-br from-forest/20 to-forest/5">
+                          <div className="absolute inset-0 flex items-center justify-center text-forest/30">
+                            <IconComponent />
+                          </div>
+                        </div>
+
+                        {/* Badges */}
+                        {step.badges.map((badge, idx) => {
+                          const positionClasses = {
+                            'bottom-right': 'absolute bottom-4 right-4',
+                            'top-left': 'absolute top-4 left-4',
+                            'top-right': 'absolute top-4 right-4',
+                            'bottom-left': 'absolute bottom-4 left-4'
+                          };
+                          
+                          return (
+                            <motion.div
+                              key={idx}
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={isInView ? { opacity: 1, scale: 1 } : {}}
+                              transition={{ duration: 0.5, delay: 0.3 + (idx * 0.1) }}
+                              className={`${positionClasses[badge.position as keyof typeof positionClasses]} ${badge.className} bg-white rounded-xl shadow-lg p-3 max-w-[200px] border border-forest/10`}
+                            >
+                              <div className="w-full h-12 bg-forest/10 rounded flex items-center justify-center text-forest text-xs">
+                                {badge.position === 'bottom-right' && 'Pick Up · Today 03:00 - 04:00 pm'}
+                                {badge.position === 'top-left' && 'Delivery at Door · In person'}
+                                {badge.position === 'top-right' && 'Drop Off · Tomorrow · Free next-day delivery'}
+                                {badge.position === 'bottom-left' && 'Order received · Collected · In process · Delivery Tuesday'}
+                              </div>
+                            </motion.div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
+
+        {/* Mobile CTA */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={isInView ? { opacity: 1 } : {}}
+          transition={{ duration: 0.6, delay: 0.8 }}
+          className="mt-12 text-center lg:hidden"
+        >
+          <Link 
+            href="/download" 
+            className="inline-flex items-center px-8 py-4 bg-forest text-white rounded-lg font-semibold hover:bg-forest/90 transition-colors shadow-lg"
+          >
+            Download Laundrica
+          </Link>
+        </motion.div>
       </div>
     </section>
   );
