@@ -4,7 +4,7 @@
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useRef } from 'react';
 
-// Icons (keep these as they are)
+// Icons
 const CalendarIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
     <path d="M8 2V6M16 2V6M3 10H21M5 4H19C20.1046 4 21 4.89543 21 6V20C21 21.1046 20.1046 22 19 22H5C3.89543 22 3 21.1046 3 20V6C3 4.89543 3.89543 4 5 4Z" stroke="currentColor" strokeWidth="2"/>
@@ -66,10 +66,55 @@ export function HowItWorks() {
         ref={containerRef}
         className="max-w-7xl mx-auto px-6"
       >
-        {/* Reversed the grid layout: [1fr, 80px, 300px] instead of [300px,80px,1fr] */}
-        <div className="grid lg:grid-cols-[1fr,80px,300px] gap-12">
+        <div className="grid lg:grid-cols-[300px,80px,1fr] gap-12">
 
-          {/* LEFT SCROLLING CONTENT - Now on the left side */}
+          {/* LEFT FIXED */}
+          <div className="hidden lg:block sticky top-32 h-fit">
+            <p className="text-sm text-green-600 mb-2">How It Works</p>
+            <h2 className="text-4xl font-bold">
+              Laundry day, simplified.
+              <br />
+              <span className="text-green-600">
+                Four steps and you're done.
+              </span>
+            </h2>
+          </div>
+
+          {/* TIMELINE FIXED */}
+          <div className="hidden lg:flex flex-col items-center relative sticky top-32 h-fit">
+
+            {/* Line */}
+            <div className="absolute top-0 w-[2px] h-[400px] bg-gray-200">
+              <motion.div
+                className="w-full bg-green-600 origin-top"
+                style={{ scaleY: scrollYProgress }}
+              />
+            </div>
+
+            {/* Dots */}
+            <div className="flex flex-col gap-24 relative z-10">
+              {steps.map((_, index) => {
+                const progress = useTransform(
+                  scrollYProgress,
+                  [index * 0.25, (index + 1) * 0.25],
+                  [0.3, 1]
+                );
+
+                return (
+                  <motion.div
+                    key={index}
+                    style={{
+                      scale: progress,
+                      opacity: progress,
+                    }}
+                    className="w-10 h-10 rounded-full bg-green-100 border border-green-400"
+                  />
+                );
+              })}
+            </div>
+          </div>
+
+          {/* RIGHT SCROLLING CONTENT */}
           <div className="space-y-40">
             {steps.map((step, index) => {
               const progress = useTransform(
@@ -105,52 +150,6 @@ export function HowItWorks() {
                 </motion.div>
               );
             })}
-          </div>
-
-          {/* TIMELINE FIXED - Still in the middle */}
-          <div className="hidden lg:flex flex-col items-center relative sticky top-32 h-fit">
-
-            {/* Line */}
-            <div className="absolute top-0 w-[2px] h-[400px] bg-gray-200">
-              <motion.div
-                className="w-full bg-green-600 origin-top"
-                style={{ scaleY: scrollYProgress }}
-              />
-            </div>
-
-            {/* Dots */}
-            <div className="flex flex-col gap-24 relative z-10">
-              {steps.map((_, index) => {
-                const progress = useTransform(
-                  scrollYProgress,
-                  [index * 0.25, (index + 1) * 0.25],
-                  [0.3, 1]
-                );
-
-                return (
-                  <motion.div
-                    key={index}
-                    style={{
-                      scale: progress,
-                      opacity: progress,
-                    }}
-                    className="w-10 h-10 rounded-full bg-green-100 border border-green-400"
-                  />
-                );
-              })}
-            </div>
-          </div>
-
-          {/* RIGHT FIXED - Now the title is on the right side */}
-          <div className="hidden lg:block sticky top-32 h-fit text-right">
-            <p className="text-sm text-green-600 mb-2">How It Works</p>
-            <h2 className="text-4xl font-bold">
-              Laundry day, simplified.
-              <br />
-              <span className="text-green-600">
-                Four steps and you're done.
-              </span>
-            </h2>
           </div>
 
         </div>
