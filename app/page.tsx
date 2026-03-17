@@ -7,6 +7,7 @@ import { MembershipPlans } from '@/components/home/membership-plans';
 import { Testimonials } from '@/components/home/testimonials';
 import { CTASection } from '@/components/home/cta-section';
 import ServicesSlider from '@/components/home/ServicesSlider';
+import { ServicesPricing } from '@/components/home/services-grid';
 
 export default function Home() {
   return (
@@ -14,6 +15,7 @@ export default function Home() {
       <Header />
       <HeroSection />
       <HowItWorks />
+      <ServicesPricing/>
       <ServicesSlider /> {/* This is the slider component we created */}
       {/* Remove ServicesGrid since we're using ServicesSlider */}
       <WhyChooseUs />
