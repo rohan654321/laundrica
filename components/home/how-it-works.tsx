@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, useInView } from 'framer-motion';
-import { useRef, useState, useEffect } from 'react';
+import { useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -38,7 +38,6 @@ const ArrowIcon = () => (
 
 export function HowItWorks() {
   const sectionRef = useRef(null);
-  const isInView = useInView(sectionRef, { once: true, amount: 0.2 });
   
   const steps = [
     {
@@ -47,10 +46,15 @@ export function HowItWorks() {
       description: "Download the Laundrica app, schedule a pickup time that suits you, and we'll collect your laundry right from your doorstep.",
       icon: CalendarIcon,
       image: "/images/step1.jpg",
-      badge: {
+      badgeTop: {
         icon: "/images/pickup-badge.svg",
         alt: "Pick up schedule",
-        position: "top-left"
+        text: "Pick Up Today 03:00 - 04:00 pm"
+      },
+      badgeBottom: {
+        icon: "/images/delivery-badge.jpg",
+        alt: "Delivery options",
+        text: "Delivery at Door · Delivery in person"
       }
     },
     {
@@ -73,15 +77,15 @@ export function HowItWorks() {
       description: "Get your items back fresh and ready to wear in as little as 24 hours. Simply select next-day delivery when setting up your order.",
       icon: DeliveryIcon,
       image: "/images/step4.jpg",
-      badges: {
-        topRight: {
-          icon: "/images/delivery-badge.svg",
-          alt: "Delivery options"
-        },
-        bottomLeft: {
-          icon: "/images/order-status.svg",
-          alt: "Order status"
-        }
+      badgeTopRight: {
+        icon: "/images/delivery-badge.svg",
+        alt: "Delivery options",
+        text: "Drop Off · Tomorrow · Free next-day delivery"
+      },
+      badgeBottomLeft: {
+        icon: "/images/order-status.svg",
+        alt: "Order status",
+        text: "Order received 22 Aug · Order collected · Items in process · Delivery on Tuesday"
       }
     }
   ];
@@ -90,123 +94,180 @@ export function HowItWorks() {
     <section ref={sectionRef} id="how-it-works" className="bg-white py-16 sm:py-20 lg:py-24 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-12 lg:mb-16"
-        >
-          <div className="max-w-2xl">
-            <span className="text-sm font-semibold text-forest uppercase tracking-wider">How It Works</span>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mt-2 leading-tight">
-              Laundry day, simplified.
-              <span className="text-forest block">Four steps and you're done.</span>
-            </h2>
-          </div>
-          <Link 
-            href="/app" 
-            className="inline-flex items-center gap-2 text-forest font-semibold hover:gap-3 transition-all group"
-          >
-            <span>Download Laundrica</span>
-            <span className="w-5 h-5 group-hover:translate-x-1 transition-transform">
-              <ArrowIcon />
-            </span>
-          </Link>
-        </motion.div>
-
-        {/* Progress Line (desktop) */}
-        <div className="hidden lg:block relative h-0.5 bg-forest/10 mb-16">
-          <motion.div 
-            className="absolute top-0 left-0 h-full bg-forest"
-            initial={{ width: "0%" }}
-            animate={isInView ? { width: "100%" } : {}}
-            transition={{ duration: 1.5, ease: "easeInOut", delay: 0.5 }}
-          />
+        <div className="w-full lg:w-1/2 mb-12 lg:mb-16">
+          <span className="text-sm font-semibold text-forest uppercase tracking-wider">How It Works</span>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mt-2 leading-tight">
+            Laundry day, simplified.
+            <span className="text-forest block">Four steps and you're done.</span>
+          </h2>
         </div>
 
-        {/* Steps */}
-        <div className="space-y-16 lg:space-y-24">
-          {steps.map((step, index) => {
-            const StepIcon = step.icon;
-            const isEven = index % 2 === 0;
-            
-            return (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 30 }}
-                animate={isInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ duration: 0.6, delay: index * 0.2 }}
-                className="relative"
-              >
-                {/* Step Number Circle (desktop) */}
-                <div className="hidden lg:block absolute left-0 -top-6">
-                  <div className="w-12 h-12 rounded-full bg-forest/10 flex items-center justify-center text-forest">
-                    <StepIcon />
-                  </div>
-                </div>
+        {/* Steps with Vertical Scroll Effect */}
+        <div className="relative">
+          {/* Progress Line - This fills as you scroll */}
+          <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-forest/10 hidden lg:block">
+            <motion.div 
+              className="w-full bg-forest origin-top"
+              style={{ scaleY: 0 }}
+              whileInView={{ scaleY: 1 }}
+              transition={{ duration: 1.5, ease: "easeInOut" }}
+              viewport={{ amount: 0.3 }}
+            />
+          </div>
 
-                <div className={`flex flex-col ${isEven ? 'lg:flex-row' : 'lg:flex-row-reverse'} gap-8 lg:gap-12 items-center`}>
-                  {/* Content */}
-                  <div className="flex-1">
-                    <div className="lg:pl-16">
-                      <span className="text-sm font-semibold text-forest/60 block mb-2">{step.number}</span>
-                      <h3 className="text-2xl sm:text-3xl font-bold text-forest mb-4">{step.title}</h3>
-                      <p className="text-foreground/70 leading-relaxed mb-6 max-w-xl">
-                        {step.description}
-                      </p>
-                      
-                      {/* CTA for step 1 */}
-                      {index === 0 && (
-                        <Link 
-                          href="/download" 
-                          className="inline-flex items-center px-6 py-3 bg-forest text-white rounded-lg font-semibold hover:bg-forest/90 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all"
-                        >
-                          Download Laundrica
-                        </Link>
-                      )}
+          <div className="space-y-16 lg:space-y-24">
+            {steps.map((step, index) => {
+              const StepIcon = step.icon;
+              
+              return (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 50 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  className="relative grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center"
+                >
+                  {/* Step Circle Indicator */}
+                  <div className="absolute left-0 -top-6 hidden lg:flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-forest/10 flex items-center justify-center text-forest">
+                      <StepIcon />
                     </div>
+                    <span className="text-sm font-semibold text-forest/60">{step.number}</span>
                   </div>
 
-                  {/* Image with badges */}
-                  <div className="flex-1 relative">
-                    <div className="relative rounded-2xl overflow-hidden shadow-xl border-2 border-forest/10">
-                      <div className="aspect-[4/3] relative bg-forest/5">
-                        <div className="absolute inset-0 flex items-center justify-center text-forest/20">
+                  {/* Content - alternates sides */}
+                  <div className={`lg:pl-16 ${index % 2 === 1 ? 'lg:order-2' : ''}`}>
+                    <span className="text-sm font-semibold text-forest/60 block lg:hidden mb-2">{step.number}</span>
+                    <h3 className="text-2xl sm:text-3xl font-bold text-forest mb-4">{step.title}</h3>
+                    <p className="text-foreground/70 leading-relaxed mb-6 max-w-xl">
+                      {step.description}
+                    </p>
+                    
+                    {index === 0 && (
+                      <Link 
+                        href="/download" 
+                        className="inline-flex items-center px-6 py-3 bg-forest text-white rounded-lg font-semibold hover:bg-forest/90 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all"
+                      >
+                        Download Laundrica
+                      </Link>
+                    )}
+                  </div>
+
+                  {/* Image Card with Badges - Like Washmen's design */}
+                  <div className={`relative ${index % 2 === 1 ? 'lg:order-1' : ''}`}>
+                    <div className="relative rounded-2xl overflow-hidden shadow-xl border border-forest/10">
+                      {/* Image Placeholder - Replace with actual images */}
+                      <div className="aspect-[4/3] relative bg-gradient-to-br from-forest/20 to-forest/5">
+                        <div className="absolute inset-0 flex items-center justify-center text-forest/30">
                           <StepIcon />
                         </div>
                       </div>
                       
-                      {/* Badges */}
-                      {step.badge && (
-                        <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-3 max-w-[200px] border border-forest/10">
-                          <div className="w-full h-8 bg-forest/10 rounded"></div>
-                        </div>
+                      {/* Badge Top Left - Like Washmen's first step */}
+                      {step.badgeTop && (
+                        <motion.div 
+                          initial={{ opacity: 0, x: -20 }}
+                          whileInView={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.5, delay: 0.3 }}
+                          viewport={{ once: true }}
+                          className="absolute top-4 left-4 bg-white rounded-xl shadow-lg p-3 max-w-[200px] border border-forest/10"
+                        >
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 bg-forest/10 rounded-lg flex items-center justify-center text-forest text-xs">
+                              📅
+                            </div>
+                            <div className="text-xs">
+                              <p className="font-medium text-forest">Pick Up</p>
+                              <p className="text-foreground/60">Today 03:00 - 04:00 pm</p>
+                            </div>
+                          </div>
+                        </motion.div>
                       )}
-                      
-                      {step.badges?.topRight && (
-                        <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg p-3 max-w-[200px] border border-forest/10">
-                          <div className="w-full h-8 bg-forest/10 rounded"></div>
-                        </div>
+
+                      {/* Badge Bottom Left - Like Washmen's first step */}
+                      {step.badgeBottom && (
+                        <motion.div 
+                          initial={{ opacity: 0, y: 20 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.5, delay: 0.4 }}
+                          viewport={{ once: true }}
+                          className="absolute bottom-4 left-4 bg-white rounded-xl shadow-lg p-3 max-w-[220px] border border-forest/10"
+                        >
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 bg-forest/10 rounded-full overflow-hidden">
+                              <div className="w-full h-full bg-forest/20"></div>
+                            </div>
+                            <div className="text-xs">
+                              <p className="font-medium text-forest">Delivery options</p>
+                              <p className="text-foreground/60">Delivery at Door · In person</p>
+                            </div>
+                          </div>
+                        </motion.div>
                       )}
-                      
-                      {step.badges?.bottomLeft && (
-                        <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-3 max-w-[200px] border border-forest/10">
-                          <div className="w-full h-8 bg-forest/10 rounded"></div>
-                        </div>
+
+                      {/* Badge Top Right - Like Washmen's fourth step */}
+                      {step.badgeTopRight && (
+                        <motion.div 
+                          initial={{ opacity: 0, x: 20 }}
+                          whileInView={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.5, delay: 0.3 }}
+                          viewport={{ once: true }}
+                          className="absolute top-4 right-4 bg-white rounded-xl shadow-lg p-3 max-w-[220px] border border-forest/10"
+                        >
+                          <div className="text-xs">
+                            <p className="font-medium text-forest mb-1">Drop Off</p>
+                            <p className="text-forest/70">Tomorrow · Free next-day delivery</p>
+                          </div>
+                        </motion.div>
+                      )}
+
+                      {/* Badge Bottom Left - Like Washmen's fourth step */}
+                      {step.badgeBottomLeft && (
+                        <motion.div 
+                          initial={{ opacity: 0, y: 20 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.5, delay: 0.4 }}
+                          viewport={{ once: true }}
+                          className="absolute bottom-4 left-4 bg-white rounded-xl shadow-lg p-3 max-w-[240px] border border-forest/10"
+                        >
+                          <div className="text-xs">
+                            <p className="font-medium text-forest mb-1">Order Status</p>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-1">
+                                <span className="w-1 h-1 bg-forest rounded-full"></span>
+                                <span className="text-forest/70">Order received 22 Aug</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <span className="w-1 h-1 bg-forest rounded-full"></span>
+                                <span className="text-forest/70">Order collected</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <span className="w-1 h-1 bg-forest rounded-full"></span>
+                                <span className="text-forest/70">Items in process</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <span className="w-1 h-1 bg-forest rounded-full"></span>
+                                <span className="text-forest/70">Delivery on Tuesday</span>
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
                       )}
                     </div>
                   </div>
-                </div>
-              </motion.div>
-            );
-          })}
+                </motion.div>
+              );
+            })}
+          </div>
         </div>
 
         {/* Mobile CTA */}
         <motion.div
           initial={{ opacity: 0 }}
-          animate={isInView ? { opacity: 1 } : {}}
+          whileInView={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.8 }}
+          viewport={{ once: true }}
           className="mt-12 text-center lg:hidden"
         >
           <Link 
