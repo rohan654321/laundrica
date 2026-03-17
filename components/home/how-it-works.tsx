@@ -114,43 +114,45 @@ export function HowItWorks() {
             </div>
           </div>
 
-          {/* RIGHT SCROLLING CONTENT */}
-          <div className="space-y-40">
-            {steps.map((step, index) => {
-              const progress = useTransform(
-                scrollYProgress,
-                [index * 0.25, (index + 1) * 0.25],
-                [0, 1]
-              );
+{/* RIGHT SCROLLING CONTENT */}
+<div className="space-y-40">
+  {steps.map((step, index) => {
+    const ref = useRef(null);
 
-              return (
-                <motion.div
-                  key={index}
-                  style={{
-                    opacity: progress,
-                    y: useTransform(progress, [0, 1], [80, 0]),
-                  }}
-                  className="max-w-xl"
-                >
-                  <p className="text-sm text-green-600 mb-2">
-                    {step.step}
-                  </p>
+    const { scrollYProgress } = useScroll({
+      target: ref,
+      offset: ['start 80%', 'start 30%'],
+    });
 
-                  <h3 className="text-3xl font-bold mb-4">
-                    {step.title}
-                  </h3>
+    const opacity = useTransform(scrollYProgress, [0, 1], [0, 1]);
+    const y = useTransform(scrollYProgress, [0, 1], [80, 0]);
 
-                  <p className="text-gray-600">
-                    {step.description}
-                  </p>
+    return (
+      <motion.div
+        ref={ref}
+        key={index}
+        style={{ opacity, y }}
+        className="max-w-xl ml-auto" // 👈 IMPORTANT FIX
+      >
+        <p className="text-sm text-green-600 mb-2">
+          {step.step}
+        </p>
 
-                  <div className="mt-6 h-64 rounded-xl bg-green-100 flex items-center justify-center">
-                    Image
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
+        <h3 className="text-3xl font-bold mb-4">
+          {step.title}
+        </h3>
+
+        <p className="text-gray-600">
+          {step.description}
+        </p>
+
+        <div className="mt-6 h-64 rounded-xl bg-green-100 flex items-center justify-center">
+          Image
+        </div>
+      </motion.div>
+    );
+  })}
+</div>
 
         </div>
       </div>
