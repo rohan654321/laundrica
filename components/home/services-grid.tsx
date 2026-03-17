@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, useInView } from 'framer-motion';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -30,6 +30,21 @@ const DryCleanIcon = () => (
   </svg>
 );
 
+const ShoeIcon = () => (
+  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M21 14.5C21 14.5 19 12 15 12C11 12 6 14.5 6 14.5C6 14.5 3 16 3 18C3 20 4 20 4 20H20C20 20 21 20 21 18C21 16.5 21 14.5 21 14.5Z" stroke="currentColor" strokeWidth="2" fill="none"/>
+    <path d="M8 14L5 9" stroke="currentColor" strokeWidth="2"/>
+    <path d="M16 14L19 9" stroke="currentColor" strokeWidth="2"/>
+  </svg>
+);
+
+const LinenIcon = () => (
+  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M4 6H20M4 12H20M4 18H14" stroke="currentColor" strokeWidth="2"/>
+    <rect x="6" y="4" width="12" height="16" stroke="currentColor" strokeWidth="2" fill="none"/>
+  </svg>
+);
+
 const ArrowIcon = () => (
   <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M12 4L10.59 5.41L16.17 11H4V13H16.17L10.59 18.59L12 20L20 12L12 4Z" fill="currentColor"/>
@@ -38,6 +53,7 @@ const ArrowIcon = () => (
 
 export function ServicesPricing() {
   const [activeSlide, setActiveSlide] = useState(0);
+  const [isAutoScrolling, setIsAutoScrolling] = useState(true);
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.2 });
 
@@ -52,7 +68,6 @@ export function ServicesPricing() {
         { name: "Up to 8 kg", price: "₹699" },
         { name: "Up to 12 kg", price: "₹899" }
       ],
-      color: "forest",
       image: "/images/express-wash.jpg",
       link: "/services/express-wash"
     },
@@ -67,7 +82,6 @@ export function ServicesPricing() {
         { name: "Suits", price: "₹599" },
         { name: "Dresses", price: "₹399" }
       ],
-      color: "forest",
       image: "/images/premium-care.jpg",
       link: "/services/premium-care"
     },
@@ -81,7 +95,6 @@ export function ServicesPricing() {
         { name: "Up to 8 kg", price: "₹799" },
         { name: "Up to 12 kg", price: "₹999" }
       ],
-      color: "forest",
       image: "/images/deep-clean.jpg",
       link: "/services/deep-clean"
     },
@@ -96,13 +109,12 @@ export function ServicesPricing() {
         { name: "Coats", price: "₹799" },
         { name: "Traditional Wear", price: "₹699" }
       ],
-      color: "forest",
       image: "/images/dry-clean.jpg",
       link: "/services/dry-clean"
     },
     {
       title: "Shoe Care",
-      icon: ExpressIcon,
+      icon: ShoeIcon,
       description: "Professional cleaning and restoration for all types of footwear.",
       pricing: "Priced per pair:",
       items: [
@@ -110,14 +122,13 @@ export function ServicesPricing() {
         { name: "Leather Shoes", price: "₹499" },
         { name: "Boots", price: "₹599" }
       ],
-      color: "forest",
       image: "/images/shoe-care.jpg",
       beforeAfter: true,
       link: "/services/shoe-care"
     },
     {
       title: "Home Linens",
-      icon: PremiumIcon,
+      icon: LinenIcon,
       description: "Fresh, crisp cleaning for bedsheets, towels, and curtains.",
       pricing: "Priced per item:",
       items: [
@@ -126,17 +137,39 @@ export function ServicesPricing() {
         { name: "Curtains", price: "₹499" },
         { name: "Duvets", price: "₹699" }
       ],
-      color: "forest",
       image: "/images/home-linens.jpg",
       link: "/services/home-linens"
     }
   ];
 
-  const getColorClasses = (color: string) => {
-    const colors = {
-      forest: "bg-forest-50 border-forest-200"
-    };
-    return colors[color as keyof typeof colors] || colors.forest;
+  // Auto-scroll functionality
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (isAutoScrolling && isInView) {
+      interval = setInterval(() => {
+        setActiveSlide((prev) => {
+          const maxSlide = services.length - 3;
+          if (prev >= maxSlide) {
+            return 0;
+          }
+          return prev + 1;
+        });
+      }, 3000); // Change slide every 3 seconds
+    }
+
+    return () => clearInterval(interval);
+  }, [isAutoScrolling, isInView, services.length]);
+
+  // Pause auto-scroll when user interacts
+  const handleManualNavigation = (newSlide: number) => {
+    setIsAutoScrolling(false);
+    setActiveSlide(newSlide);
+    
+    // Resume auto-scroll after 5 seconds of inactivity
+    setTimeout(() => {
+      setIsAutoScrolling(true);
+    }, 5000);
   };
 
   return (
@@ -151,7 +184,7 @@ export function ServicesPricing() {
         >
           <div>
             <span className="text-sm font-semibold text-forest uppercase tracking-wider">Services</span>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mt-2">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-black mt-2">
               Services & Pricing
             </h2>
           </div>
@@ -159,20 +192,20 @@ export function ServicesPricing() {
           {/* Navigation buttons */}
           <div className="flex items-center gap-2">
             <button 
-              onClick={() => setActiveSlide(prev => Math.max(0, prev - 1))}
-              className="w-10 h-10 rounded-full border border-forest/30 flex items-center justify-center hover:bg-forest/5 transition-colors disabled:opacity-40 disabled:pointer-events-none"
+              onClick={() => handleManualNavigation(Math.max(0, activeSlide - 1))}
+              className="w-10 h-10 rounded-full border border-forest flex items-center justify-center text-forest hover:bg-forest hover:text-white transition-colors disabled:opacity-40 disabled:pointer-events-none"
               disabled={activeSlide === 0}
             >
-              <svg className="w-5 h-5 text-forest" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
             <button 
-              onClick={() => setActiveSlide(prev => Math.min(services.length - 3, prev + 1))}
-              className="w-10 h-10 rounded-full border border-forest/30 flex items-center justify-center hover:bg-forest/5 transition-colors disabled:opacity-40 disabled:pointer-events-none"
+              onClick={() => handleManualNavigation(Math.min(services.length - 3, activeSlide + 1))}
+              className="w-10 h-10 rounded-full border border-forest flex items-center justify-center text-forest hover:bg-forest hover:text-white transition-colors disabled:opacity-40 disabled:pointer-events-none"
               disabled={activeSlide >= services.length - 3}
             >
-              <svg className="w-5 h-5 text-forest" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>
@@ -198,26 +231,42 @@ export function ServicesPricing() {
                     animate={isInView ? { opacity: 1, scale: 1 } : {}}
                     transition={{ duration: 0.5, delay: index * 0.05 }}
                   >
-                    <div className={`rounded-2xl border-2 ${getColorClasses(service.color)} overflow-hidden h-full flex flex-col bg-white`}>
-                      <div className="p-6 flex-1">
-                        <div className="flex items-start justify-between mb-4">
-                          <h3 className="text-xl sm:text-2xl font-bold text-forest">{service.title}</h3>
-                          <div className="w-10 h-10 sm:w-12 sm:h-12 text-forest">
+                    <div className="rounded-2xl border-2 border-black/10 overflow-hidden h-full flex flex-col bg-white hover:shadow-xl transition-shadow group">
+                      {/* Image area with black/green gradient */}
+                      <div className="relative h-48 bg-gradient-to-br from-black to-forest">
+                        <div className="absolute inset-0 flex items-center justify-center text-white/20">
+                          <div className="w-24 h-24">
                             <IconComponent />
                           </div>
                         </div>
                         
-                        <p className="text-foreground/70 text-sm mb-4 line-clamp-2">
+                        {/* Service title overlay */}
+                        <div className="absolute bottom-4 left-4 right-4">
+                          <h3 className="text-2xl font-bold text-white mb-1">{service.title}</h3>
+                          <div className="w-12 h-1 bg-forest rounded-full" />
+                        </div>
+                        
+                        {service.beforeAfter && (
+                          <>
+                            <span className="absolute top-4 left-4 bg-black/80 text-white text-xs px-3 py-1.5 rounded-full backdrop-blur-sm">Before</span>
+                            <span className="absolute top-4 right-4 bg-forest text-white text-xs px-3 py-1.5 rounded-full">After</span>
+                          </>
+                        )}
+                      </div>
+                      
+                      {/* Content */}
+                      <div className="p-6 flex-1">
+                        <p className="text-black/60 text-sm mb-4 line-clamp-2">
                           {service.description}
                         </p>
                         
                         {service.pricing && (
                           <>
-                            <p className="text-xs font-medium text-forest/70 mb-2">{service.pricing}</p>
+                            <p className="text-xs font-medium text-forest mb-2">{service.pricing}</p>
                             <div className="flex flex-wrap gap-1.5 mb-4">
                               {service.items?.map((item, idx) => (
-                                <span key={idx} className="px-2 py-0.5 bg-forest/5 text-forest rounded-full text-xs border border-forest/10">
-                                  {item.name}: {item.price}
+                                <span key={idx} className="px-3 py-1 bg-black/5 text-black rounded-full text-xs border border-black/10">
+                                  {item.name}: <span className="font-semibold text-forest">{item.price}</span>
                                 </span>
                               ))}
                             </div>
@@ -226,25 +275,13 @@ export function ServicesPricing() {
                         
                         <Link 
                           href={service.link}
-                          className="inline-flex items-center gap-1 text-forest font-semibold hover:gap-2 transition-all group mt-2 text-sm"
+                          className="inline-flex items-center gap-2 text-forest font-semibold hover:gap-3 transition-all group mt-2 text-sm"
                         >
                           <span>Learn More</span>
                           <span className="w-4 h-4 group-hover:translate-x-1 transition-transform">
                             <ArrowIcon />
                           </span>
                         </Link>
-                      </div>
-                      
-                      <div className="relative h-40 sm:h-44 bg-forest/5">
-                        <div className="absolute inset-0 flex items-center justify-center text-forest/20">
-                          <IconComponent />
-                        </div>
-                        {service.beforeAfter && (
-                          <>
-                            <span className="absolute top-2 left-2 bg-forest/80 text-white text-xs px-2 py-1 rounded">Before</span>
-                            <span className="absolute top-2 right-2 bg-forest text-white text-xs px-2 py-1 rounded">After</span>
-                          </>
-                        )}
                       </div>
                     </div>
                   </motion.div>
@@ -253,16 +290,39 @@ export function ServicesPricing() {
             </motion.div>
           </div>
 
+          {/* Auto-scroll indicator */}
+          <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 flex items-center gap-3">
+            {/* Progress indicator for auto-scroll */}
+            <div className="flex items-center gap-2">
+              <div className="w-20 h-1 bg-black/10 rounded-full overflow-hidden">
+                <motion.div 
+                  className="h-full bg-forest"
+                  animate={{ 
+                    width: isAutoScrolling ? ["0%", "100%"] : "0%"
+                  }}
+                  transition={{ 
+                    duration: 3,
+                    repeat: isAutoScrolling ? Infinity : 0,
+                    ease: "linear"
+                  }}
+                />
+              </div>
+              <span className="text-xs text-black/40">
+                {isAutoScrolling ? 'Auto-scrolling' : 'Paused'}
+              </span>
+            </div>
+          </div>
+
           {/* Pagination dots */}
-          <div className="flex justify-center gap-2 mt-8">
+          <div className="flex justify-center gap-2 mt-12">
             {Array.from({ length: Math.ceil(services.length / 3) }).map((_, index) => (
               <button
                 key={index}
-                onClick={() => setActiveSlide(index * 3)}
-                className={`h-1.5 rounded-full transition-all ${
+                onClick={() => handleManualNavigation(index * 3)}
+                className={`h-2 rounded-full transition-all ${
                   Math.floor(activeSlide / 3) === index 
                     ? 'w-8 bg-forest' 
-                    : 'w-1.5 bg-forest/30 hover:bg-forest/50'
+                    : 'w-2 bg-black/20 hover:bg-forest/50'
                 }`}
               />
             ))}
@@ -274,12 +334,12 @@ export function ServicesPricing() {
           initial={{ opacity: 0 }}
           animate={isInView ? { opacity: 1 } : {}}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="text-center mt-12"
+          className="text-center mt-16"
         >
           <Link href="/services">
-            <button className="inline-flex items-center gap-2 px-6 py-3 bg-forest text-white rounded-lg font-semibold hover:bg-forest/90 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all">
+            <button className="inline-flex items-center gap-2 px-8 py-4 bg-black text-white rounded-xl font-semibold hover:bg-forest transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all group">
               View All Services
-              <span className="w-5 h-5">
+              <span className="w-5 h-5 group-hover:translate-x-1 transition-transform">
                 <ArrowIcon />
               </span>
             </button>
