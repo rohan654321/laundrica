@@ -30,12 +30,11 @@ const DeliveryIcon = () => (
 );
 
 export function HowItWorks() {
-  const sectionRef = useRef(null);
+  const containerRef = useRef(null);
 
-  // Scroll tracking
   const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ['start end', 'end start'],
+    target: containerRef,
+    offset: ['start start', 'end end'],
   });
 
   const steps = [
@@ -43,75 +42,62 @@ export function HowItWorks() {
       step: 'Step 1',
       title: 'Place Your Order on the App',
       description: 'Schedule pickup and we collect your laundry.',
-      icon: CalendarIcon,
     },
     {
       step: 'Step 2',
       title: 'Prepare Your Order',
       description: 'Pack your clothes and hand them over.',
-      icon: BagIcon,
     },
     {
       step: 'Step 3',
       title: 'Cleaned at Facility',
       description: 'We clean using advanced technology.',
-      icon: FacilityIcon,
     },
     {
       step: 'Step 4',
       title: 'Delivery',
       description: 'Delivered fresh within 24–48 hours.',
-      icon: DeliveryIcon,
     },
   ];
 
   return (
-    <section
-      ref={sectionRef}
-      className="bg-white py-24 min-h-[300vh]"
-    >
-      <div className="max-w-7xl mx-auto px-6">
-
-        {/* GRID */}
+    <section className="bg-white py-24">
+      <div
+        ref={containerRef}
+        className="max-w-7xl mx-auto px-6"
+      >
         <div className="grid lg:grid-cols-[300px,80px,1fr] gap-12">
 
-          {/* LEFT STICKY TEXT */}
+          {/* LEFT FIXED */}
           <div className="hidden lg:block sticky top-32 h-fit">
-            <span className="text-sm font-semibold text-green-600 block mb-3">
-              How It Works
-            </span>
-
-            <h2 className="text-4xl font-bold leading-tight">
+            <p className="text-sm text-green-600 mb-2">How It Works</p>
+            <h2 className="text-4xl font-bold">
               Laundry day, simplified.
               <br />
               <span className="text-green-600">
-                Four steps and you’re done.
+                Four steps and you're done.
               </span>
             </h2>
           </div>
 
-          {/* TIMELINE */}
-          <div className="hidden lg:flex flex-col items-center relative">
+          {/* TIMELINE FIXED */}
+          <div className="hidden lg:flex flex-col items-center relative sticky top-32 h-fit">
 
             {/* Line */}
-            <div className="absolute top-0 w-[2px] h-full bg-gray-200">
+            <div className="absolute top-0 w-[2px] h-[400px] bg-gray-200">
               <motion.div
                 className="w-full bg-green-600 origin-top"
-                style={{
-                  scaleY: scrollYProgress,
-                }}
+                style={{ scaleY: scrollYProgress }}
               />
             </div>
 
-            {/* Circles */}
-            <div className="flex flex-col items-center gap-32 relative z-10">
-              {steps.map((step, index) => {
-                const Icon = step.icon;
-
+            {/* Dots */}
+            <div className="flex flex-col gap-24 relative z-10">
+              {steps.map((_, index) => {
                 const progress = useTransform(
                   scrollYProgress,
                   [index * 0.25, (index + 1) * 0.25],
-                  [0, 1]
+                  [0.3, 1]
                 );
 
                 return (
@@ -121,16 +107,14 @@ export function HowItWorks() {
                       scale: progress,
                       opacity: progress,
                     }}
-                    className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-700"
-                  >
-                    <Icon />
-                  </motion.div>
+                    className="w-10 h-10 rounded-full bg-green-100 border border-green-400"
+                  />
                 );
               })}
             </div>
           </div>
 
-          {/* RIGHT CONTENT */}
+          {/* RIGHT SCROLLING CONTENT */}
           <div className="space-y-40">
             {steps.map((step, index) => {
               const progress = useTransform(
@@ -144,8 +128,7 @@ export function HowItWorks() {
                   key={index}
                   style={{
                     opacity: progress,
-                    y: useTransform(progress, [0, 1], [120, 0]),
-                    scale: useTransform(progress, [0, 1], [0.95, 1]),
+                    y: useTransform(progress, [0, 1], [80, 0]),
                   }}
                   className="max-w-xl"
                 >
@@ -161,9 +144,8 @@ export function HowItWorks() {
                     {step.description}
                   </p>
 
-                  {/* Image Card */}
-                  <div className="mt-6 h-64 rounded-xl bg-gradient-to-br from-green-100 to-green-50 flex items-center justify-center">
-                    <span className="text-green-400">Image</span>
+                  <div className="mt-6 h-64 rounded-xl bg-green-100 flex items-center justify-center">
+                    Image
                   </div>
                 </motion.div>
               );
