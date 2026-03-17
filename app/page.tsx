@@ -2,7 +2,6 @@ import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { HeroSection } from '@/components/home/hero-section';
 import { HowItWorks } from '@/components/home/how-it-works';
-import { ServicesGrid } from '@/components/home/services-grid';
 import { WhyChooseUs } from '@/components/home/why-choose-us';
 import { MembershipPlans } from '@/components/home/membership-plans';
 import { Testimonials } from '@/components/home/testimonials';
@@ -15,8 +14,8 @@ export default function Home() {
       <Header />
       <HeroSection />
       <HowItWorks />
-      <ServicesSlider />
-      <ServicesGrid />
+      <ServicesSlider /> {/* This is the slider component we created */}
+      {/* Remove ServicesGrid since we're using ServicesSlider */}
       <WhyChooseUs />
       <MembershipPlans />
       <Testimonials />
