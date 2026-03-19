@@ -1,4 +1,3 @@
-// app/services/[slug]/orders/page.tsx
 'use client';
 
 import { useState } from 'react';
@@ -11,7 +10,7 @@ import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { services } from '@/lib/services-data';
 import { useCart } from '@/context/cart-context';
-import { Star, ChevronLeft, Minus, Plus, ShoppingCart } from 'lucide-react';
+import { Minus, Plus, ShoppingCart } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -39,7 +38,7 @@ export default function ServiceOrderPage() {
           <div className="text-center">
             <h1 className="text-4xl font-bold mb-4">Service Not Found</h1>
             <Link href="/services">
-              <Button>Back to Services</Button>
+              <Button className="bg-secondary-green hover:bg-green-700 text-white">Back to Services</Button>
             </Link>
           </div>
         </div>
@@ -65,13 +64,13 @@ export default function ServiceOrderPage() {
     if (quantity === 0) return;
 
     addToCart({
-        id: item.id,
-        name: item.name,
-        price: item.price,
-        quantity,
-        category: activeTab as 'men' | 'women' | 'children' | 'household',
-        description: item.description,
-        image: ''
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      quantity,
+      category: activeTab as 'men' | 'women' | 'children' | 'household',
+      description: item.description,
+      image: ''
     });
 
     // Reset quantity for this item
@@ -111,34 +110,34 @@ export default function ServiceOrderPage() {
     <main className="flex flex-col min-h-screen">
       <Header />
 
-      {/* Hero Banner */}
-      <section className="relative h-48 sm:h-56 md:h-64 lg:h-72 bg-cover bg-center flex items-center justify-center px-6" 
+      {/* Hero Banner - Fixed with correct path and overlay */}
+      <section className="relative h-48 sm:h-56 md:h-64 lg:h-72 bg-cover bg-center bg-fixed flex items-center justify-center px-6" 
         style={{ backgroundImage: "url('/images/redesign/about-banner.png')" }}>
-        <div className="text-white text-base sm:text-2xl md:text-3xl font-medium text-center z-30">
+        <div className="text-white text-base sm:text-2xl md:text-3xl space-y-5 font-medium flex flex-col justify-center text-center items-center z-30">
           <p>Professional Laundry <span className="text-[#FFFF00]">Services Designed for Your Lifestyle</span></p>
         </div>
       </section>
 
       {/* Breadcrumb */}
-      <div className="max-w-7xl mx-auto px-6 py-5 w-full">
-        <nav className="flex items-center space-x-2 text-black">
-          <Link href="/" className="hover:text-primary transition-colors">Home</Link>
-          <span>/</span>
-          <Link href="/services" className="hover:text-primary transition-colors">Services</Link>
-          <span>/</span>
-          <span className="text-primary capitalize">Order</span>
+      <div className="w-full max-w-7xl mx-auto px-6 py-5">
+        <nav className="flex items-center space-x-1 sm:space-x-2 text-black">
+          <Link href="/" className="hover:text-green-400 text-sm sm:text-base transition-colors">Home</Link>
+          <span className="px-1 sm:px-2 text-sm sm:text-base">/</span>
+          <Link href="/services" className="hover:text-green-400 text-sm sm:text-base transition-colors">Services</Link>
+          <span className="px-1 sm:px-2 text-sm sm:text-base">/</span>
+          <span className="text-green-400 text-sm sm:text-base">Order</span>
         </nav>
       </div>
 
-      {/* Service Navigation Tabs */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="flex max-w-fit mx-auto px-10 py-5 gap-3 overflow-x-scroll lg:overflow-hidden">
+      {/* Service Navigation Tabs - Fixed styling */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full mb-8">
+        <div className="flex flex-wrap justify-center gap-3">
           {services.map((s) => (
             <Link key={s.id} href={`/services/${s.slug}/orders`}>
-              <div className={`relative w-[110px] p-3 transition-colors duration-300 flex flex-col items-center group justify-start gap-3 border border-primary text-center font-medium rounded text-base ${
+              <div className={`relative px-6 py-3 transition-colors duration-300 flex flex-col items-center group justify-center gap-2 border rounded-md text-center font-medium ${
                 s.slug === slug 
-                  ? 'bg-primary text-white' 
-                  : 'bg-gray-50 text-foreground/70 hover:bg-primary hover:text-white'
+                  ? 'bg-primary-green text-white border-primary-green' 
+                  : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-primary-green hover:text-white hover:border-primary-green'
               }`}>
                 <Image 
                   src={s.icon} 
@@ -146,112 +145,192 @@ export default function ServiceOrderPage() {
                   width={32} 
                   height={32}
                   className={`w-8 h-8 transition-all duration-300 ${
-                    s.slug === slug ? 'invert brightness-0 sepia hue-rotate-[120deg] saturate-[10]' : ''
+                    s.slug === slug ? 'brightness-0 invert' : ''
                   }`}
                 />
-                <span className="text-xs">{s.name.split(' ')[0]}</span>
-                {s.slug === slug && (
-                  <div className="absolute left-1/2 -translate-x-1/2 bottom-[-8px] w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[10px] border-t-primary block"></div>
-                )}
+                <span className="text-sm whitespace-nowrap">{s.name}</span>
               </div>
             </Link>
           ))}
         </div>
       </div>
 
-{/* Main Content */}
-<section className="min-h-screen bg-white py-8">
-  <div className="max-w-7xl mx-auto px-4">
-    {/* Service Header */}
-    <div className="bg-white shadow-sm rounded-lg p-6 mb-6">
-      {/* ... header content ... */}
-    </div>
+      {/* Main Content */}
+      <section className="min-h-screen bg-white py-8">
+        <div className="max-w-7xl mx-auto px-4">
+          {/* Service Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl md:text-4xl text-primary-green font-medium text-center">
+              {service.name} <span className="text-secondary-green">Pricing</span>
+            </h1>
+            <p className="text-lg my-3 font-medium text-gray-600 text-center">{service.tagline}</p>
+          </div>
 
-    {/* Order Form */}
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      {/* Items Grid - Left Column */}
-      <div className="lg:col-span-2">
-        <Card>
-          <CardContent className="p-0">
-            <Tabs defaultValue="men" value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid grid-cols-4 gap-2 p-4 bg-white border-b">
-                <TabsTrigger value="men" className="data-[state=active]:bg-primary data-[state=active]:text-white">Men</TabsTrigger>
-                <TabsTrigger value="women" className="data-[state=active]:bg-primary data-[state=active]:text-white">Women</TabsTrigger>
-                <TabsTrigger value="children" className="data-[state=active]:bg-primary data-[state=active]:text-white">Children</TabsTrigger>
-                <TabsTrigger value="household" className="data-[state=active]:bg-primary data-[state=active]:text-white">Household</TabsTrigger>
-              </TabsList>
+          {/* Order Form */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Items Grid - Left Column */}
+            <div className="lg:col-span-2">
+              <Card className="border border-primary-green/20">
+                <CardContent className="p-0">
+                  <Tabs defaultValue="men" value={activeTab} onValueChange={setActiveTab} className="w-full">
+                    <TabsList className="grid grid-cols-4 gap-1 p-4 bg-gray-50 border-b">
+                      <TabsTrigger 
+                        value="men" 
+                        className="data-[state=active]:bg-primary-green data-[state=active]:text-white data-[state=active]:border-primary-green py-2 rounded-md transition-all"
+                      >
+                        Men
+                      </TabsTrigger>
+                      <TabsTrigger 
+                        value="women" 
+                        className="data-[state=active]:bg-primary-green data-[state=active]:text-white data-[state=active]:border-primary-green py-2 rounded-md transition-all"
+                      >
+                        Women
+                      </TabsTrigger>
+                      <TabsTrigger 
+                        value="children" 
+                        className="data-[state=active]:bg-primary-green data-[state=active]:text-white data-[state=active]:border-primary-green py-2 rounded-md transition-all"
+                      >
+                        Children
+                      </TabsTrigger>
+                      <TabsTrigger 
+                        value="household" 
+                        className="data-[state=active]:bg-primary-green data-[state=active]:text-white data-[state=active]:border-primary-green py-2 rounded-md transition-all"
+                      >
+                        Household
+                      </TabsTrigger>
+                    </TabsList>
 
-              <AnimatePresence mode="wait">
-                <TabsContent value="men" className="p-4">
-                  <motion.div 
-                    key="men"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className="grid md:grid-cols-2 gap-4"
-                  >
-                    {service.items.men.map((item) => (
-                      <ServiceItemCard
-                        key={item.id}
-                        item={item}
-                        quantity={quantities[item.id] || 0}
-                        onUpdateQuantity={(change) => updateQuantity(item.id, change)}
-                        onAddToCart={() => handleAddToCart(item)}
-                      />
-                    ))}
-                  </motion.div>
-                </TabsContent>
+                    <AnimatePresence mode="wait">
+                      <TabsContent value="men" className="p-6">
+                        <motion.div 
+                          key="men"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -20 }}
+                          className="grid md:grid-cols-2 gap-6"
+                        >
+                          {service.items.men.map((item) => (
+                            <ServiceItemCard
+                              key={item.id}
+                              item={item}
+                              quantity={quantities[item.id] || 0}
+                              onUpdateQuantity={(change) => updateQuantity(item.id, change)}
+                              onAddToCart={() => handleAddToCart(item)}
+                            />
+                          ))}
+                        </motion.div>
+                      </TabsContent>
 
-                {/* Other TabsContent components... */}
-              </AnimatePresence>
-            </Tabs>
-          </CardContent>
-        </Card>
-      </div>
+                      <TabsContent value="women" className="p-6">
+                        <motion.div 
+                          key="women"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -20 }}
+                          className="grid md:grid-cols-2 gap-6"
+                        >
+                          {service.items.women.map((item) => (
+                            <ServiceItemCard
+                              key={item.id}
+                              item={item}
+                              quantity={quantities[item.id] || 0}
+                              onUpdateQuantity={(change) => updateQuantity(item.id, change)}
+                              onAddToCart={() => handleAddToCart(item)}
+                            />
+                          ))}
+                        </motion.div>
+                      </TabsContent>
 
-      {/* Order Summary - Right Column - FIX THIS PART */}
-      <div className="lg:col-span-1">
-        <Card className="sticky top-24">
-          <CardContent className="p-6">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <ShoppingCart className="w-5 h-5" />
-              Order Summary
-            </h3>
-            
-            <div className="space-y-4 mb-6">
-              <div className="flex justify-between text-sm">
-                <span>Total Items:</span>
-                <span className="font-semibold">{getTotalItems()}</span>
-              </div>
-              <div className="flex justify-between text-lg font-bold">
-                <span>Total Price:</span>
-                <span className="text-primary">AED {getTotalPrice().toFixed(2)}</span>
-              </div>
+                      <TabsContent value="children" className="p-6">
+                        <motion.div 
+                          key="children"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -20 }}
+                          className="grid md:grid-cols-2 gap-6"
+                        >
+                          {service.items.children.map((item) => (
+                            <ServiceItemCard
+                              key={item.id}
+                              item={item}
+                              quantity={quantities[item.id] || 0}
+                              onUpdateQuantity={(change) => updateQuantity(item.id, change)}
+                              onAddToCart={() => handleAddToCart(item)}
+                            />
+                          ))}
+                        </motion.div>
+                      </TabsContent>
+
+                      <TabsContent value="household" className="p-6">
+                        <motion.div 
+                          key="household"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -20 }}
+                          className="grid md:grid-cols-2 gap-6"
+                        >
+                          {service.items.household.map((item) => (
+                            <ServiceItemCard
+                              key={item.id}
+                              item={item}
+                              quantity={quantities[item.id] || 0}
+                              onUpdateQuantity={(change) => updateQuantity(item.id, change)}
+                              onAddToCart={() => handleAddToCart(item)}
+                            />
+                          ))}
+                        </motion.div>
+                      </TabsContent>
+                    </AnimatePresence>
+                  </Tabs>
+                </CardContent>
+              </Card>
             </div>
 
-            <Link href="/cart">
-              <Button className="w-full bg-accent hover:bg-accent/90 text-white mb-3">
-                View Cart ({cartItems.reduce((sum, item) => sum + item.quantity, 0)})
-              </Button>
-            </Link>
-            <Link href="/checkout">
-              <Button variant="outline" className="w-full border-primary text-primary hover:bg-primary/10">
-                Proceed to Checkout
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  </div>
-</section>
+            {/* Order Summary - Right Column - Fixed styling */}
+            <div className="lg:col-span-1">
+              <Card className="sticky top-24 border border-primary-green/20 shadow-lg">
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-semibold mb-4 flex items-center gap-2 text-primary-green">
+                    <ShoppingCart className="w-5 h-5" />
+                    Order Summary
+                  </h3>
+                  
+                  <div className="space-y-4 mb-6">
+                    <div className="flex justify-between text-sm py-2 border-b border-gray-100">
+                      <span className="text-gray-600">Total Items:</span>
+                      <span className="font-semibold text-primary-green">{getTotalItems()}</span>
+                    </div>
+                    <div className="flex justify-between text-lg font-bold pt-2">
+                      <span className="text-gray-700">Total Price:</span>
+                      <span className="text-secondary-green">AED {getTotalPrice().toFixed(2)}</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Link href="/cart">
+                      <Button className="w-full bg-secondary-green hover:bg-green-700 text-white py-6 text-base font-medium">
+                        View Cart ({cartItems.reduce((sum, item) => sum + item.quantity, 0)})
+                      </Button>
+                    </Link>
+                    <Link href="/checkout">
+                      <Button variant="outline" className="w-full border-primary-green text-primary-green hover:bg-primary-green/10 py-6 text-base font-medium">
+                        Proceed to Checkout
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <Footer />
     </main>
   );
 }
 
-// Service Item Card Component
+// Service Item Card Component - Fixed styling to match design
 function ServiceItemCard({ 
   item, 
   quantity, 
@@ -264,45 +343,48 @@ function ServiceItemCard({
   onAddToCart: () => void;
 }) {
   return (
-    <Card className="border border-primary hover:shadow-lg transition-shadow">
-      <CardContent className="p-4 flex flex-col">
-        <div className="flex-grow flex flex-col items-center text-center mb-3">
-          <h4 className="font-semibold text-lg">{item.name}</h4>
-          <p className="text-sm text-foreground/70 mb-2">{item.description}</p>
+    <Card className="border border-gray-200 hover:border-primary-green hover:shadow-lg transition-all duration-300">
+      <CardContent className="p-5">
+        <div className="mb-4">
+          <h4 className="font-semibold text-lg text-primary-green mb-1">{item.name}</h4>
+          <p className="text-sm text-gray-600 line-clamp-2">{item.description}</p>
         </div>
-        <div className="mt-auto">
-          <div className="flex justify-center items-center gap-4 mb-4">
-            <p className="text-primary font-bold text-lg">AED {item.price}<span className="text-sm font-normal text-foreground/70"> /{item.unit}</span></p>
+        
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <span className="text-secondary-green font-bold text-xl">AED {item.price}</span>
+            <span className="text-sm text-gray-500 ml-1">/{item.unit}</span>
           </div>
-          <div className="flex flex-col gap-2 items-center">
-            <div className="flex items-center gap-3">
-              <Button
-                size="icon"
-                variant="outline"
-                className="h-8 w-8 rounded-full border-primary text-primary hover:bg-primary hover:text-white"
-                onClick={() => onUpdateQuantity(-1)}
-                disabled={quantity === 0}
-              >
-                <Minus className="h-3 w-3" />
-              </Button>
-              <span className="font-medium min-w-[2rem] text-center">{quantity}</span>
-              <Button
-                size="icon"
-                variant="outline"
-                className="h-8 w-8 rounded-full border-primary text-primary hover:bg-primary hover:text-white"
-                onClick={() => onUpdateQuantity(1)}
-              >
-                <Plus className="h-3 w-3" />
-              </Button>
-            </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
             <Button
-              className="w-full bg-accent hover:bg-accent/90 text-white rounded"
-              onClick={onAddToCart}
+              size="icon"
+              variant="outline"
+              className="h-9 w-9 rounded-full border-primary-green text-primary-green hover:bg-primary-green hover:text-white"
+              onClick={() => onUpdateQuantity(-1)}
               disabled={quantity === 0}
             >
-              Add to Cart
+              <Minus className="h-3 w-3" />
+            </Button>
+            <span className="font-medium min-w-[2rem] text-center text-lg">{quantity}</span>
+            <Button
+              size="icon"
+              variant="outline"
+              className="h-9 w-9 rounded-full border-primary-green text-primary-green hover:bg-primary-green hover:text-white"
+              onClick={() => onUpdateQuantity(1)}
+            >
+              <Plus className="h-3 w-3" />
             </Button>
           </div>
+          <Button
+            className="bg-secondary-green hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+            onClick={onAddToCart}
+            disabled={quantity === 0}
+          >
+            Add
+          </Button>
         </div>
       </CardContent>
     </Card>

@@ -1,4 +1,5 @@
-// lib/services-data.ts
+import { ReactNode } from 'react';
+
 export interface ServiceItem {
   id: string;
   name: string;
@@ -20,6 +21,7 @@ export interface ServiceCategory {
   rating: number;
   reviews: number;
   turnaround: string;
+  tagline: string; // Added this property
   items: {
     men: ServiceItem[];
     women: ServiceItem[];
@@ -36,7 +38,7 @@ export const services: ServiceCategory[] = [
   {
     id: 'laundry-services',
     name: 'Laundry Services (Wash & Press)',
-    slug: 'laundry-services',
+    slug: 'professional-laundry-services-in-dubai', // Updated slug to match your routes
     icon: '/images/redesign/Laundry.svg',
     description: 'Professional wash and press for all your clothing needs.',
     fullDescription: 'Our comprehensive laundry services include washing and pressing of all types of clothing. We use premium detergents to ensure your clothes come back fresh, clean, and wrinkle-free. Free pickup and delivery within 24 hours, eco-friendly detergents, and professional stain removal treatment.',
@@ -44,6 +46,7 @@ export const services: ServiceCategory[] = [
     rating: 4.8,
     reviews: 245,
     turnaround: '24-48 hours',
+    tagline: 'The pile that haunted your weekend? Gone by evening.', // Added tagline
     items: {
       men: [
         { id: 'men-tshirts', name: 'T-shirts/Shirts', price: 6, description: 'Casual and formal shirts', unit: 'Per Item', sortOrder: 0 },
@@ -111,7 +114,7 @@ export const services: ServiceCategory[] = [
   {
     id: 'dry-cleaning',
     name: 'Dry Cleaning Services',
-    slug: 'dry-cleaning',
+    slug: 'dry-cleaning-services-in-dubai', // Updated slug
     icon: '/images/redesign/Dry-clean.svg',
     description: 'Expert dry cleaning for delicate and formal garments.',
     fullDescription: 'Our dry cleaning service uses gentle, eco-friendly solvents to clean delicate fabrics, suits, dresses, and formal wear. We ensure your garments retain their shape, color, and texture while removing tough stains.',
@@ -119,6 +122,7 @@ export const services: ServiceCategory[] = [
     rating: 4.9,
     reviews: 189,
     turnaround: '24-48 hours',
+    tagline: 'Care so gentle, even labels would approve.', // Added tagline
     items: {
       men: [],
       women: [],
@@ -133,7 +137,7 @@ export const services: ServiceCategory[] = [
   {
     id: 'steam-pressing',
     name: 'Steam Pressing Service',
-    slug: 'steam-pressing',
+    slug: 'steam-pressing-services-in-dubai', // Updated slug
     icon: '/images/redesign/Steam.svg',
     description: 'Professional steam pressing for wrinkle-free clothes.',
     fullDescription: 'Get perfectly pressed clothes with our professional steam pressing service. We remove wrinkles and creases, giving your garments a crisp, fresh look without the risk of damage from traditional ironing.',
@@ -141,6 +145,7 @@ export const services: ServiceCategory[] = [
     rating: 4.7,
     reviews: 156,
     turnaround: '24 hours',
+    tagline: 'Wrinkles erased, confidence intact. A standard of polish that matches the pace of the city.', // Added tagline
     items: {
       men: [],
       women: [],
@@ -155,7 +160,7 @@ export const services: ServiceCategory[] = [
   {
     id: 'shoe-cleaning',
     name: 'Shoe Cleaning',
-    slug: 'shoe-cleaning',
+    slug: 'shoe-and-bag-spa-services-in-dubai', // Updated slug
     icon: '/images/redesign/Shoe-spa.svg',
     description: 'Professional shoe cleaning and restoration.',
     fullDescription: 'Bring your shoes back to life with our professional shoe cleaning service. We clean, disinfect, and restore sneakers, leather shoes, and more.',
@@ -163,6 +168,7 @@ export const services: ServiceCategory[] = [
     rating: 4.8,
     reviews: 134,
     turnaround: '24-48 hours',
+    tagline: 'Fresh enough for first steps, because the shoes you love should outlast the dirt.', // Added tagline
     items: {
       men: [],
       women: [],
@@ -177,7 +183,7 @@ export const services: ServiceCategory[] = [
   {
     id: 'carpet-cleaning',
     name: 'Carpet Cleaning Service',
-    slug: 'carpet-cleaning',
+    slug: 'carpet-cleaning-services-in-dubai', // Updated slug
     icon: '/images/redesign/Carpet.svg',
     description: 'Deep cleaning for carpets and rugs.',
     fullDescription: 'Our carpet cleaning service removes deep-seated dirt, stains, and allergens. We use professional equipment and eco-friendly solutions to refresh your carpets.',
@@ -185,6 +191,7 @@ export const services: ServiceCategory[] = [
     rating: 4.8,
     reviews: 98,
     turnaround: '48-72 hours',
+    tagline: 'Dust and stains pulled from where your vacuum can’t reach.', // Added tagline
     items: {
       men: [],
       women: [],
@@ -199,7 +206,7 @@ export const services: ServiceCategory[] = [
   {
     id: 'curtain-cleaning',
     name: 'Curtain Cleaning Service',
-    slug: 'curtain-cleaning',
+    slug: 'curtain-cleaning-services-in-dubai', // Updated slug
     icon: '/images/redesign/Curtain.svg',
     description: 'Professional cleaning for all curtain types.',
     fullDescription: 'Keep your curtains fresh and dust-free with our professional curtain cleaning service. We handle all fabric types, from delicate sheers to heavy drapes.',
@@ -207,6 +214,7 @@ export const services: ServiceCategory[] = [
     rating: 4.7,
     reviews: 87,
     turnaround: '48-72 hours',
+    tagline: 'Every breeze leaves something behind — we take it out.', // Added tagline
     items: {
       men: [],
       women: [],
@@ -221,7 +229,7 @@ export const services: ServiceCategory[] = [
   {
     id: 'commercial-laundry',
     name: 'Commercial Laundry Service',
-    slug: 'commercial-laundry',
+    slug: 'commercial-laundry-services-in-dubai', // Updated slug
     icon: '/images/redesign/Commercial.svg',
     description: 'Bulk laundry solutions for businesses.',
     fullDescription: 'Our commercial laundry service handles high-volume laundry for hotels, restaurants, salons, and other businesses. We ensure consistent quality and timely delivery.',
@@ -229,6 +237,7 @@ export const services: ServiceCategory[] = [
     rating: 4.9,
     reviews: 76,
     turnaround: '24-48 hours',
+    tagline: 'High volume, tight deadlines, zero excuses. Bulk care with boutique standards.', // Added tagline
     items: {
       men: [],
       women: [],
