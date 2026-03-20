@@ -52,7 +52,7 @@ export default function ServiceOrderPage() {
             <h1 className="text-4xl font-bold mb-4 text-gray-900">Service Not Found</h1>
             <p className="text-gray-600 mb-8">The service you're looking for doesn't exist.</p>
             <Link href="/services">
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg rounded-xl">
+              <Button className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg rounded-xl">
                 Back to Services
               </Button>
             </Link>
@@ -91,7 +91,7 @@ export default function ServiceOrderPage() {
       name: item.name,
       price: item.price,
       quantity,
-      category: activeCategory, // Now this is properly typed as CategoryType
+      category: activeCategory,
       description: item.description,
       image: ''
     });
@@ -124,7 +124,7 @@ export default function ServiceOrderPage() {
     <main className="flex flex-col min-h-screen bg-gray-50">
       <Header />
 
-      {/* Hero Section with Parallax */}
+      {/* Hero Section */}
       <section className="relative h-[300px] overflow-hidden">
         <motion.div
           initial={{ scale: 1.2 }}
@@ -139,7 +139,7 @@ export default function ServiceOrderPage() {
             className="object-cover"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-900/90 to-purple-900/90" />
+          <div className="absolute inset-0 bg-gradient-to-r from-green-900/90 to-emerald-900/90" />
         </motion.div>
         
         <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center">
@@ -174,7 +174,7 @@ export default function ServiceOrderPage() {
                   onClick={() => setActiveCategory(category.id)}
                   className={`px-6 py-3 rounded-xl font-medium transition-all ${
                     activeCategory === category.id
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25'
+                      ? 'bg-green-600 text-white shadow-lg shadow-green-600/25'
                       : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
                   }`}
                 >
@@ -214,7 +214,7 @@ export default function ServiceOrderPage() {
                         
                         <div className="flex items-center justify-between mb-4">
                           <div>
-                            <span className="text-2xl font-bold text-blue-600">AED {item.price}</span>
+                            <span className="text-2xl font-bold text-green-600">AED {item.price}</span>
                             <span className="text-sm text-gray-500 ml-1">/{item.unit}</span>
                           </div>
                         </div>
@@ -222,7 +222,7 @@ export default function ServiceOrderPage() {
                         <div className="flex items-center gap-3">
                           <div className="flex items-center bg-gray-100 rounded-xl">
                             <button
-                              className="w-10 h-10 flex items-center justify-center text-gray-600 hover:text-blue-600 transition-colors"
+                              className="w-10 h-10 flex items-center justify-center text-gray-600 hover:text-green-600 transition-colors"
                               onClick={() => updateQuantity(item.id, -1)}
                               disabled={!quantities[item.id]}
                             >
@@ -232,7 +232,7 @@ export default function ServiceOrderPage() {
                               {quantities[item.id] || 0}
                             </span>
                             <button
-                              className="w-10 h-10 flex items-center justify-center text-gray-600 hover:text-blue-600 transition-colors"
+                              className="w-10 h-10 flex items-center justify-center text-gray-600 hover:text-green-600 transition-colors"
                               onClick={() => updateQuantity(item.id, 1)}
                             >
                               <Plus className="w-4 h-4" />
@@ -244,7 +244,7 @@ export default function ServiceOrderPage() {
                               addedItems[item.id]
                                 ? 'bg-green-500 text-white'
                                 : quantities[item.id]
-                                ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                                ? 'bg-green-600 hover:bg-green-700 text-white'
                                 : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                             }`}
                             onClick={() => handleAddToCart(item)}
@@ -273,7 +273,7 @@ export default function ServiceOrderPage() {
                   transition={{ delay: 0.2 }}
                   className="bg-white rounded-2xl shadow-xl overflow-hidden"
                 >
-                  <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white">
+                  <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-6 text-white">
                     <h3 className="text-xl font-semibold flex items-center gap-2">
                       <ShoppingCart className="w-5 h-5" />
                       Order Summary
@@ -317,17 +317,17 @@ export default function ServiceOrderPage() {
                       </div>
                       <div className="flex justify-between items-center mb-6">
                         <span className="text-lg font-semibold text-gray-900">Total Amount:</span>
-                        <span className="text-2xl font-bold text-blue-600">AED {getTotalPrice()}</span>
+                        <span className="text-2xl font-bold text-green-600">AED {getTotalPrice()}</span>
                       </div>
 
                       <Link href="/cart">
-                        <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 text-lg font-medium rounded-xl mb-3">
+                        <Button className="w-full bg-green-600 hover:bg-green-700 text-white py-6 text-lg font-medium rounded-xl mb-3">
                           View Cart ({cartItems.reduce((sum, item) => sum + item.quantity, 0)})
                         </Button>
                       </Link>
                       
                       <Link href="/checkout">
-                        <Button variant="outline" className="w-full border-2 border-blue-600 text-blue-600 hover:bg-blue-50 py-6 text-lg font-medium rounded-xl">
+                        <Button variant="outline" className="w-full border-2 border-green-600 text-green-600 hover:bg-green-50 py-6 text-lg font-medium rounded-xl">
                           Proceed to Checkout
                         </Button>
                       </Link>
@@ -336,19 +336,19 @@ export default function ServiceOrderPage() {
                     {/* Features */}
                     <div className="mt-6 grid grid-cols-2 gap-3">
                       <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Truck className="w-4 h-4 text-blue-600" />
+                        <Truck className="w-4 h-4 text-green-600" />
                         <span>Free pickup</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Clock className="w-4 h-4 text-blue-600" />
+                        <Clock className="w-4 h-4 text-green-600" />
                         <span>24-48 hrs</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Shield className="w-4 h-4 text-blue-600" />
+                        <Shield className="w-4 h-4 text-green-600" />
                         <span>Quality assured</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Leaf className="w-4 h-4 text-blue-600" />
+                        <Leaf className="w-4 h-4 text-green-600" />
                         <span>Eco-friendly</span>
                       </div>
                     </div>

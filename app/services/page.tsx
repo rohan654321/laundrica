@@ -19,11 +19,11 @@ export default function ServicesPage() {
   
   const { scrollYProgress } = useScroll({
     target: heroRef,
-    offset: ["start start", "end start"]
+    offset: ["start start", "start 0.3"]
   });
 
-  const heroScale = useTransform(scrollYProgress, [0, 1], [1, 0.8]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  const heroY = useTransform(scrollYProgress, [0, 1], [0, 100]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0.8]);
 
   const features = [
     {
@@ -62,7 +62,7 @@ export default function ServicesPage() {
       {/* Hero Section with Parallax */}
       <section ref={heroRef} className="relative h-[600px] overflow-hidden">
         <motion.div
-          style={{ scale: heroScale, opacity: heroOpacity }}
+          style={{ y: heroY, opacity: heroOpacity }}
           className="absolute inset-0"
         >
           <Image
@@ -72,7 +72,7 @@ export default function ServicesPage() {
             className="object-cover"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-900/90 to-purple-900/90" />
+          <div className="absolute inset-0 bg-gradient-to-r from-green-900/90 to-emerald-900/90" />
         </motion.div>
 
         <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center">
@@ -93,7 +93,7 @@ export default function ServicesPage() {
             
             <h1 className="text-5xl md:text-6xl font-bold mb-6">
               Fresh, Clean Clothes
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-pink-300">
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-emerald-300">
                 Delivered to Your Door
               </span>
             </h1>
@@ -105,7 +105,7 @@ export default function ServicesPage() {
             
             <div className="flex flex-wrap gap-4">
               <Link href="#services">
-                <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-6 rounded-xl shadow-lg">
+                <Button size="lg" className="bg-white text-green-700 hover:bg-gray-100 text-lg px-8 py-6 rounded-xl shadow-lg">
                   Explore Services
                   <ChevronRight className="ml-2 w-5 h-5" />
                 </Button>
@@ -144,7 +144,7 @@ export default function ServicesPage() {
                 transition={{ delay: index * 0.1 }}
                 className="text-center"
               >
-                <div className="text-3xl md:text-4xl font-bold text-blue-600 mb-2">
+                <div className="text-3xl md:text-4xl font-bold text-green-600 mb-2">
                   {stat.value}
                 </div>
                 <div className="text-gray-600">{stat.label}</div>
@@ -167,7 +167,7 @@ export default function ServicesPage() {
                 transition={{ delay: index * 0.1 }}
                 className="text-center"
               >
-                <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600 mx-auto mb-4">
+                <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center text-green-600 mx-auto mb-4">
                   {feature.icon}
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-2">{feature.title}</h3>
@@ -221,7 +221,7 @@ export default function ServicesPage() {
                           <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                           <span className="font-medium text-sm">{service.rating}</span>
                         </div>
-                        <div className="bg-blue-600 text-white rounded-full px-3 py-1 text-xs font-medium">
+                        <div className="bg-green-600 text-white rounded-full px-3 py-1 text-xs font-medium">
                           {service.turnaround}
                         </div>
                       </div>
@@ -241,7 +241,7 @@ export default function ServicesPage() {
                           <span>Free pickup</span>
                         </div>
                         
-                        <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl">
+                        <Button className="bg-green-600 hover:bg-green-700 text-white rounded-xl">
                           Learn More
                           <ChevronRight className="ml-2 w-4 h-4" />
                         </Button>
@@ -256,7 +256,7 @@ export default function ServicesPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-blue-600 to-purple-600">
+      <section className="py-20 bg-gradient-to-r from-green-600 to-emerald-600">
         <div className="max-w-4xl mx-auto text-center px-4">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -271,7 +271,7 @@ export default function ServicesPage() {
             </p>
             <div className="flex flex-wrap gap-4 justify-center">
               <Link href="/schedule">
-                <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-6 rounded-xl shadow-lg">
+                <Button size="lg" className="bg-white text-green-600 hover:bg-gray-100 text-lg px-8 py-6 rounded-xl shadow-lg">
                   Schedule Pickup
                 </Button>
               </Link>

@@ -20,11 +20,11 @@ export default function ServiceDetailPage() {
   
   const { scrollYProgress } = useScroll({
     target: containerRef,
-    offset: ["start start", "end start"]
+    offset: ["start start", "start 0.3"]
   });
 
-  const heroScale = useTransform(scrollYProgress, [0, 1], [1, 0.8]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  const heroY = useTransform(scrollYProgress, [0, 1], [0, 100]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0.9]);
 
   if (!service) {
     return (
@@ -34,7 +34,7 @@ export default function ServiceDetailPage() {
           <div className="text-center">
             <h1 className="text-4xl font-bold mb-4 text-gray-900">Service Not Found</h1>
             <Link href="/services">
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Button className="bg-green-600 hover:bg-green-700 text-white">
                 Back to Services
               </Button>
             </Link>
@@ -77,7 +77,7 @@ export default function ServiceDetailPage() {
       {/* Hero Section with Parallax */}
       <section className="relative h-[500px] overflow-hidden">
         <motion.div
-          style={{ scale: heroScale, opacity: heroOpacity }}
+          style={{ y: heroY, opacity: heroOpacity }}
           className="absolute inset-0"
         >
           <Image
@@ -87,7 +87,7 @@ export default function ServiceDetailPage() {
             className="object-cover"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-900/90 via-blue-800/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-green-900/90 via-green-800/80 to-transparent" />
         </motion.div>
 
         <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center">
@@ -103,7 +103,7 @@ export default function ServiceDetailPage() {
                 <span className="font-medium">{service.rating}</span>
                 <span className="text-white/70 ml-1">({service.reviews} reviews)</span>
               </div>
-              <span className="bg-blue-500/20 backdrop-blur-sm rounded-full px-3 py-1 text-sm">
+              <span className="bg-green-500/20 backdrop-blur-sm rounded-full px-3 py-1 text-sm">
                 {service.turnaround}
               </span>
             </div>
@@ -113,7 +113,7 @@ export default function ServiceDetailPage() {
             
             <div className="flex flex-wrap gap-4">
               <Link href={`/services/${service.slug}/orders`}>
-                <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-6 rounded-xl shadow-lg">
+                <Button size="lg" className="bg-white text-green-600 hover:bg-gray-100 text-lg px-8 py-6 rounded-xl shadow-lg">
                   Order Now
                   <ChevronRight className="ml-2 w-5 h-5" />
                 </Button>
@@ -140,7 +140,7 @@ export default function ServiceDetailPage() {
                 transition={{ delay: index * 0.1 }}
                 className="flex items-center gap-3 text-gray-700"
               >
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
+                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center text-green-600">
                   {feature.icon}
                 </div>
                 <span className="font-medium text-sm">{feature.label}</span>
@@ -190,19 +190,19 @@ export default function ServiceDetailPage() {
                 <h3 className="text-xl font-semibold text-gray-900">What's Included:</h3>
                 <ul className="space-y-3">
                   <li className="flex items-center gap-3 text-gray-700">
-                    <div className="w-2 h-2 bg-blue-600 rounded-full" />
+                    <div className="w-2 h-2 bg-green-600 rounded-full" />
                     <span>Free pickup and delivery within your area</span>
                   </li>
                   <li className="flex items-center gap-3 text-gray-700">
-                    <div className="w-2 h-2 bg-blue-600 rounded-full" />
+                    <div className="w-2 h-2 bg-green-600 rounded-full" />
                     <span>Professional stain treatment for all items</span>
                   </li>
                   <li className="flex items-center gap-3 text-gray-700">
-                    <div className="w-2 h-2 bg-blue-600 rounded-full" />
+                    <div className="w-2 h-2 bg-green-600 rounded-full" />
                     <span>Eco-friendly cleaning products</span>
                   </li>
                   <li className="flex items-center gap-3 text-gray-700">
-                    <div className="w-2 h-2 bg-blue-600 rounded-full" />
+                    <div className="w-2 h-2 bg-green-600 rounded-full" />
                     <span>Quality checked before return delivery</span>
                   </li>
                 </ul>
@@ -221,7 +221,7 @@ export default function ServiceDetailPage() {
                 transition={{ delay: index * 0.1 }}
                 className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow"
               >
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mb-4">
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center text-green-600 mb-4">
                   {benefit.icon}
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">{benefit.title}</h3>
@@ -235,7 +235,7 @@ export default function ServiceDetailPage() {
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 md:p-12 text-center text-white"
+            className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl p-8 md:p-12 text-center text-white"
           >
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Get Started?</h2>
             <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
@@ -243,7 +243,7 @@ export default function ServiceDetailPage() {
             </p>
             <div className="flex flex-wrap gap-4 justify-center">
               <Link href={`/services/${service.slug}/orders`}>
-                <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-6 rounded-xl">
+                <Button size="lg" className="bg-white text-green-600 hover:bg-gray-100 text-lg px-8 py-6 rounded-xl">
                   Order Now
                 </Button>
               </Link>
