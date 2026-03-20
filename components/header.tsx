@@ -1,13 +1,16 @@
+// components/header.tsx (updated with login/logout)
 'use client';
 
 import Link from 'next/link';
 import { useCart } from '@/context/cart-context';
-import { ShoppingCart, Menu, X } from 'lucide-react';
+import { useAuth } from '@/context/auth-context';
+import { ShoppingCart, Menu, X, User, LogOut } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 
 export function Header() {
   const { cartItems } = useCart();
+  const { user, logout, isAuthenticated } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -54,6 +57,31 @@ export function Header() {
               </Button>
             </Link>
 
+            {/* User Menu */}
+            {isAuthenticated ? (
+              <div className="hidden md:flex items-center gap-4">
+                <span className="text-sm text-gray-600">
+                  Hi, {user?.name || user?.email?.split('@')[0]}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={logout}
+                  className="text-gray-600 hover:text-red-600"
+                >
+                  <LogOut size={18} className="mr-2" />
+                  Logout
+                </Button>
+              </div>
+            ) : (
+              <Link href="/login" className="hidden md:block">
+                <Button variant="outline" className="border-primary text-primary hover:bg-primary/10">
+                  <User size={18} className="mr-2" />
+                  Login
+                </Button>
+              </Link>
+            )}
+
             {/* Schedule Button */}
             <Link href="/schedule" className="hidden md:block">
               <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg">
@@ -87,6 +115,30 @@ export function Header() {
               <Link href="/contact" className="text-foreground hover:text-primary">
                 Contact
               </Link>
+              
+              {isAuthenticated ? (
+                <>
+                  <div className="text-sm text-gray-600 py-2">
+                    Hi, {user?.name || user?.email?.split('@')[0]}
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={logout}
+                    className="w-full border-red-200 text-red-600 hover:bg-red-50"
+                  >
+                    <LogOut size={18} className="mr-2" />
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <Link href="/login">
+                  <Button variant="outline" className="w-full border-primary text-primary hover:bg-primary/10">
+                    <User size={18} className="mr-2" />
+                    Login / Sign Up
+                  </Button>
+                </Link>
+              )}
+              
               <Link href="/schedule">
                 <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
                   Schedule Pickup

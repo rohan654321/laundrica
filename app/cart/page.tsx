@@ -1,14 +1,16 @@
-// app/cart/page.tsx
+// app/cart/page.tsx (updated version)
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/cart-context';
+import { useAuth } from '@/context/auth-context';
+import { OTPLoginModal } from '@/components/auth/otp-login-modal';
 import { 
   Minus, Plus, Trash2, ShoppingBag, ArrowLeft, 
   Truck, Shield, Clock, Leaf, CreditCard, MapPin 
@@ -16,9 +18,12 @@ import {
 
 export default function CartPage() {
   const { cartItems, updateQuantity, removeFromCart, clearCart } = useCart();
+  const { isAuthenticated, requireAuth } = useAuth();
+  const router = useRouter();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [promoCode, setPromoCode] = useState('');
   const [promoApplied, setPromoApplied] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const deliveryFee = subtotal > 100 ? 0 : 10;
@@ -36,6 +41,17 @@ export default function CartPage() {
   const handleApplyPromo = () => {
     if (promoCode.toLowerCase() === 'fresh10') {
       setPromoApplied(true);
+    }
+  };
+
+  const handleProceedToCheckout = () => {
+    if (!isAuthenticated) {
+      setShowLoginModal(true);
+    } else {
+      setIsCheckingOut(true);
+      setTimeout(() => {
+        router.push('/checkout');
+      }, 1000);
     }
   };
 
@@ -58,7 +74,7 @@ export default function CartPage() {
               Looks like you haven't added any items to your cart yet.
             </p>
             <Link href="/services">
-              <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg rounded-xl">
+              <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg rounded-xl">
                 Browse Services
               </Button>
             </Link>
@@ -75,7 +91,7 @@ export default function CartPage() {
       <Header />
 
       {/* Cart Header */}
-      <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-12">
+      <section className="bg-gradient-to-r from-green-600 to-emerald-600 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div>
@@ -124,14 +140,14 @@ export default function CartPage() {
                         </div>
 
                         <div className="text-right">
-                          <p className="font-bold text-blue-600">AED {item.price}</p>
+                          <p className="font-bold text-green-600">AED {item.price}</p>
                           <p className="text-xs text-gray-500">per item</p>
                         </div>
 
                         <div className="flex items-center gap-2">
                           <div className="flex items-center bg-gray-100 rounded-lg">
                             <button
-                              className="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-blue-600 transition-colors"
+                              className="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-green-600 transition-colors"
                               onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
                             >
                               <Minus className="w-3 h-3" />
@@ -140,7 +156,7 @@ export default function CartPage() {
                               {item.quantity}
                             </span>
                             <button
-                              className="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-blue-600 transition-colors"
+                              className="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-green-600 transition-colors"
                               onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
                             >
                               <Plus className="w-3 h-3" />
@@ -179,7 +195,7 @@ export default function CartPage() {
             <div className="lg:col-span-1">
               <div className="sticky top-24">
                 <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                  <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white">
+                  <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-6 text-white">
                     <h2 className="text-xl font-semibold flex items-center gap-2">
                       <CreditCard className="w-5 h-5" />
                       Order Summary
@@ -198,7 +214,7 @@ export default function CartPage() {
                           value={promoCode}
                           onChange={(e) => setPromoCode(e.target.value)}
                           placeholder="Enter code"
-                          className="flex-1 px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="flex-1 px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
                           disabled={promoApplied}
                         />
                         <Button
@@ -237,7 +253,7 @@ export default function CartPage() {
                       <div className="pt-3 border-t border-gray-200">
                         <div className="flex justify-between items-center">
                           <span className="text-lg font-semibold text-gray-900">Total</span>
-                          <span className="text-2xl font-bold text-blue-600">AED {total.toFixed(2)}</span>
+                          <span className="text-2xl font-bold text-green-600">AED {total.toFixed(2)}</span>
                         </div>
                       </div>
                     </div>
@@ -252,7 +268,7 @@ export default function CartPage() {
                           <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${(subtotal / 100) * 100}%` }}
-                            className="h-full bg-blue-600"
+                            className="h-full bg-green-600"
                           />
                         </div>
                       </div>
@@ -260,8 +276,8 @@ export default function CartPage() {
 
                     {/* Checkout Button */}
                     <Button
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 text-lg font-medium rounded-xl mb-3"
-                      onClick={() => setIsCheckingOut(true)}
+                      className="w-full bg-green-600 hover:bg-green-700 text-white py-4 text-lg font-medium rounded-xl mb-3"
+                      onClick={handleProceedToCheckout}
                       disabled={isCheckingOut}
                     >
                       {isCheckingOut ? (
@@ -277,22 +293,22 @@ export default function CartPage() {
                     {/* Trust Badges */}
                     <div className="grid grid-cols-3 gap-2">
                       <div className="text-center p-2 bg-gray-50 rounded-lg">
-                        <Shield className="w-5 h-5 mx-auto mb-1 text-blue-600" />
+                        <Shield className="w-5 h-5 mx-auto mb-1 text-green-600" />
                         <p className="text-xs text-gray-600">Secure</p>
                       </div>
                       <div className="text-center p-2 bg-gray-50 rounded-lg">
-                        <Truck className="w-5 h-5 mx-auto mb-1 text-blue-600" />
+                        <Truck className="w-5 h-5 mx-auto mb-1 text-green-600" />
                         <p className="text-xs text-gray-600">Free*</p>
                       </div>
                       <div className="text-center p-2 bg-gray-50 rounded-lg">
-                        <Leaf className="w-5 h-5 mx-auto mb-1 text-blue-600" />
+                        <Leaf className="w-5 h-5 mx-auto mb-1 text-green-600" />
                         <p className="text-xs text-gray-600">Eco</p>
                       </div>
                     </div>
 
                     {/* Delivery Info */}
-                    <div className="mt-4 p-3 bg-blue-50 rounded-lg flex items-start gap-2">
-                      <MapPin className="w-4 h-4 text-blue-600 mt-0.5" />
+                    <div className="mt-4 p-3 bg-green-50 rounded-lg flex items-start gap-2">
+                      <MapPin className="w-4 h-4 text-green-600 mt-0.5" />
                       <p className="text-xs text-gray-600">
                         Estimated delivery: 24-48 hours. Free delivery on orders above AED 100.
                       </p>
@@ -304,6 +320,19 @@ export default function CartPage() {
           </div>
         </div>
       </section>
+
+      {/* OTP Login Modal */}
+      <OTPLoginModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        onSuccess={() => {
+          setIsCheckingOut(true);
+          setTimeout(() => {
+            router.push('/checkout');
+          }, 1000);
+        }}
+        message="Please login to proceed with checkout"
+      />
 
       <Footer />
     </main>
