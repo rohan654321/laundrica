@@ -26,8 +26,8 @@ export function Header() {
               <Image
                 src="/images/laundrica png.png"
                 alt="Freshora Care Logo"
-                width={40}
-                height={40}
+                width={120}
+                height={120}
                 className="object-contain"
                 priority
               />
