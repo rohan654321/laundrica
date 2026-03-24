@@ -35,6 +35,9 @@ export function Header() {
             <Link href="/services" className="text-foreground hover:text-primary transition-colors">
               Services
             </Link>
+            <Link href="/pricing" className="text-foreground hover:text-primary transition-colors">
+              Prices
+            </Link>
             <Link href="/about" className="text-foreground hover:text-primary transition-colors">
               About
             </Link>

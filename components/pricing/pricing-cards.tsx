@@ -1,8 +1,9 @@
+// components/pricing/pricing-cards.tsx
 'use client';
 
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Check, Zap, Crown, Star } from 'lucide-react';
+import { Check, Zap, Crown, Star, Shirt, Truck, Clock, Shield } from 'lucide-react';
 import Link from 'next/link';
 
 interface PricingCardsProps {
@@ -127,19 +128,19 @@ export function PricingCards({ billingCycle }: PricingCardsProps) {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.5, type: 'spring', stiffness: 200 }}
               >
-                <div className="bg-gradient-to-r from-primary to-accent text-white px-4 py-1.5 rounded-full text-sm font-bold whitespace-nowrap shadow-lg">
+                <div className="bg-gradient-to-r from-[#1f4f2b] to-[#2a6e3a] text-white px-4 py-1.5 rounded-full text-sm font-bold whitespace-nowrap shadow-lg">
                   Most Popular
                 </div>
               </motion.div>
             )}
 
-            {/* Glassmorphism background */}
-            <div className={`absolute inset-0 glassmorphism ${tier.featured ? 'ring-2 ring-primary/50' : ''}`} />
+            {/* Card background */}
+            <div className={`absolute inset-0 bg-white border ${tier.featured ? 'border-[#1f4f2b] shadow-xl' : 'border-gray-200'} rounded-3xl`} />
 
             {/* Gradient overlay for featured card */}
             {tier.featured && (
               <motion.div
-                className="absolute inset-0 bg-gradient-to-br from-primary/10 to-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                className="absolute inset-0 bg-gradient-to-br from-[#1f4f2b]/5 to-[#2a6e3a]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-3xl"
               />
             )}
 
@@ -148,29 +149,35 @@ export function PricingCards({ billingCycle }: PricingCardsProps) {
               {/* Icon and title */}
               <div className="mb-6">
                 <motion.div
-                  className="inline-block p-3 bg-gradient-to-br from-primary/20 to-accent/20 rounded-2xl mb-4"
+                  className={`inline-block p-3 rounded-2xl mb-4 ${
+                    tier.featured ? 'bg-[#1f4f2b]/10' : 'bg-gray-100'
+                  }`}
                   whileHover={{ rotate: 360 }}
                   transition={{ duration: 0.6 }}
                 >
-                  <Icon className="w-6 h-6 text-primary" />
+                  <Icon className={`w-6 h-6 ${tier.featured ? 'text-[#1f4f2b]' : 'text-gray-600'}`} />
                 </motion.div>
-                <h3 className="text-2xl font-bold text-foreground mb-2">{tier.name}</h3>
-                <p className="text-sm text-foreground/70">{tier.description}</p>
+                <h3 className={`text-2xl font-bold mb-2 ${tier.featured ? 'text-[#1f4f2b]' : 'text-gray-800'}`}>
+                  {tier.name}
+                </h3>
+                <p className="text-sm text-gray-500">{tier.description}</p>
               </div>
 
               {/* Pricing */}
               <div className="mb-8">
                 <div className="flex items-baseline gap-2 mb-2">
-                  <span className="text-5xl font-bold text-foreground">₹{price}</span>
-                  <span className="text-foreground/60 text-lg">/{billingCycle === 'monthly' ? 'month' : 'year'}</span>
+                  <span className={`text-5xl font-bold ${tier.featured ? 'text-[#1f4f2b]' : 'text-gray-800'}`}>
+                    AED {price}
+                  </span>
+                  <span className="text-gray-500 text-lg">/{billingCycle === 'monthly' ? 'month' : 'year'}</span>
                 </div>
                 {billingCycle === 'yearly' && savings > 0 && (
                   <motion.p
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="text-sm text-primary font-medium"
+                    className="text-sm text-[#1f4f2b] font-medium"
                   >
-                    Save ₹{savings}/month
+                    Save AED {savings}/month
                   </motion.p>
                 )}
               </div>
@@ -186,8 +193,8 @@ export function PricingCards({ billingCycle }: PricingCardsProps) {
                     size="lg"
                     className={`w-full rounded-xl font-semibold ${
                       tier.featured
-                        ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                        : 'bg-white/10 text-foreground hover:bg-white/20 border border-white/20'
+                        ? 'bg-[#1f4f2b] text-white hover:bg-[#2a6e3a]'
+                        : 'bg-gray-100 text-gray-800 hover:bg-gray-200 border border-gray-200'
                     }`}
                   >
                     {tier.cta}
@@ -196,7 +203,7 @@ export function PricingCards({ billingCycle }: PricingCardsProps) {
               </motion.div>
 
               {/* Features list */}
-              <div className="space-y-4 border-t border-white/10 pt-8">
+              <div className="space-y-4 border-t border-gray-100 pt-8">
                 {tier.features.map((feature, index) => (
                   <motion.div
                     key={index}
@@ -209,9 +216,9 @@ export function PricingCards({ billingCycle }: PricingCardsProps) {
                       whileHover={{ scale: 1.2 }}
                       className="flex-shrink-0 mt-1"
                     >
-                      <Check className="w-5 h-5 text-primary" />
+                      <Check className="w-5 h-5 text-[#1f4f2b]" />
                     </motion.div>
-                    <span className="text-sm text-foreground/80">{feature}</span>
+                    <span className="text-sm text-gray-600">{feature}</span>
                   </motion.div>
                 ))}
               </div>
