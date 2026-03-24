@@ -1,7 +1,8 @@
-// components/header.tsx (updated with login/logout)
+// components/header.tsx (updated with logo)
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useCart } from '@/context/cart-context';
 import { useAuth } from '@/context/auth-context';
 import { ShoppingCart, Menu, X, User, LogOut } from 'lucide-react';
@@ -20,11 +21,20 @@ export function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 font-bold text-xl text-primary">
-            <span className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground">
-              F
+          <Link href="/" className="flex items-center gap-2">
+            <div className="relative w-10 h-10">
+              <Image
+                src="/images/laundrica.svg"
+                alt="Freshora Care Logo"
+                width={40}
+                height={40}
+                className="object-contain"
+                priority
+              />
+            </div>
+            <span className="font-semibold text-lg text-foreground hidden sm:inline-block">
+              Freshora Care
             </span>
-            Freshora
           </Link>
 
           {/* Desktop Navigation */}
@@ -111,6 +121,9 @@ export function Header() {
               </Link>
               <Link href="/services" className="text-foreground hover:text-primary">
                 Services
+              </Link>
+              <Link href="/pricing" className="text-foreground hover:text-primary">
+                Prices
               </Link>
               <Link href="/about" className="text-foreground hover:text-primary">
                 About
