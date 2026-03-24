@@ -24,7 +24,7 @@ export function Header() {
           <Link href="/" className="flex items-center gap-2">
             <div className="relative w-10 h-10">
               <Image
-                src="/images/laundrica.svg"
+                src="/images/laundrica png.png"
                 alt="Freshora Care Logo"
                 width={40}
                 height={40}
@@ -32,9 +32,9 @@ export function Header() {
                 priority
               />
             </div>
-            <span className="font-semibold text-lg text-foreground hidden sm:inline-block">
+            {/* <span className="font-semibold text-lg text-foreground hidden sm:inline-block">
               Freshora Care
-            </span>
+            </span> */}
           </Link>
 
           {/* Desktop Navigation */}
