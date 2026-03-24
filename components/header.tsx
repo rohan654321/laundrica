@@ -1,4 +1,4 @@
-// components/header.tsx (updated with logo)
+// components/header.tsx (updated with properly sized logo)
 'use client';
 
 import Link from 'next/link';
@@ -19,48 +19,48 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <div className="relative w-10 h-10">
+        <div className="flex items-center justify-between h-20">
+          {/* Logo - Larger and properly sized */}
+          <Link href="/" className="flex items-center gap-2 flex-shrink-0">
+            <div className="relative w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16">
               <Image
                 src="/images/laundrica png.png"
                 alt="Freshora Care Logo"
-                width={120}
-                height={120}
+                fill
                 className="object-contain"
                 priority
               />
             </div>
-            {/* <span className="font-semibold text-lg text-foreground hidden sm:inline-block">
+            {/* Optional: Add brand name next to logo */}
+            {/* <span className="font-semibold text-xl text-foreground hidden sm:inline-block">
               Freshora Care
             </span> */}
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
-            <Link href="/" className="text-foreground hover:text-primary transition-colors">
+          <nav className="hidden md:flex items-center gap-8 ml-8">
+            <Link href="/" className="text-foreground hover:text-primary transition-colors font-medium">
               Home
             </Link>
-            <Link href="/services" className="text-foreground hover:text-primary transition-colors">
+            <Link href="/services" className="text-foreground hover:text-primary transition-colors font-medium">
               Services
             </Link>
-            <Link href="/pricing" className="text-foreground hover:text-primary transition-colors">
+            <Link href="/pricing" className="text-foreground hover:text-primary transition-colors font-medium">
               Prices
             </Link>
-            <Link href="/about" className="text-foreground hover:text-primary transition-colors">
+            <Link href="/about" className="text-foreground hover:text-primary transition-colors font-medium">
               About
             </Link>
-            <Link href="/contact" className="text-foreground hover:text-primary transition-colors">
+            <Link href="/contact" className="text-foreground hover:text-primary transition-colors font-medium">
               Contact
             </Link>
           </nav>
 
           {/* Right Section */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
             {/* Cart */}
             <Link href="/cart" className="relative">
-              <Button variant="ghost" size="icon" className="relative">
+              <Button variant="ghost" size="icon" className="relative h-10 w-10">
                 <ShoppingCart size={20} />
                 {cartCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
@@ -72,7 +72,7 @@ export function Header() {
 
             {/* User Menu */}
             {isAuthenticated ? (
-              <div className="hidden md:flex items-center gap-4">
+              <div className="hidden md:flex items-center gap-3">
                 <span className="text-sm text-gray-600">
                   Hi, {user?.name || user?.email?.split('@')[0]}
                 </span>
@@ -104,7 +104,7 @@ export function Header() {
 
             {/* Mobile Menu Toggle */}
             <button
-              className="md:hidden"
+              className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -114,21 +114,21 @@ export function Header() {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <nav className="md:hidden pb-4 border-t border-border">
+          <nav className="md:hidden pb-6 border-t border-border">
             <div className="flex flex-col gap-4 pt-4">
-              <Link href="/" className="text-foreground hover:text-primary">
+              <Link href="/" className="text-foreground hover:text-primary py-2">
                 Home
               </Link>
-              <Link href="/services" className="text-foreground hover:text-primary">
+              <Link href="/services" className="text-foreground hover:text-primary py-2">
                 Services
               </Link>
-              <Link href="/pricing" className="text-foreground hover:text-primary">
+              <Link href="/pricing" className="text-foreground hover:text-primary py-2">
                 Prices
               </Link>
-              <Link href="/about" className="text-foreground hover:text-primary">
+              <Link href="/about" className="text-foreground hover:text-primary py-2">
                 About
               </Link>
-              <Link href="/contact" className="text-foreground hover:text-primary">
+              <Link href="/contact" className="text-foreground hover:text-primary py-2">
                 Contact
               </Link>
               
