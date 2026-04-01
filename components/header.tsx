@@ -155,7 +155,7 @@ export function Header() {
                 </Link>
               )}
               
-              <Link href="/schedule">
+              <Link href="/services">
                 <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
                   Schedule Pickup
                 </Button>

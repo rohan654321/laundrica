@@ -183,10 +183,14 @@ export default function CartPage() {
               {/* Continue Shopping */}
               <div className="mt-6">
                 <Link href="/services">
-                  <Button variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-100 rounded-xl">
-                    <ArrowLeft className="mr-2 w-4 h-4" />
-                    Continue Shopping
-                  </Button>
+                 <Button
+  variant="outline"
+  className="border-gray-300 text-gray-700 hover:bg-gray-100 rounded-xl"
+  onClick={() => router.back()}
+>
+  <ArrowLeft className="mr-2 w-4 h-4" />
+  Continue Shopping
+</Button>
                 </Link>
               </div>
             </div>

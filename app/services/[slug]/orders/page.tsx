@@ -13,16 +13,22 @@ import { services } from '@/lib/services-data';
 import { useCart } from '@/context/cart-context';
 import { useAuth } from '@/context/auth-context';
 import { OTPLoginModal } from '@/components/auth/otp-login-modal';
-import { Minus, Plus, ShoppingCart, ArrowLeft, Check, Clock, Shield, Truck, Leaf, AlertCircle } from 'lucide-react';
+import { Minus, Plus, ShoppingCart, ArrowLeft, Check, Clock, Shield, Truck, Leaf, AlertCircle, Phone, MessageCircle, DollarSign } from 'lucide-react';
 
-// Define the category type to match your CartCategory
-type CategoryType = 'men' | 'women' | 'children' | 'household';
+// Define the category type
+type CategoryType = 'men' | 'women' | 'children' | 'household' | 'carpet' | 'shoes';
+
+// Type for service items with all possible categories
+type ServiceItemsType = {
+  [key in CategoryType]?: ServiceItem[];
+};
 
 interface Category {
   id: CategoryType;
   label: string;
   icon: string;
   description: string;
+  contactForPricing?: boolean;
 }
 
 interface ServiceItem {
@@ -32,6 +38,7 @@ interface ServiceItem {
   unit: string;
   description: string;
   image?: string;
+  contactForPricing?: boolean;
 }
 
 export default function ServiceOrderPage() {
@@ -46,9 +53,11 @@ export default function ServiceOrderPage() {
   const [activeCategory, setActiveCategory] = useState<CategoryType>('men');
   const [addedItems, setAddedItems] = useState<Record<string, boolean>>({});
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [pendingItem, setPendingItem] = useState<ServiceItem | null>(null);
+  const [pendingItem, setPendingItem] = useState<{ item: ServiceItem; quantity: number } | null>(null);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [contactItem, setContactItem] = useState<ServiceItem | null>(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -61,6 +70,21 @@ export default function ServiceOrderPage() {
     setTimeout(() => {
       setShowSuccessToast(false);
     }, 3000);
+  };
+
+  // Handle WhatsApp contact
+  const handleWhatsAppContact = (item: ServiceItem) => {
+    const phoneNumber = "+971501234567"; // Replace with your actual WhatsApp number
+    const message = encodeURIComponent(
+      `Hello, I'm interested in pricing for ${service?.name} - ${item.name}. Please share the pricing details.`
+    );
+    window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
+  };
+
+  // Handle Call contact
+  const handleCallContact = () => {
+    const phoneNumber = "+971501234567"; // Replace with your actual phone number
+    window.location.href = `tel:${phoneNumber}`;
   };
 
   if (!service) {
@@ -88,10 +112,12 @@ export default function ServiceOrderPage() {
     { id: 'women', label: 'Women', icon: '👗', description: 'Dresses, blouses, skirts, and more' },
     { id: 'children', label: 'Children', icon: '🧸', description: 'Kids clothing, uniforms, and more' },
     { id: 'household', label: 'Household', icon: '🏠', description: 'Curtains, bedding, towels, and more' },
+    { id: 'carpet', label: 'Carpet Cleaning', icon: '🧹', description: 'Professional carpet and rug cleaning', contactForPricing: true },
+    { id: 'shoes', label: 'Shoe Cleaning', icon: '👟', description: 'Premium shoe cleaning and restoration', contactForPricing: true },
   ];
 
-  // Default items for each category if not provided in service data
-  const defaultItems: Record<CategoryType, ServiceItem[]> = {
+  // Default items for each category
+  const defaultItems: ServiceItemsType = {
     men: [
       { id: 'men-shirts', name: 'Shirts', price: 8, unit: 'piece', description: 'Professional pressing and folding' },
       { id: 'men-pants', name: 'Pants/Trousers', price: 12, unit: 'piece', description: 'Stain removal and crease-free' },
@@ -116,40 +142,124 @@ export default function ServiceOrderPage() {
       { id: 'house-towels', name: 'Towels', price: 8, unit: 'piece', description: 'Fluffy and absorbent' },
       { id: 'house-cushions', name: 'Cushion Covers', price: 10, unit: 'set', description: 'Stain removal' },
     ],
+    carpet: [
+      { 
+        id: 'carpet-area', 
+        name: 'Area Rugs', 
+        price: 0, 
+        unit: 'sq ft', 
+        description: 'Professional deep cleaning for area rugs',
+        contactForPricing: true 
+      },
+      { 
+        id: 'carpet-wall-to-wall', 
+        name: 'Wall-to-Wall Carpet', 
+        price: 0, 
+        unit: 'room', 
+        description: 'Complete carpet cleaning service',
+        contactForPricing: true 
+      },
+      { 
+        id: 'carpet-stain', 
+        name: 'Stain Removal', 
+        price: 0, 
+        unit: 'stain', 
+        description: 'Specialized stain treatment',
+        contactForPricing: true 
+      },
+      { 
+        id: 'carpet-protection', 
+        name: 'Carpet Protection', 
+        price: 0, 
+        unit: 'treatment', 
+        description: 'Protective coating application',
+        contactForPricing: true 
+      },
+    ],
+    shoes: [
+      { 
+        id: 'shoes-sneakers', 
+        name: 'Sneakers', 
+        price: 0, 
+        unit: 'pair', 
+        description: 'Deep cleaning and deodorizing for sneakers',
+        contactForPricing: true 
+      },
+      { 
+        id: 'shoes-leather', 
+        name: 'Leather Shoes', 
+        price: 0, 
+        unit: 'pair', 
+        description: 'Premium leather cleaning and conditioning',
+        contactForPricing: true 
+      },
+      { 
+        id: 'shoes-suede', 
+        name: 'Suede Shoes', 
+        price: 0, 
+        unit: 'pair', 
+        description: 'Specialized suede cleaning and restoration',
+        contactForPricing: true 
+      },
+      { 
+        id: 'shoes-luxury', 
+        name: 'Luxury Footwear', 
+        price: 0, 
+        unit: 'pair', 
+        description: 'Premium care for designer shoes',
+        contactForPricing: true 
+      },
+    ],
   };
 
-  const items = service.items?.[activeCategory] || defaultItems[activeCategory];
-
-  const updateQuantity = (itemId: string, change: number) => {
-    setQuantities(prev => {
-      const current = prev[itemId] || 0;
-      const newValue = Math.max(0, current + change);
-      if (newValue === 0) {
-        const { [itemId]: _, ...rest } = prev;
-        return rest;
-      }
-      return { ...prev, [itemId]: newValue };
-    });
+  // Safely get items for current category - handle both service.items and defaultItems
+  const getItemsForCategory = (category: CategoryType): ServiceItem[] => {
+    // First try to get from service.items (cast safely)
+    const serviceItems = service.items as ServiceItemsType | undefined;
+    const itemsFromService = serviceItems?.[category];
+    
+    // If items exist in service, use those
+    if (itemsFromService && itemsFromService.length > 0) {
+      return itemsFromService;
+    }
+    
+    // Otherwise use default items
+    return defaultItems[category] || [];
   };
 
-  const handleAddToCart = (item: ServiceItem) => {
-    const quantity = quantities[item.id] || 0;
-    if (quantity === 0) return;
+  const items = getItemsForCategory(activeCategory);
+  const currentCategory = categories.find(c => c.id === activeCategory);
+  const isContactCategory = currentCategory?.contactForPricing || false;
+
+  // Direct add to cart function when clicking plus button
+  const handleIncrement = (item: ServiceItem) => {
+    // If item requires contact for pricing
+    if (item.contactForPricing || isContactCategory) {
+      setContactItem(item);
+      setShowContactModal(true);
+      return;
+    }
 
     // Check if user is authenticated
     if (!isAuthenticated) {
-      setPendingItem(item);
+      // Store the item and quantity to add after login
+      setPendingItem({ item, quantity: 1 });
       setShowLoginModal(true);
       return;
     }
 
-    // Add to cart
+    // Add to cart directly
+    addToCartDirectly(item, 1);
+  };
+
+  // Direct add to cart function
+  const addToCartDirectly = (item: ServiceItem, quantity: number) => {
     addToCart({
       id: `${service.id}-${item.id}`,
       name: `${service.name} - ${item.name}`,
       price: item.price,
       quantity,
-      category: activeCategory,
+      category: service.name as any,
       description: item.description,
       image: service.icon || ''
     });
@@ -161,56 +271,131 @@ export default function ServiceOrderPage() {
     setTimeout(() => {
       setAddedItems(prev => ({ ...prev, [item.id]: false }));
     }, 1000);
+  };
 
-    // Reset quantity for this item
-    setQuantities(prev => {
-      const { [item.id]: _, ...rest } = prev;
-      return rest;
-    });
+  // Handle decrement (remove from cart)
+  const handleDecrement = (item: ServiceItem) => {
+    // Find if item exists in cart
+    const cartItem = cartItems.find(
+      cartItem => cartItem.id === `${service.id}-${item.id}`
+    );
+    
+    if (cartItem) {
+      if (cartItem.quantity > 1) {
+        // Update cart with reduced quantity
+        addToCart({
+          id: `${service.id}-${item.id}`,
+          name: `${service.name} - ${item.name}`,
+          price: item.price,
+          quantity: cartItem.quantity - 1,
+          category: service.name as any,
+          description: item.description,
+          image: service.icon || ''
+        });
+        showToast(`Removed 1 × ${item.name} from cart`);
+      } else {
+        // Remove item completely (you might want to implement a remove function)
+        // For now, we'll just show a message
+        showToast(`${item.name} removed from cart`);
+      }
+    }
   };
 
   const handleLoginSuccess = () => {
     if (pendingItem) {
-      const quantity = quantities[pendingItem.id] || 0;
-      if (quantity > 0) {
-        addToCart({
-          id: `${service.id}-${pendingItem.id}`,
-          name: `${service.name} - ${pendingItem.name}`,
-          price: pendingItem.price,
-          quantity,
-          category: activeCategory,
-          description: pendingItem.description,
-          image: service.icon || ''
-        });
-        setAddedItems(prev => ({ ...prev, [pendingItem.id]: true }));
-        showToast(`Added ${quantity} × ${pendingItem.name} to cart!`);
-        setTimeout(() => {
-          setAddedItems(prev => ({ ...prev, [pendingItem.id]: false }));
-        }, 1000);
-        setQuantities(prev => {
-          const { [pendingItem.id]: _, ...rest } = prev;
-          return rest;
-        });
-      }
+      // Add the pending item to cart after successful login
+      addToCartDirectly(pendingItem.item, pendingItem.quantity);
       setPendingItem(null);
     }
   };
 
+  // Get quantity from cart for a specific item
+  const getItemQuantity = (itemId: string): number => {
+    const cartItem = cartItems.find(
+      cartItem => cartItem.id === `${service.id}-${itemId}`
+    );
+    return cartItem?.quantity || 0;
+  };
+
   const getTotalItems = () => {
-    return Object.values(quantities).reduce((sum, qty) => sum + qty, 0);
+    return cartItems.reduce((sum, item) => sum + item.quantity, 0);
   };
 
   const getTotalPrice = () => {
-    let total = 0;
-    items.forEach((item: ServiceItem) => {
-      total += (quantities[item.id] || 0) * item.price;
-    });
-    return total;
+    return cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   };
 
   const getCartCount = () => {
     return cartItems.reduce((sum, item) => sum + item.quantity, 0);
   };
+
+  // Contact Modal Component
+  const ContactModal = () => (
+    <AnimatePresence>
+      {showContactModal && contactItem && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          onClick={() => setShowContactModal(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <DollarSign className="w-8 h-8 text-amber-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                Contact for Pricing
+              </h3>
+              <p className="text-gray-600">
+                For {contactItem.name}, pricing varies based on size, material, and specific requirements. 
+                Please contact us directly for a personalized quote.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <Button
+                onClick={() => handleWhatsAppContact(contactItem)}
+                className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl flex items-center justify-center gap-2"
+              >
+                <MessageCircle className="w-5 h-5" />
+                Contact via WhatsApp
+              </Button>
+              
+              <Button
+                onClick={handleCallContact}
+                variant="outline"
+                className="w-full border-2 border-green-600 text-green-600 hover:bg-green-50 py-3 rounded-xl flex items-center justify-center gap-2"
+              >
+                <Phone className="w-5 h-5" />
+                Call for Quote
+              </Button>
+              
+              <button
+                onClick={() => setShowContactModal(false)}
+                className="w-full text-gray-500 hover:text-gray-700 py-2 text-sm"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-gray-200">
+              <p className="text-xs text-gray-500 text-center">
+                Our team will respond within minutes during business hours
+              </p>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
 
   return (
     <main className="flex flex-col min-h-screen bg-gray-50">
@@ -287,12 +472,25 @@ export default function ServiceOrderPage() {
                 >
                   <span className="mr-2 text-xl">{category.icon}</span>
                   <span>{category.label}</span>
+                  {category.contactForPricing && (
+                    <span className="ml-2 text-xs bg-amber-500 text-white px-2 py-0.5 rounded-full">
+                      Contact
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
             <p className="text-sm text-gray-500 mt-3">
               {categories.find(c => c.id === activeCategory)?.description}
             </p>
+            {isContactCategory && (
+              <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <p className="text-sm text-amber-800 flex items-center gap-2">
+                  <DollarSign className="w-4 h-4" />
+                  <span>Pricing varies based on requirements. Contact us for a personalized quote.</span>
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -307,84 +505,110 @@ export default function ServiceOrderPage() {
                   transition={{ duration: 0.3 }}
                   className="grid md:grid-cols-2 gap-4"
                 >
-                  {items.map((item: ServiceItem, index: number) => (
-                    <motion.div
-                      key={item.id}
-                      layout
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: index * 0.05 }}
-                      whileHover={{ y: -4 }}
-                      className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100"
-                    >
-                      <div className="p-6">
-                        <div className="mb-4">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                                {item.name}
-                              </h3>
-                              <p className="text-sm text-gray-600 line-clamp-2">
-                                {item.description}
-                              </p>
+                  {items.map((item: ServiceItem, index: number) => {
+                    const itemQuantity = getItemQuantity(item.id);
+                    const isAdded = addedItems[item.id];
+                    
+                    return (
+                      <motion.div
+                        key={item.id}
+                        layout
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: index * 0.05 }}
+                        whileHover={{ y: -4 }}
+                        className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100"
+                      >
+                        <div className="p-6">
+                          <div className="mb-4">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                  {item.name}
+                                </h3>
+                                <p className="text-sm text-gray-600 line-clamp-2">
+                                  {item.description}
+                                </p>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        
-                        <div className="flex items-center justify-between mb-4">
-                          <div>
-                            <span className="text-2xl font-bold text-green-600">AED {item.price}</span>
-                            <span className="text-sm text-gray-500 ml-1">/{item.unit}</span>
+                          
+                          <div className="flex items-center justify-between mb-4">
+                            <div>
+                              {item.contactForPricing || isContactCategory ? (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-amber-600 font-semibold">Contact for Price</span>
+                                  <DollarSign className="w-4 h-4 text-amber-500" />
+                                </div>
+                              ) : (
+                                <>
+                                  <span className="text-2xl font-bold text-green-600">AED {item.price}</span>
+                                  <span className="text-sm text-gray-500 ml-1">/{item.unit}</span>
+                                </>
+                              )}
+                            </div>
+                            {service.turnaround && !(item.contactForPricing || isContactCategory) && (
+                              <div className="flex items-center gap-1 text-xs text-gray-500">
+                                <Clock className="w-3 h-3" />
+                                <span>{service.turnaround}</span>
+                              </div>
+                            )}
                           </div>
-                          {service.turnaround && (
-                            <div className="flex items-center gap-1 text-xs text-gray-500">
-                              <Clock className="w-3 h-3" />
-                              <span>{service.turnaround}</span>
+
+                          {item.contactForPricing || isContactCategory ? (
+                            <div className="flex flex-col gap-2">
+                              <Button
+                                onClick={() => handleIncrement(item)}
+                                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white py-3 rounded-xl flex items-center justify-center gap-2"
+                              >
+                                <MessageCircle className="w-4 h-4" />
+                                Contact for Quote
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="flex items-center bg-gray-100 rounded-xl">
+                                <button
+                                  className={`w-10 h-10 flex items-center justify-center transition-colors rounded-l-xl ${
+                                    itemQuantity > 0 
+                                      ? 'text-gray-600 hover:text-green-600' 
+                                      : 'text-gray-300 cursor-not-allowed'
+                                  }`}
+                                  onClick={() => handleDecrement(item)}
+                                  disabled={itemQuantity === 0}
+                                >
+                                  <Minus className="w-4 h-4" />
+                                </button>
+                                <span className="w-12 text-center font-semibold text-gray-900">
+                                  {itemQuantity}
+                                </span>
+                                <button
+                                  className={`w-10 h-10 flex items-center justify-center transition-colors rounded-r-xl ${
+                                    isAdded
+                                      ? 'text-green-500'
+                                      : 'text-gray-600 hover:text-green-600'
+                                  }`}
+                                  onClick={() => handleIncrement(item)}
+                                >
+                                  {isAdded ? (
+                                    <Check className="w-4 h-4" />
+                                  ) : (
+                                    <Plus className="w-4 h-4" />
+                                  )}
+                                </button>
+                              </div>
+                              
+                              {itemQuantity > 0 && (
+                                <div className="text-sm text-green-600 font-medium">
+                                  AED {(item.price * itemQuantity).toFixed(2)}
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
-
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center bg-gray-100 rounded-xl">
-                            <button
-                              className="w-10 h-10 flex items-center justify-center text-gray-600 hover:text-green-600 transition-colors disabled:opacity-50"
-                              onClick={() => updateQuantity(item.id, -1)}
-                              disabled={!quantities[item.id]}
-                            >
-                              <Minus className="w-4 h-4" />
-                            </button>
-                            <span className="w-12 text-center font-medium text-gray-900">
-                              {quantities[item.id] || 0}
-                            </span>
-                            <button
-                              className="w-10 h-10 flex items-center justify-center text-gray-600 hover:text-green-600 transition-colors"
-                              onClick={() => updateQuantity(item.id, 1)}
-                            >
-                              <Plus className="w-4 h-4" />
-                            </button>
-                          </div>
-                          
-                          <button
-                            className={`flex-1 h-10 rounded-xl font-medium transition-all ${
-                              addedItems[item.id]
-                                ? 'bg-green-500 text-white'
-                                : quantities[item.id]
-                                ? 'bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-600/25'
-                                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                            }`}
-                            onClick={() => handleAddToCart(item)}
-                            disabled={!quantities[item.id]}
-                          >
-                            {addedItems[item.id] ? (
-                              <Check className="w-5 h-5 mx-auto" />
-                            ) : (
-                              'Add to Cart'
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
+                      </motion.div>
+                    );
+                  })}
                 </motion.div>
               </AnimatePresence>
 
@@ -417,34 +641,29 @@ export default function ServiceOrderPage() {
                       Order Summary
                     </h3>
                     <p className="text-white/80 text-sm mt-1">
-                      {getTotalItems()} items selected
+                      {getTotalItems()} items in cart
                     </p>
                   </div>
                   
                   <div className="p-6">
-                    {/* Current Selection Summary */}
+                    {/* Cart Items Summary */}
                     <div className="mb-6">
-                      <h4 className="text-sm font-medium text-gray-500 mb-3">Current Selection</h4>
+                      <h4 className="text-sm font-medium text-gray-500 mb-3">Your Cart</h4>
                       <div className="space-y-2 max-h-64 overflow-y-auto">
-                        {Object.entries(quantities).map(([itemId, qty]) => {
-                          const item = items.find(
-                            (i: ServiceItem) => i.id === itemId
-                          );
-                          if (!item) return null;
-                          return (
-                            <div key={itemId} className="flex justify-between text-sm py-1">
+                        {cartItems.length > 0 ? (
+                          cartItems.map((cartItem) => (
+                            <div key={cartItem.id} className="flex justify-between text-sm py-1">
                               <span className="text-gray-600">
-                                {item.name} x{qty}
+                                {cartItem.name.replace(`${service.name} - `, '')} x{cartItem.quantity}
                               </span>
                               <span className="font-medium text-gray-900">
-                                AED {item.price * qty}
+                                AED {(cartItem.price * cartItem.quantity).toFixed(2)}
                               </span>
                             </div>
-                          );
-                        })}
-                        {Object.keys(quantities).length === 0 && (
+                          ))
+                        ) : (
                           <p className="text-sm text-gray-500 text-center py-4">
-                            No items selected
+                            Your cart is empty
                           </p>
                         )}
                       </div>
@@ -458,7 +677,7 @@ export default function ServiceOrderPage() {
                       </div>
                       <div className="flex justify-between items-center mb-6">
                         <span className="text-lg font-semibold text-gray-900">Total Amount:</span>
-                        <span className="text-2xl font-bold text-green-600">AED {getTotalPrice()}</span>
+                        <span className="text-2xl font-bold text-green-600">AED {getTotalPrice().toFixed(2)}</span>
                       </div>
 
                       <Link href="/cart">
@@ -468,7 +687,13 @@ export default function ServiceOrderPage() {
                       </Link>
                       
                       <Link href="/checkout">
-                        <Button variant="outline" className="w-full border-2 border-green-600 text-green-600 hover:bg-green-50 py-6 text-lg font-medium rounded-xl">
+                        <Button 
+                          variant="outline" 
+                          className={`w-full border-2 border-green-600 text-green-600 hover:bg-green-50 py-6 text-lg font-medium rounded-xl ${
+                            cartItems.length === 0 ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''
+                          }`}
+                          disabled={cartItems.length === 0}
+                        >
                           Proceed to Checkout
                         </Button>
                       </Link>
@@ -510,6 +735,9 @@ export default function ServiceOrderPage() {
           </div>
         </div>
       </section>
+
+      {/* Contact Modal */}
+      <ContactModal />
 
       {/* OTP Login Modal */}
       <OTPLoginModal

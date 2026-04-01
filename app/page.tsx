@@ -14,9 +14,10 @@ export default function Home() {
     <main className="flex flex-col min-h-screen">
       <Header />
       <HeroSection />
+      <ServicesSlider />
       <HowItWorks />
-      <ServicesPricing/>
-      <ServicesSlider /> {/* This is the slider component we created */}
+      {/* <ServicesPricing/> */}
+       {/* This is the slider component we created */}
       {/* Remove ServicesGrid since we're using ServicesSlider */}
       <WhyChooseUs />
       <MembershipPlans />
