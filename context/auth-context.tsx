@@ -1,26 +1,57 @@
-// context/auth-context.tsx
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
 
-interface User {
+export interface User {
   id: string;
-  email?: string;
-  phone?: string;
-  name?: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: 'user' | 'admin' | 'staff';
+  isActive: boolean;
+  address?: {
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+  };
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface AuthContextType {
   user: User | null;
-  isLoading: boolean;
   isAuthenticated: boolean;
+  isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  loginWithOTP: (phone: string, otp: string) => Promise<void>;
-  sendOTP: (phone: string) => Promise<void>;
+  register: (userData: RegisterData) => Promise<void>;
   logout: () => void;
-  register: (userData: any) => Promise<void>;
+  sendOTP: (phone: string) => Promise<void>;
+  loginWithOTP: (phone: string, otp: string) => Promise<void>;
+  updateProfile: (data: Partial<User>) => Promise<void>;
   requireAuth: () => boolean;
+}
+
+interface RegisterData {
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+}
+
+interface LoginResponse {
+  success: boolean;
+  token: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    role: 'user' | 'admin' | 'staff';
+    isActive: boolean;
+  };
+  message?: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,121 +59,145 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
 
   useEffect(() => {
-    // Check localStorage for existing session
+    // Load user from localStorage
     const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    const token = localStorage.getItem('token');
+    
+    if (storedUser && token) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        // Ensure the user object has all required fields
+        if (parsedUser && typeof parsedUser === 'object') {
+          setUser(parsedUser as User);
+        }
+      } catch (error) {
+        console.error('Error parsing stored user:', error);
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+      }
     }
     setIsLoading(false);
   }, []);
 
   const login = async (email: string, password: string) => {
-    setIsLoading(true);
     try {
-      // Simulate API call
-      const userData = { id: '1', email, name: email.split('@')[0] };
-      setUser(userData);
-      localStorage.setItem('user', JSON.stringify(userData));
-    } catch (error) {
-      console.error('Login failed:', error);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const sendOTP = async (phone: string) => {
-    setIsLoading(true);
-    try {
-      // Simulate sending OTP
-      console.log(`Sending OTP to ${phone}`);
-      // In production, call your API endpoint
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
       
-      // Store phone temporarily for verification
-      sessionStorage.setItem('pendingPhone', phone);
-      
-      // For demo purposes, show alert with OTP
-      alert(`OTP sent to ${phone}. Demo OTP: 123456`);
-    } catch (error) {
-      console.error('Failed to send OTP:', error);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const loginWithOTP = async (phone: string, otp: string) => {
-    setIsLoading(true);
-    try {
-      // Simulate OTP verification
-      if (otp !== '123456') {
-        throw new Error('Invalid OTP');
+      const data: LoginResponse = await response.json();
+      if (data.success && data.user) {
+        // Ensure the user object has all required fields
+        const userData: User = {
+          id: data.user.id,
+          name: data.user.name,
+          email: data.user.email,
+          phone: data.user.phone,
+          role: data.user.role,
+          isActive: data.user.isActive,
+        };
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(userData));
+        setUser(userData);
+      } else {
+        throw new Error(data.message || 'Login failed');
       }
-      
-      // Check if user exists, if not create new account
-      const userData = { 
-        id: Date.now().toString(), 
-        phone,
-        name: `User_${phone.slice(-4)}`
-      };
-      
-      setUser(userData);
-      localStorage.setItem('user', JSON.stringify(userData));
-      sessionStorage.removeItem('pendingPhone');
     } catch (error) {
-      console.error('OTP verification failed:', error);
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const register = async (userData: any) => {
-    setIsLoading(true);
+  const register = async (userData: RegisterData) => {
     try {
-      // Simulate registration
-      const newUser = { id: Date.now().toString(), ...userData };
-      setUser(newUser);
-      localStorage.setItem('user', JSON.stringify(newUser));
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData),
+      });
+      
+      const data: LoginResponse = await response.json();
+      if (data.success && data.user) {
+        const userDataComplete: User = {
+          id: data.user.id,
+          name: data.user.name,
+          email: data.user.email,
+          phone: data.user.phone,
+          role: data.user.role,
+          isActive: data.user.isActive,
+        };
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(userDataComplete));
+        setUser(userDataComplete);
+      } else {
+        throw new Error(data.message || 'Registration failed');
+      }
     } catch (error) {
-      console.error('Registration failed:', error);
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const logout = () => {
-    setUser(null);
+    localStorage.removeItem('token');
     localStorage.removeItem('user');
-    router.push('/');
+    setUser(null);
+  };
+
+  const sendOTP = async (phone: string) => {
+    // Implement OTP sending
+    console.log('Sending OTP to:', phone);
+  };
+
+  const loginWithOTP = async (phone: string, otp: string) => {
+    // Implement OTP login
+    console.log('Verifying OTP:', otp, 'for:', phone);
+  };
+
+  const updateProfile = async (data: Partial<User>) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      });
+      
+      const result = await response.json();
+      if (result.success && user) {
+        const updatedUser: User = {
+          ...user,
+          ...data,
+        };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        setUser(updatedUser);
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+    }
   };
 
   const requireAuth = () => {
-    if (!user) {
-      // Store the intended destination
-      sessionStorage.setItem('redirectAfterLogin', window.location.pathname);
-      router.push('/login');
-      return false;
-    }
-    return true;
+    return !!user;
   };
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        isLoading,
         isAuthenticated: !!user,
+        isLoading,
         login,
-        loginWithOTP,
-        sendOTP,
-        logout,
         register,
+        logout,
+        sendOTP,
+        loginWithOTP,
+        updateProfile,
         requireAuth,
       }}
     >
