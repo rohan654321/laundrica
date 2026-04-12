@@ -13,9 +13,9 @@ const getToken = () => {
 async function apiCall(endpoint: string, options: RequestInit = {}) {
   const token = getToken();
   
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...options.headers,
+    ...(options.headers as Record<string, string> || {}),
   };
   
   if (token) {
@@ -86,6 +86,16 @@ export const authAPI = {
   resetPassword: (token: string, password: string) => apiCall(`/auth/reset-password/${token}`, {
     method: 'PUT',
     body: JSON.stringify({ password }),
+  }),
+  
+  sendOTP: (phone: string) => apiCall('/auth/send-otp', {
+    method: 'POST',
+    body: JSON.stringify({ phone }),
+  }),
+  
+  loginWithOTP: (phone: string, otp: string) => apiCall('/auth/login-otp', {
+    method: 'POST',
+    body: JSON.stringify({ phone, otp }),
   }),
 };
 

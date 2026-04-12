@@ -444,7 +444,7 @@ export default function AdminReports() {
                     {reportData.topProducts.map((product, index) => (
                       <tr key={index} className="border-b">
                         <td className="py-3">{product.name}</td>
-                        <td className="py-3 capitalize">{product.category || 'General'}</td>
+                        {/* <td className="py-3 capitalize">{product.category || 'General'}</td> */}
                         <td className="py-3">{product.sales}</td>
                         <td className="py-3 text-green-600">
                           AED {product.revenue.toFixed(2)}

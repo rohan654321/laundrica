@@ -39,6 +39,7 @@ export function ProductCard({ product }: ProductCardProps) {
       quantity: quantity,
       category: 'print-store',
       image: product.image,
+      serviceItems: []
     });
   };
 

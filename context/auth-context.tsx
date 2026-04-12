@@ -13,12 +13,22 @@ interface User {
   address?: string;
 }
 
+interface RegisterData {
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+}
+
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   userRole: string | null;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  register: (userData: RegisterData) => Promise<{ success: boolean; error?: string }>;
+  sendOTP: (phone: string) => Promise<void>;
+  loginWithOTP: (phone: string, otp: string) => Promise<void>;
   logout: () => void;
   updateUser: (userData: Partial<User>) => void;
 }
@@ -89,6 +99,56 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const register = async (userData: RegisterData) => {
+    try {
+      const response = await authAPI.register(userData);
+      
+      if (response.success && response.token && response.user) {
+        // Store token and user data
+        localStorage.setItem('token', response.token);
+        localStorage.setItem('user', JSON.stringify(response.user));
+        setUser(response.user);
+        
+        return { success: true };
+      } else {
+        return { success: false, error: response.message || 'Registration failed' };
+      }
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      return { success: false, error: error.message || 'Registration failed' };
+    }
+  };
+
+  const sendOTP = async (phone: string) => {
+    try {
+      const response = await authAPI.sendOTP(phone);
+      if (!response.success) {
+        throw new Error(response.message || 'Failed to send OTP');
+      }
+    } catch (error: any) {
+      console.error('Send OTP error:', error);
+      throw error;
+    }
+  };
+
+  const loginWithOTP = async (phone: string, otp: string) => {
+    try {
+      const response = await authAPI.loginWithOTP(phone, otp);
+      
+      if (response.success && response.token && response.user) {
+        // Store token and user data
+        localStorage.setItem('token', response.token);
+        localStorage.setItem('user', JSON.stringify(response.user));
+        setUser(response.user);
+      } else {
+        throw new Error(response.message || 'OTP verification failed');
+      }
+    } catch (error: any) {
+      console.error('OTP login error:', error);
+      throw error;
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -109,6 +169,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAuthenticated: !!user,
     userRole: user?.role || null,
     login,
+    register,
+    sendOTP,
+    loginWithOTP,
     logout,
     updateUser,
   };
