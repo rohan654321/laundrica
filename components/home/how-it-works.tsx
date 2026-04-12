@@ -9,7 +9,7 @@ import Image from 'next/image';
 // Forest Green themed icons - simplified
 const CalendarIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-    <path d="M8 2V6M16 2V6M3 10H21M5 4H19C20.1046 4 21 4.89543 21 6V20C21 21.1046 20.1046 22 19 22H5C3.89543 22 3 21.1046 3 20V6C3 4.89543 3.89543 4 5 4Z" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+    <path d="M8 2V6M16 2V6M3 10H21M5 4H19C20.1046 4 21 4.89543 4 21V6C3 4.89543 3.89543 4 5 4Z" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
     <rect x="7" y="12" width="2" height="2" fill="white"/>
     <rect x="11" y="12" width="2" height="2" fill="white"/>
     <rect x="15" y="12" width="2" height="2" fill="white"/>
@@ -74,11 +74,44 @@ const steps = [
 export function HowItWorks() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
+  const [activeStep, setActiveStep] = useState(0);
+  const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ['start start', 'end end'],
   });
+
+  // Track active step based on scroll position
+  useEffect(() => {
+    const observers = stepRefs.current.map((ref, index) => {
+      if (!ref) return null;
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              setActiveStep(index);
+            }
+          });
+        },
+        {
+          threshold: 0.5, // Trigger when 50% of the element is visible
+          rootMargin: '-100px 0px -100px 0px' // Adjust trigger zone
+        }
+      );
+
+      observer.observe(ref);
+      return observer;
+    });
+
+    // Cleanup observers
+    return () => {
+      observers.forEach((observer) => {
+        if (observer) observer.disconnect();
+      });
+    };
+  }, []);
 
   const getStepProgress = (index: number) => {
     const stepStart = index / steps.length;
@@ -93,6 +126,27 @@ export function HowItWorks() {
 
   return (
     <section className="relative bg-black">
+      {/* Fixed Navigation Dots */}
+      <div className="fixed right-8 top-1/2 transform -translate-y-1/2 z-50 hidden lg:flex flex-col gap-3">
+        {steps.map((step, index) => (
+          <button
+            key={index}
+            onClick={() => {
+              stepRefs.current[index]?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+              });
+            }}
+            className={`w-3 h-3 rounded-full transition-all duration-300 ${
+              activeStep === index
+                ? 'bg-[#1f4f2b] scale-125'
+                : 'bg-white/30 hover:bg-white/50'
+            }`}
+            aria-label={`Go to step ${step.step}`}
+          />
+        ))}
+      </div>
+
       {/* Steps Container */}
       <div ref={containerRef} className="relative">
         {steps.map((step, index) => {
@@ -103,11 +157,11 @@ export function HowItWorks() {
           return (
             <motion.div
               key={index}
-              className="relative h-screen w-full overflow-hidden"
+              ref={(el) => { stepRefs.current[index] = el; }}
+              className="relative min-h-screen w-full overflow-hidden"
               initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
+              animate={{ opacity: 1 }}
               transition={{ duration: 0.8 }}
-              viewport={{ once: false, amount: 0.3 }}
             >
               {/* Background Image */}
               <div className="absolute inset-0">
@@ -126,26 +180,26 @@ export function HowItWorks() {
                   <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-gray-800" />
                 )}
                 {/* Dark Overlay for better text readability */}
-                <div className="absolute inset-0 bg-black/40" />
+                <div className="absolute inset-0 bg-black/50" />
               </div>
 
               {/* Content */}
-              <div className="relative h-full flex items-center">
-                <div className="max-w-7xl mx-auto px-6 w-full">
+              <div className="relative min-h-screen flex items-center">
+                <div className="max-w-7xl mx-auto px-6 w-full py-20">
                   <motion.div
                     style={{
                       x: useTransform(progress, [0, 1], [isEven ? -100 : 100, 0]),
                       opacity: progress
                     }}
-                    transition={{ duration: 0.6 }}
+                    transition={{ duration: 0.8 }}
                     className={`max-w-2xl ${isEven ? 'md:ml-0' : 'md:ml-auto'}`}
                   >
                     {/* Step Number */}
                     <motion.div
                       initial={{ scale: 0, opacity: 0 }}
-                      whileInView={{ scale: 1, opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.2 }}
-                      className="text-7xl md:text-8xl font-bold text-white/5 mb-4"
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ duration: 0.6, delay: 0.2 }}
+                      className="text-8xl md:text-9xl font-bold text-white/10 mb-4"
                     >
                       {step.step}
                     </motion.div>
@@ -153,8 +207,8 @@ export function HowItWorks() {
                     {/* Icon */}
                     <motion.div
                       initial={{ scale: 0, rotate: -180 }}
-                      whileInView={{ scale: 1, rotate: 0 }}
-                      transition={{ duration: 0.5, delay: 0.3 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{ duration: 0.6, delay: 0.3 }}
                       className="w-16 h-16 rounded-2xl bg-[#1f4f2b] flex items-center justify-center mb-6 shadow-lg"
                     >
                       <Icon />
@@ -163,8 +217,8 @@ export function HowItWorks() {
                     {/* Title */}
                     <motion.h2
                       initial={{ y: 30, opacity: 0 }}
-                      whileInView={{ y: 0, opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.4 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ duration: 0.6, delay: 0.4 }}
                       className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4"
                     >
                       {step.title}
@@ -173,9 +227,9 @@ export function HowItWorks() {
                     {/* Description */}
                     <motion.p
                       initial={{ y: 30, opacity: 0 }}
-                      whileInView={{ y: 0, opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.5 }}
-                      className="text-base md:text-lg text-gray-200 mb-8 leading-relaxed max-w-lg"
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ duration: 0.6, delay: 0.5 }}
+                      className="text-base md:text-lg text-gray-100 mb-8 leading-relaxed max-w-lg"
                     >
                       {step.description}
                     </motion.p>
@@ -183,7 +237,7 @@ export function HowItWorks() {
                     {/* Decorative Line */}
                     <motion.div
                       initial={{ width: 0 }}
-                      whileInView={{ width: 80 }}
+                      animate={{ width: 80 }}
                       transition={{ duration: 0.8, delay: 0.6 }}
                       className="h-1 bg-[#1f4f2b] rounded-full"
                     />
@@ -203,7 +257,7 @@ export function HowItWorks() {
           );
         })}
 
-        {/* Final CTA Section - Redesigned and more attractive */}
+        {/* Final CTA Section */}
         <motion.div
           className="relative min-h-[60vh] w-full overflow-hidden"
           initial={{ opacity: 0 }}
@@ -232,7 +286,7 @@ export function HowItWorks() {
                 ✨ Join Our Community
               </motion.div>
               
-              {/* Main heading - smaller and more elegant */}
+              {/* Main heading */}
               <motion.h2
                 initial={{ y: 30, opacity: 0 }}
                 whileInView={{ y: 0, opacity: 1 }}
@@ -305,7 +359,7 @@ export function HowItWorks() {
                 transition={{ duration: 0.6, delay: 0.5 }}
                 className="mt-10 pt-8 border-t border-white/10"
               >
-                <div className="flex justify-center items-center gap-6 text-white/60 text-sm">
+                <div className="flex flex-wrap justify-center items-center gap-6 text-white/60 text-sm">
                   <span>⭐ 4.9/5 from 2,500+ reviews</span>
                   <span>🔒 Secure Payment</span>
                   <span>✅ Satisfaction Guaranteed</span>
