@@ -18,7 +18,7 @@ import {
 
 export default function CartPage() {
   const { cartItems, updateQuantity, removeFromCart, clearCart } = useCart();
-  const { isAuthenticated, requireAuth } = useAuth();
+  const { isAuthenticated,  } = useAuth();
   const router = useRouter();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [promoCode, setPromoCode] = useState('');
@@ -100,13 +100,12 @@ export default function CartPage() {
                 {cartItems.reduce((sum, item) => sum + item.quantity, 0)} items in your cart
               </p>
             </div>
-            <Button
-              variant="outline"
-              onClick={clearCart}
-              className="border-white text-white hover:bg-white/20 rounded-xl"
-            >
-              Clear Cart
-            </Button>
+       <Button
+  onClick={clearCart}
+  className="bg-transparent border border-white text-white hover:bg-white/10 hover:text-white rounded-xl"
+>
+  Clear Cart
+</Button>
           </div>
         </div>
       </section>

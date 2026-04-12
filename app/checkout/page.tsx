@@ -1,4 +1,3 @@
-// app/checkout/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -11,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { useCart } from '@/context/cart-context';
 import { useAuth } from '@/context/auth-context';
 import { OTPLoginModal } from '@/components/auth/otp-login-modal';
+import { orderAPI } from '@/lib/api';
 import { ArrowLeft, Check, AlertCircle, Truck, Clock, Shield, MapPin } from 'lucide-react';
 
 interface CheckoutFormData {
@@ -33,11 +33,12 @@ interface CheckoutFormData {
 export default function CheckoutPage() {
   const router = useRouter();
   const { cartItems, getTotalPrice, clearCart } = useCart();
-  const { user, isAuthenticated, requireAuth } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderId, setOrderId] = useState('');
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [error, setError] = useState('');
 
   // Split user name safely
   const getUserName = () => {
@@ -76,72 +77,92 @@ export default function CheckoutPage() {
   }, [isAuthenticated]);
 
   const totalPrice = getTotalPrice();
-  const deliveryFee = totalPrice > 100 ? 0 : 10;
+  const deliveryFee = totalPrice > 100 ? 0 : 15;
   const tax = totalPrice * 0.05; // 5% VAT for UAE
   const finalTotal = totalPrice + deliveryFee + tax;
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // FIXED: Updated handleSubmit with better error handling
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Check authentication again before processing
-    if (!isAuthenticated) {
-      setShowLoginModal(true);
-      return;
-    }
-    
     setIsProcessing(true);
+    setError('');
 
-    // Simulate payment processing
-    setTimeout(() => {
-      const mockOrderId = `ORD-${Date.now()}`;
-      setOrderId(mockOrderId);
-      setOrderPlaced(true);
-      setIsProcessing(false);
-      clearCart();
-      
-      // Save order to localStorage for demo
-      const orders = JSON.parse(localStorage.getItem('orders') || '[]');
-      orders.push({
-        id: mockOrderId,
-        date: new Date().toISOString(),
-        items: cartItems,
-        total: finalTotal,
+    try {
+      // Validate required fields
+      if (!formData.address || !formData.city || !formData.phone) {
+        throw new Error('Please fill in all required shipping fields');
+      }
+
+      if (!formData.pickupDate || !formData.pickupTime) {
+        throw new Error('Please select pickup date and time');
+      }
+
+      // Prepare order data
+      const orderData = {
+        items: cartItems.map(item => ({
+          productId: item.id, // This is the slug from cart
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price, // Include price as fallback
+          image: item.image,
+          serviceItems: item.serviceItems || [],
+        })),
         shippingAddress: {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
+          firstName: formData.firstName || user?.name?.split(' ')[0] || '',
+          lastName: formData.lastName || '',
+          email: formData.email || user?.email || '',
+          phone: formData.phone || user?.phone || '',
           address: formData.address,
           city: formData.city,
           state: formData.state,
-          zipCode: formData.zipCode
+          zipCode: formData.zipCode,
         },
+        paymentMethod: 'card',
         pickupDetails: {
           date: formData.pickupDate,
           time: formData.pickupTime,
-          instructions: formData.specialInstructions
+          instructions: formData.specialInstructions,
         },
-        status: 'confirmed'
-      });
-      localStorage.setItem('orders', JSON.stringify(orders));
-    }, 2000);
+      };
+
+      console.log('Sending order data:', orderData);
+
+      const response = await orderAPI.createOrder(orderData);
+      console.log('Order response:', response);
+
+      if (response.success) {
+        setOrderId(response.order._id);
+        setOrderPlaced(true);
+        await clearCart();
+      } else {
+        throw new Error(response.message || 'Failed to create order');
+      }
+
+    } catch (err: any) {
+      console.error('Order creation error:', err);
+      setError(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleLoginSuccess = () => {
-    // After successful login, the user will be authenticated
-    // The component will re-render and show the checkout form
     setShowLoginModal(false);
   };
 
-  // Generate available time slots
+  // Generate time slots
   const getTimeSlots = () => {
     const slots = [];
     for (let i = 9; i <= 18; i++) {
-      slots.push(`${i}:00 AM`);
-      slots.push(`${i}:30 AM`);
+      const period = i < 12 ? 'AM' : 'PM';
+      const hour = i > 12 ? i - 12 : i;
+      slots.push(`${hour}:00 ${period}`);
+      slots.push(`${hour}:30 ${period}`);
     }
     return slots;
   };
@@ -204,14 +225,14 @@ export default function CheckoutPage() {
                 <div className="mb-4">
                   <p className="text-sm text-gray-500 mb-1">Pickup Date</p>
                   <p className="text-lg font-semibold text-gray-900">
-                    {formData.pickupDate || 'Will be scheduled'}
+                    {formData.pickupDate ? new Date(formData.pickupDate).toLocaleDateString() : 'Will be scheduled'}
                   </p>
                 </div>
                 
                 <div className="mb-4">
-                  <p className="text-sm text-gray-500 mb-1">Estimated Return</p>
+                  <p className="text-sm text-gray-500 mb-1">Pickup Time</p>
                   <p className="text-lg font-semibold text-gray-900">
-                    Within 24-48 hours after pickup
+                    {formData.pickupTime || 'To be confirmed'}
                   </p>
                 </div>
                 
@@ -257,6 +278,14 @@ export default function CheckoutPage() {
         <div className="max-w-7xl mx-auto grid lg:grid-cols-3 gap-8">
           {/* Checkout Form */}
           <form onSubmit={handleSubmit} className="lg:col-span-2 space-y-6">
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl">
+                <p className="font-medium">Error</p>
+                <p className="text-sm">{error}</p>
+              </div>
+            )}
+
             {/* Shipping Information */}
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
               <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-2">
@@ -366,14 +395,13 @@ export default function CheckoutPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Zip Code *
+                    Zip Code
                   </label>
                   <Input
                     placeholder="Zip Code"
                     name="zipCode"
                     value={formData.zipCode}
                     onChange={handleInputChange}
-                    required
                     className="rounded-xl"
                   />
                 </div>
@@ -395,7 +423,7 @@ export default function CheckoutPage() {
                   <select
                     name="pickupDate"
                     value={formData.pickupDate}
-                    onChange={handleInputChange as any}
+                    onChange={handleInputChange}
                     required
                     className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
                   >
@@ -420,7 +448,7 @@ export default function CheckoutPage() {
                   <select
                     name="pickupTime"
                     value={formData.pickupTime}
-                    onChange={handleInputChange as any}
+                    onChange={handleInputChange}
                     required
                     className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
                   >
@@ -453,49 +481,43 @@ export default function CheckoutPage() {
                 <Shield className="w-6 h-6 text-green-600" />
                 Payment Method
               </h2>
+              
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Card Number *
-                  </label>
-                  <Input
-                    placeholder="1234 5678 9012 3456"
-                    name="cardNumber"
-                    value={formData.cardNumber}
-                    onChange={handleInputChange}
-                    required
-                    maxLength={16}
-                    className="rounded-xl"
-                  />
+                <div className="p-4 bg-green-50 rounded-xl border border-green-200">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="radio"
+                      id="card"
+                      name="paymentMethod"
+                      value="card"
+                      defaultChecked
+                      className="w-4 h-4 text-green-600"
+                    />
+                    <label htmlFor="card" className="font-medium text-gray-900">
+                      Credit / Debit Card
+                    </label>
+                  </div>
+                  <p className="text-sm text-gray-500 mt-2 ml-7">
+                    Pay securely with your card. Your payment is encrypted and secure.
+                  </p>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Expiry Date *
-                    </label>
-                    <Input
-                      placeholder="MM/YY"
-                      name="cardExpiry"
-                      value={formData.cardExpiry}
-                      onChange={handleInputChange}
-                      required
-                      className="rounded-xl"
+                
+                <div className="p-4 border border-gray-200 rounded-xl">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="radio"
+                      id="cash"
+                      name="paymentMethod"
+                      value="cash"
+                      className="w-4 h-4 text-green-600"
                     />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      CVC *
+                    <label htmlFor="cash" className="font-medium text-gray-900">
+                      Cash on Pickup
                     </label>
-                    <Input
-                      placeholder="123"
-                      name="cardCVC"
-                      value={formData.cardCVC}
-                      onChange={handleInputChange}
-                      required
-                      maxLength={3}
-                      className="rounded-xl"
-                    />
                   </div>
+                  <p className="text-sm text-gray-500 mt-2 ml-7">
+                    Pay when we pick up your laundry
+                  </p>
                 </div>
               </div>
               
@@ -525,7 +547,7 @@ export default function CheckoutPage() {
                     Processing...
                   </div>
                 ) : (
-                  'Place Order'
+                  `Place Order • AED ${finalTotal.toFixed(2)}`
                 )}
               </Button>
             </div>
@@ -540,6 +562,9 @@ export default function CheckoutPage() {
                     <Truck className="w-5 h-5" />
                     Order Summary
                   </h2>
+                  <p className="text-sm text-white/80 mt-1">
+                    {cartItems.length} item{cartItems.length !== 1 ? 's' : ''}
+                  </p>
                 </div>
                 
                 <div className="p-6">
@@ -567,7 +592,7 @@ export default function CheckoutPage() {
                     <div className="flex justify-between text-gray-600">
                       <span>Delivery Fee</span>
                       <span>
-                        {deliveryFee === 0 ? 'FREE' : `AED ${deliveryFee}`}
+                        {deliveryFee === 0 ? 'FREE' : `AED ${deliveryFee.toFixed(2)}`}
                       </span>
                     </div>
                     <div className="flex justify-between text-gray-600">

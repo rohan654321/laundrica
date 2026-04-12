@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Mail, Phone, MapPin } from 'lucide-react';
+import Image from 'next/image';
 
 export function Footer() {
   return (
@@ -7,17 +8,24 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           {/* Brand */}
-          <div>
-            <div className="flex items-center gap-2 font-bold text-lg mb-4">
-              <span className="w-8 h-8 bg-primary-foreground rounded-lg flex items-center justify-center text-primary">
-                L
-              </span>
-              Laundrica
-            </div>
-            <p className="text-sm opacity-90">
-              Professional laundry services for your home and business.
-            </p>
-          </div>
+          {/* Brand */}
+<div>
+  <Link href="/" className="flex items-center mb-4">
+    <div className="relative w-32 h-12">
+      <Image
+        src="/images/laundrica png.png"
+        alt="Laundrica Logo"
+        fill
+        className="object-contain brightness-0 invert"
+        priority
+      />
+    </div>
+  </Link>
+
+  <p className="text-sm opacity-90">
+    Professional laundry services for your home and business.
+  </p>
+</div>
 
           {/* Quick Links */}
           <div>

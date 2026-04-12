@@ -9,7 +9,7 @@ import { FeatureComparison } from '@/components/pricing/feature-comparison';
 import { ServiceMenu } from '@/components/pricing/service-menu';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import { Sparkles, Shirt, Home, Crown } from 'lucide-react';
+import { Sparkles, Shirt, Home, Crown, Download, FileText } from 'lucide-react';
 
 export default function PricingPage() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
@@ -33,6 +33,18 @@ export default function PricingPage() {
       y: 0,
       transition: { duration: 0.6 },
     },
+  };
+
+  // Function to handle PDF download
+  const handleDownloadPDF = () => {
+    // Create a temporary link to your PDF file
+    const pdfUrl = '/pricing-menu.pdf'; // Update this path to your actual PDF file
+    const link = document.createElement('a');
+    link.href = pdfUrl;
+    link.download = 'laundry-price-list.pdf'; // Download with this filename
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -93,35 +105,6 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* Subscription Plans Section */}
-      <section className="py-20 px-4 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <motion.h2
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="text-4xl font-bold text-[#1f4f2b] mb-4"
-            >
-              Choose Your Perfect Plan
-            </motion.h2>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
-              className="text-lg text-gray-600"
-            >
-              All plans include free pickup, delivery, and professional care
-            </motion.p>
-            <div className="mt-8">
-              <PricingToggle billingCycle={billingCycle} setBillingCycle={setBillingCycle} />
-            </div>
-          </div>
-          <PricingCards billingCycle={billingCycle} />
-        </div>
-      </section>
-
       {/* A La Carte Services Section - From PDF */}
       <section className="py-20 px-4 bg-[#f8faf6]">
         <div className="max-w-7xl mx-auto">
@@ -143,6 +126,19 @@ export default function PricingPage() {
               Pay per item — no subscription needed
             </motion.p>
             <p className="text-sm text-gray-500 mt-2">*Prices in AED | Subject to variation based on garment condition</p>
+          </div>
+
+          {/* SQUARE DOWNLOAD BUTTON - BEFORE THE TABLE */}
+          <div className="flex justify-center mb-6">
+            <motion.button
+              onClick={handleDownloadPDF}
+              whileHover={{ scale: 1.05, rotate: 0 }}
+              whileTap={{ scale: 0.95 }}
+              className="w-12 h-12 bg-[#1f4f2b] hover:bg-[#2a6e3a] text-white rounded-lg flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg group"
+              title="Download Price List PDF"
+            >
+              <Download className="w-5 h-5 group-hover:animate-bounce" />
+            </motion.button>
           </div>
 
           {/* Category Tabs */}
@@ -171,32 +167,6 @@ export default function PricingPage() {
           </div>
 
           <ServiceMenu activeCategory={activeCategory} />
-        </div>
-      </section>
-
-      {/* Feature Comparison Section */}
-      <section className="py-20 px-4 bg-white">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <motion.h2
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="text-4xl font-bold text-[#1f4f2b] mb-4"
-            >
-              Feature Comparison
-            </motion.h2>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
-              className="text-lg text-gray-600"
-            >
-              Compare features across our subscription tiers
-            </motion.p>
-          </div>
-          <FeatureComparison />
         </div>
       </section>
 

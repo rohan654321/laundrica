@@ -1,105 +1,172 @@
-// context/cart-context.tsx
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-
-// Update CartCategory to include all possible categories
-export type CartCategory = 'service' | 'print-store' | 'membership' | 'men' | 'women' | 'children' | 'household';
+import { cartAPI } from '@/lib/api';
+import { useAuth } from './auth-context';
 
 export interface CartItem {
+  serviceItems: never[];
   id: string;
   name: string;
   price: number;
   quantity: number;
-  image: string;
-  category: CartCategory;
-  description?: string; // Make optional
-  unit?: string; // Add unit field
-  serviceId?: string; // Add serviceId for reference
-  itemId?: string; // Add original itemId
+  category: string;
+  description?: string;
+  image?: string;
 }
 
 interface CartContextType {
   cartItems: CartItem[];
-  addToCart: (item: CartItem) => void;
-  removeFromCart: (id: string) => void;
-  updateQuantity: (id: string, quantity: number) => void;
-  clearCart: () => void;
+  addToCart: (item: CartItem) => Promise<void>;
+  updateQuantity: (id: string, quantity: number) => Promise<void>;
+  removeFromCart: (id: string) => Promise<void>;
+  clearCart: () => Promise<void>;
+  getCartCount: () => number;
   getTotalPrice: () => number;
-  getItemsByCategory: (category: CartCategory) => CartItem[];
+  isLoading: boolean;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const { isAuthenticated } = useAuth();
 
-  // Load from localStorage
+  // Load cart from backend when authenticated
   useEffect(() => {
-    const savedCart = localStorage.getItem('laundrica-cart');
-    if (savedCart) {
-      try {
-        setCartItems(JSON.parse(savedCart));
-      } catch (error) {
-        console.error('Failed to load cart:', error);
-      }
-    }
-    setIsLoaded(true);
-  }, []);
-
-  // Save to localStorage
-  useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem('laundrica-cart', JSON.stringify(cartItems));
-    }
-  }, [cartItems, isLoaded]);
-
-  const addToCart = (item: CartItem) => {
-    setCartItems((prevItems) => {
-      const existingItem = prevItems.find((i) => i.id === item.id);
-
-      if (existingItem) {
-        return prevItems.map((i) =>
-          i.id === item.id
-            ? { ...i, quantity: i.quantity + item.quantity }
-            : i
-        );
-      }
-
-      return [...prevItems, item];
-    });
-  };
-
-  const removeFromCart = (id: string) => {
-    setCartItems((prevItems) => prevItems.filter((item) => item.id !== id));
-  };
-
-  const updateQuantity = (id: string, quantity: number) => {
-    if (quantity <= 0) {
-      removeFromCart(id);
+    if (isAuthenticated) {
+      loadCartFromBackend();
     } else {
-      setCartItems((prevItems) =>
-        prevItems.map((item) =>
-          item.id === id ? { ...item, quantity } : item
-        )
-      );
+      // Load from localStorage for guests
+      loadCartFromLocalStorage();
+    }
+  }, [isAuthenticated]);
+
+  const loadCartFromBackend = async () => {
+    try {
+      setIsLoading(true);
+      const data = await cartAPI.getCart();
+      if (data.success && data.items) {
+        setCartItems(data.items);
+        // Sync to localStorage as backup
+        localStorage.setItem('cart', JSON.stringify(data.items));
+      }
+    } catch (error) {
+      console.error('Error loading cart from backend:', error);
+      // Fallback to localStorage
+      loadCartFromLocalStorage();
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const clearCart = () => {
-    setCartItems([]);
+  const loadCartFromLocalStorage = () => {
+    const savedCart = localStorage.getItem('cart');
+    if (savedCart) {
+      setCartItems(JSON.parse(savedCart));
+    }
+    setIsLoading(false);
+  };
+
+  const saveCartToLocalStorage = (items: CartItem[]) => {
+    localStorage.setItem('cart', JSON.stringify(items));
+  };
+
+  const addToCart = async (item: CartItem) => {
+    try {
+      if (isAuthenticated) {
+        // Add to backend cart
+        const data = await cartAPI.addToCart({
+          productId: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          category: item.category,
+          description: item.description,
+          image: item.image,
+        });
+        
+        if (data.success) {
+          // Refresh cart from backend
+          await loadCartFromBackend();
+        }
+      } else {
+        // Guest cart - store locally
+        const existingItemIndex = cartItems.findIndex(i => i.id === item.id);
+        let updatedCart;
+        
+        if (existingItemIndex >= 0) {
+          updatedCart = [...cartItems];
+          updatedCart[existingItemIndex].quantity += item.quantity;
+        } else {
+          updatedCart = [...cartItems, item];
+        }
+        
+        setCartItems(updatedCart);
+        saveCartToLocalStorage(updatedCart);
+      }
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      throw error;
+    }
+  };
+
+  const updateQuantity = async (id: string, quantity: number) => {
+    try {
+      if (isAuthenticated) {
+        await cartAPI.updateCartItem(id, quantity);
+        await loadCartFromBackend();
+      } else {
+        const updatedCart = cartItems.map(item =>
+          item.id === id ? { ...item, quantity } : item
+        );
+        setCartItems(updatedCart);
+        saveCartToLocalStorage(updatedCart);
+      }
+    } catch (error) {
+      console.error('Error updating quantity:', error);
+      throw error;
+    }
+  };
+
+  const removeFromCart = async (id: string) => {
+    try {
+      if (isAuthenticated) {
+        await cartAPI.removeFromCart(id);
+        await loadCartFromBackend();
+      } else {
+        const updatedCart = cartItems.filter(item => item.id !== id);
+        setCartItems(updatedCart);
+        saveCartToLocalStorage(updatedCart);
+      }
+    } catch (error) {
+      console.error('Error removing from cart:', error);
+      throw error;
+    }
+  };
+
+  const clearCart = async () => {
+    try {
+      if (isAuthenticated) {
+        await cartAPI.clearCart();
+        setCartItems([]);
+      } else {
+        setCartItems([]);
+        saveCartToLocalStorage([]);
+      }
+    } catch (error) {
+      console.error('Error clearing cart:', error);
+      throw error;
+    }
+  };
+
+  const getCartCount = () => {
+    return cartItems.reduce((sum, item) => sum + item.quantity, 0);
   };
 
   const getTotalPrice = () => {
-    return cartItems.reduce(
-      (total, item) => total + item.price * item.quantity,
-      0
-    );
-  };
-
-  const getItemsByCategory = (category: CartCategory) => {
-    return cartItems.filter(item => item.category === category);
+    return cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   };
 
   return (
@@ -107,11 +174,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
       value={{
         cartItems,
         addToCart,
-        removeFromCart,
         updateQuantity,
+        removeFromCart,
         clearCart,
+        getCartCount,
         getTotalPrice,
-        getItemsByCategory,
+        isLoading,
       }}
     >
       {children}
@@ -121,8 +189,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
 export function useCart() {
   const context = useContext(CartContext);
-  if (!context) {
-    throw new Error('useCart must be used within CartProvider');
+  if (context === undefined) {
+    throw new Error('useCart must be used within a CartProvider');
   }
   return context;
 }

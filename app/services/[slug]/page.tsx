@@ -13,7 +13,7 @@ import { services } from '@/lib/services-data';
 import { useCart } from '@/context/cart-context';
 import { useAuth } from '@/context/auth-context';
 import { OTPLoginModal } from '@/components/auth/otp-login-modal';
-import { Minus, Plus, ShoppingCart, ArrowLeft, Check, Clock, Shield, Truck, Leaf, AlertCircle, Phone, MessageCircle, DollarSign } from 'lucide-react';
+import { Minus, Plus, ShoppingCart, ArrowLeft, Check, Clock, Shield, Truck, Leaf, AlertCircle, Phone, MessageCircle } from 'lucide-react';
 
 // Define the category type to match your CartCategory
 type CategoryType = 'men' | 'women' | 'children' | 'household' | 'carpet' | 'shoes';
@@ -23,7 +23,7 @@ interface Category {
   label: string;
   icon: string;
   description: string;
-  contactForPricing?: boolean; // Add flag for contact-based services
+  contactForPricing?: boolean;
 }
 
 interface ServiceItem {
@@ -33,7 +33,7 @@ interface ServiceItem {
   unit: string;
   description: string;
   image?: string;
-  contactForPricing?: boolean; // Individual item flag
+  contactForPricing?: boolean;
 }
 
 export default function ServiceOrderPage() {
@@ -42,7 +42,7 @@ export default function ServiceOrderPage() {
   const slug = params.slug as string;
   const service = services.find(s => s.slug === slug);
   const { addToCart, cartItems } = useCart();
-  const { isAuthenticated, requireAuth } = useAuth();
+  const { isAuthenticated } = useAuth();
   
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [activeCategory, setActiveCategory] = useState<CategoryType>('men');
@@ -53,6 +53,24 @@ export default function ServiceOrderPage() {
   const [successMessage, setSuccessMessage] = useState('');
   const [showContactModal, setShowContactModal] = useState(false);
   const [contactItem, setContactItem] = useState<ServiceItem | null>(null);
+
+  // Map service names to their respective images (FIXED: Using correct paths)
+  const getServiceImageByName = (serviceName: string): string => {
+    const imageMap: { [key: string]: string } = {
+      'Laundry Services (Wash & Press)': '/images/services/laundry-wash-press.jpg',
+      'Dry Cleaning Services': '/images/services/dry-cleaning.jpg',
+      'Steam Pressing Service': '/images/services/steam-pressing.jpg',
+      'Shoe Cleaning': '/images/services/shoe-cleaning.jpg',
+      'Carpet Cleaning': '/images/services/carpet-cleaning.jpg',
+      'Curtain Cleaning': '/images/services/curtain-cleaning.jpg',
+      'Commercial Laundry': '/images/services/commercial-laundry.jpg',
+      'Apparel Care': '/images/services/apparel-care.jpg',
+      'Uniform Services': '/images/services/uniform-services.jpg',
+      'Accessories Cleaning': '/images/services/accessories-cleaning.jpg'
+    };
+    
+    return imageMap[serviceName] || '/images/services/placeholder.jpg';
+  };
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -69,7 +87,7 @@ export default function ServiceOrderPage() {
 
   // Handle WhatsApp contact
   const handleWhatsAppContact = (item: ServiceItem) => {
-    const phoneNumber = "+971501234567"; // Replace with your actual WhatsApp number
+    const phoneNumber = "+971501234567";
     const message = encodeURIComponent(
       `Hello, I'm interested in pricing for ${service?.name} - ${item.name}. Please share the pricing details.`
     );
@@ -78,7 +96,7 @@ export default function ServiceOrderPage() {
 
   // Handle Call contact
   const handleCallContact = () => {
-    const phoneNumber = "+971501234567"; // Replace with your actual phone number
+    const phoneNumber = "+971501234567";
     window.location.href = `tel:${phoneNumber}`;
   };
 
@@ -236,10 +254,13 @@ export default function ServiceOrderPage() {
     const quantity = quantities[item.id] || 0;
     if (quantity === 0) return;
 
-    // Check if user is authenticated
+    // Check if user is authenticated - FIXED: Redirect to login page instead of modal
     if (!isAuthenticated) {
       setPendingItem(item);
-      setShowLoginModal(true);
+      // Store the current path and item in sessionStorage to redirect back after login
+      sessionStorage.setItem('redirectAfterLogin', window.location.pathname);
+      sessionStorage.setItem('pendingItem', JSON.stringify({ item, quantity, activeCategory }));
+      router.push('/login');
       return;
     }
 
@@ -251,7 +272,8 @@ export default function ServiceOrderPage() {
       quantity,
       category: activeCategory as any,
       description: item.description,
-      image: service.icon || ''
+      image: service.icon || '',
+      serviceItems: []
     });
 
     // Show success animation
@@ -267,33 +289,6 @@ export default function ServiceOrderPage() {
       const { [item.id]: _, ...rest } = prev;
       return rest;
     });
-  };
-
-  const handleLoginSuccess = () => {
-    if (pendingItem) {
-      const quantity = quantities[pendingItem.id] || 0;
-      if (quantity > 0) {
-        addToCart({
-          id: `${service.id}-${pendingItem.id}`,
-          name: `${service.name} - ${pendingItem.name}`,
-          price: pendingItem.price,
-          quantity,
-          category: activeCategory as any,
-          description: pendingItem.description,
-          image: service.icon || ''
-        });
-        setAddedItems(prev => ({ ...prev, [pendingItem.id]: true }));
-        showToast(`Added ${quantity} × ${pendingItem.name} to cart!`);
-        setTimeout(() => {
-          setAddedItems(prev => ({ ...prev, [pendingItem.id]: false }));
-        }, 1000);
-        setQuantities(prev => {
-          const { [pendingItem.id]: _, ...rest } = prev;
-          return rest;
-        });
-      }
-      setPendingItem(null);
-    }
   };
 
   const getTotalItems = () => {
@@ -314,7 +309,15 @@ export default function ServiceOrderPage() {
     return cartItems.reduce((sum, item) => sum + item.quantity, 0);
   };
 
-  // Contact Modal Component
+  // Get the hero image for the service - FIXED: Using correct image mapping
+  const getHeroImage = () => {
+    // First try to use service.image if available
+    if (service.image) return service.image;
+    // Then try by name
+    return getServiceImageByName(service.name);
+  };
+
+  // Contact Modal Component - FIXED: Removed dollar sign, using AED
   const ContactModal = () => (
     <AnimatePresence>
       {showContactModal && contactItem && (
@@ -334,7 +337,7 @@ export default function ServiceOrderPage() {
           >
             <div className="text-center mb-6">
               <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <DollarSign className="w-8 h-8 text-amber-600" />
+                <Phone className="w-8 h-8 text-amber-600" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">
                 Contact for Pricing
@@ -401,23 +404,22 @@ export default function ServiceOrderPage() {
         )}
       </AnimatePresence>
 
-      {/* Hero Section */}
+      {/* Hero Section - FIXED: Image will now load correctly */}
       <section className="relative h-[300px] overflow-hidden">
-        <motion.div
-          initial={{ scale: 1.2 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 1.5 }}
-          className="absolute inset-0"
-        >
+        <div className="absolute inset-0">
           <Image
-            src={service.image}
+            src={getHeroImage()}
             alt={service.name}
             fill
             className="object-cover"
             priority
+            onError={(e) => {
+              const target = e.currentTarget;
+              target.src = '/images/services/placeholder.jpg';
+            }}
           />
           <div className="absolute inset-0 bg-gradient-to-r from-green-900/90 to-emerald-900/90" />
-        </motion.div>
+        </div>
         
         <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center">
           <motion.div
@@ -427,7 +429,7 @@ export default function ServiceOrderPage() {
             className="text-white"
           >
             <Link 
-              href={`/services/${service.slug}`}
+              href={'/services'}
               className="inline-flex items-center gap-2 text-white/80 hover:text-white mb-4 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -471,7 +473,7 @@ export default function ServiceOrderPage() {
             {isContactCategory && (
               <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
                 <p className="text-sm text-amber-800 flex items-center gap-2">
-                  <DollarSign className="w-4 h-4" />
+                  <Phone className="w-4 h-4" />
                   <span>Pricing varies based on requirements. Contact us for a personalized quote.</span>
                 </p>
               </div>
@@ -519,7 +521,7 @@ export default function ServiceOrderPage() {
                             {item.contactForPricing || isContactCategory ? (
                               <div className="flex items-center gap-2">
                                 <span className="text-amber-600 font-semibold">Contact for Price</span>
-                                <DollarSign className="w-4 h-4 text-amber-500" />
+                                <Phone className="w-4 h-4 text-amber-500" />
                               </div>
                             ) : (
                               <>
@@ -731,16 +733,7 @@ export default function ServiceOrderPage() {
       {/* Contact Modal */}
       <ContactModal />
 
-      {/* OTP Login Modal */}
-      <OTPLoginModal
-        isOpen={showLoginModal}
-        onClose={() => {
-          setShowLoginModal(false);
-          setPendingItem(null);
-        }}
-        onSuccess={handleLoginSuccess}
-        message="Please login to add items to your cart"
-      />
+      {/* Note: OTPLoginModal removed - now redirecting to /login page */}
 
       <Footer />
     </main>

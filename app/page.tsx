@@ -20,7 +20,7 @@ export default function Home() {
        {/* This is the slider component we created */}
       {/* Remove ServicesGrid since we're using ServicesSlider */}
       <WhyChooseUs />
-      <MembershipPlans />
+      {/* <MembershipPlans /> */}
       <Testimonials />
       <CTASection />
       <Footer />

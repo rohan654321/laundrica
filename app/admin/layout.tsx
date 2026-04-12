@@ -53,11 +53,13 @@ export default function AdminLayout({
   const pathname = usePathname();
   const router = useRouter();
 
-  useEffect(() => {
-    if (!isAuthenticated || user?.role !== 'admin') {
-      router.push('/login');
+useEffect(() => {
+  if (!isAuthenticated || user?.role !== 'admin') {
+    if (pathname !== '/admin/login') {
+      router.push('/admin/login');
     }
-  }, [isAuthenticated, user, router]);
+  }
+}, [isAuthenticated, user, pathname, router]);
 
   useEffect(() => {
     const darkMode = localStorage.getItem('darkMode') === 'true';
