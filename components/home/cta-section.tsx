@@ -45,7 +45,7 @@ export function CTASection() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/services">
               <Button size="lg" className="gap-2 rounded-full px-8">
-                Shop Now <ArrowRight className="w-4 h-4" />
+                Schedule Now <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
             <Link href="/contact">

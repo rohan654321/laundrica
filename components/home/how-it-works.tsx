@@ -1,402 +1,219 @@
-// components/home/how-it-works.tsx
 'use client';
 
-import { motion, useScroll, useTransform } from 'framer-motion';
-import Link from 'next/link';
-import { useRef, useState, useEffect } from 'react';
-import Image from 'next/image';
-
-// Forest Green themed icons - simplified
-const CalendarIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-    <path d="M8 2V6M16 2V6M3 10H21M5 4H19C20.1046 4 21 4.89543 4 21V6C3 4.89543 3.89543 4 5 4Z" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-    <rect x="7" y="12" width="2" height="2" fill="white"/>
-    <rect x="11" y="12" width="2" height="2" fill="white"/>
-    <rect x="15" y="12" width="2" height="2" fill="white"/>
-  </svg>
-);
-
-const BagIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-    <path d="M20 12V18C20 19.1046 19.1046 20 18 20H6C4.89543 20 4 19.1046 4 18V12M12 12V4M8 8H16" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-    <circle cx="12" cy="16" r="2" fill="white"/>
-  </svg>
-);
-
-const FacilityIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-    <path d="M3 9L12 3L21 9V20H3V9Z" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-    <path d="M9 20V12H15V20" stroke="white" strokeWidth="1.5"/>
-    <rect x="12" y="14" width="2" height="4" fill="white"/>
-  </svg>
-);
-
-const DeliveryIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-    <path d="M16 16H8M4 8H12M20 8H18" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-    <circle cx="6" cy="18" r="2" fill="white"/>
-    <circle cx="18" cy="18" r="2" fill="white"/>
-    <path d="M6 16L4 8H20L18 16H6Z" stroke="white" strokeWidth="1.5"/>
-  </svg>
-);
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { ShoppingBag, Truck, Droplets, PackageCheck, Clock, Shield, Leaf, Star } from 'lucide-react';
 
 const steps = [
   {
-    step: '01',
-    title: 'Place Your Order',
-    description: 'Schedule your pickup through our app or website. Choose your preferred date and time.',
-    icon: CalendarIcon,
-    bgImage: '/images/step-1.png'
+    title: 'Place Order',
+    shortTitle: 'Order',
+    description: 'Book your laundry pickup in seconds through our seamless platform.',
+    fullDescription: 'Simply select your laundry items, choose a pickup time that works for you, and confirm your order in under 60 seconds. Our intuitive interface makes scheduling effortless.',
+    icon: <ShoppingBag size={28} />,
+    features: ['Easy booking', 'Flexible timing', 'Instant confirmation'],
   },
   {
-    step: '02',
-    title: 'We Pick Up',
-    description: 'Our friendly staff arrives at your doorstep to collect your laundry. No need to wait all day.',
-    icon: BagIcon,
-    bgImage: '/images/step-2.jpg'
+    title: 'Pickup',
+    shortTitle: 'Pickup',
+    description: 'Our executive collects your laundry from your doorstep at your convenience.',
+    fullDescription: 'A professional delivery partner arrives at your selected time, carefully collects your laundry, and provides a confirmation receipt. No more rushing to the laundromat!',
+    icon: <Truck size={28} />,
+    features: ['Doorstep service', 'Real-time tracking', 'Professional handling'],
   },
   {
-    step: '03',
-    title: 'Professional Cleaning',
-    description: 'Your garments are cleaned using eco-friendly products and advanced technology.',
-    icon: FacilityIcon,
-    bgImage: '/images/step-3.jpg'
+    title: 'Wash & Care',
+    shortTitle: 'Wash',
+    description: 'We use premium cleaning methods and eco-friendly detergents.',
+    fullDescription: 'Your clothes receive expert care with our state-of-the-art washing technology. We separate by color, fabric type, and use premium eco-friendly detergents for lasting freshness.',
+    icon: <Droplets size={28} />,
+    features: ['Eco-friendly', 'Fabric care', 'Stain removal'],
   },
   {
-    step: '04',
-    title: 'Fresh Delivery',
-    description: 'Receive your freshly cleaned laundry within 24-48 hours, delivered to your door.',
-    icon: DeliveryIcon,
-    bgImage: '/images/step-4.jpg'
-  }
+    title: 'Delivery',
+    shortTitle: 'Deliver',
+    description: 'Fresh, neatly packed clothes delivered back to your home.',
+    fullDescription: 'Your clean, folded laundry arrives at your doorstep in premium packaging. Fresh, crisp, and ready to wear - we bring convenience right to you.',
+    icon: <PackageCheck size={28} />,
+    features: ['Neat folding', 'Premium packaging', 'On-time delivery'],
+  },
 ];
 
-export function HowItWorks() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
-  const [activeStep, setActiveStep] = useState(0);
-  const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
+export default function HowItWorksPremium() {
+  const [active, setActive] = useState(0);
 
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ['start start', 'end end'],
-  });
-
-  // Track active step based on scroll position
   useEffect(() => {
-    const observers = stepRefs.current.map((ref, index) => {
-      if (!ref) return null;
+    const interval = setInterval(() => {
+      setActive((prev) => (prev + 1) % steps.length);
+    }, 4000);
 
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              setActiveStep(index);
-            }
-          });
-        },
-        {
-          threshold: 0.5, // Trigger when 50% of the element is visible
-          rootMargin: '-100px 0px -100px 0px' // Adjust trigger zone
-        }
-      );
-
-      observer.observe(ref);
-      return observer;
-    });
-
-    // Cleanup observers
-    return () => {
-      observers.forEach((observer) => {
-        if (observer) observer.disconnect();
-      });
-    };
+    return () => clearInterval(interval);
   }, []);
 
-  const getStepProgress = (index: number) => {
-    const stepStart = index / steps.length;
-    const stepEnd = (index + 0.8) / steps.length;
-    return useTransform(scrollYProgress, [stepStart, stepEnd], [0, 1]);
-  };
-
-  const handleImageError = (index: number) => {
-    console.error(`Failed to load image: ${steps[index].bgImage}`);
-    setImageErrors(prev => ({ ...prev, [index]: true }));
-  };
+  // Calculate progress percentage (0% to 100%)
+  const progressPercentage = (active / (steps.length - 1)) * 100;
 
   return (
-    <section className="relative bg-black">
-      {/* Fixed Navigation Dots */}
-      <div className="fixed right-8 top-1/2 transform -translate-y-1/2 z-50 hidden lg:flex flex-col gap-3">
-        {steps.map((step, index) => (
-          <button
-            key={index}
-            onClick={() => {
-              stepRefs.current[index]?.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
-              });
-            }}
-            className={`w-3 h-3 rounded-full transition-all duration-300 ${
-              activeStep === index
-                ? 'bg-[#1f4f2b] scale-125'
-                : 'bg-white/30 hover:bg-white/50'
-            }`}
-            aria-label={`Go to step ${step.step}`}
-          />
-        ))}
-      </div>
+    <section className="py-20 md:py-28 bg-gradient-to-br from-white via-gray-50 to-white">
+      <div className="max-w-6xl mx-auto px-6 md:px-8">
+        
+        {/* Heading */}
+        <div className="text-center mb-12 md:mb-16">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
+              How It <span className="text-green-500">Works</span>
+            </h2>
+            <p className="text-gray-500 text-lg max-w-2xl mx-auto">
+              A simple, reliable process designed for your convenience
+            </p>
+          </motion.div>
+        </div>
 
-      {/* Steps Container */}
-      <div ref={containerRef} className="relative">
-        {steps.map((step, index) => {
-          const Icon = step.icon;
-          const isEven = index % 2 === 0;
-          const progress = getStepProgress(index);
-
-          return (
-            <motion.div
-              key={index}
-              ref={(el) => { stepRefs.current[index] = el; }}
-              className="relative min-h-screen w-full overflow-hidden"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8 }}
-            >
-              {/* Background Image */}
-              <div className="absolute inset-0">
-                {!imageErrors[index] && step.bgImage ? (
-                  <Image
-                    src={step.bgImage}
-                    alt={step.title}
-                    fill
-                    className="object-cover"
-                    onError={() => handleImageError(index)}
-                    priority={index === 0}
-                    sizes="100vw"
-                    quality={90}
-                  />
-                ) : (
-                  <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-gray-800" />
-                )}
-                {/* Dark Overlay for better text readability */}
-                <div className="absolute inset-0 bg-black/50" />
-              </div>
-
-              {/* Content */}
-              <div className="relative min-h-screen flex items-center">
-                <div className="max-w-7xl mx-auto px-6 w-full py-20">
-                  <motion.div
-                    style={{
-                      x: useTransform(progress, [0, 1], [isEven ? -100 : 100, 0]),
-                      opacity: progress
-                    }}
-                    transition={{ duration: 0.8 }}
-                    className={`max-w-2xl ${isEven ? 'md:ml-0' : 'md:ml-auto'}`}
-                  >
-                    {/* Step Number */}
-                    <motion.div
-                      initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ duration: 0.6, delay: 0.2 }}
-                      className="text-8xl md:text-9xl font-bold text-white/10 mb-4"
-                    >
-                      {step.step}
-                    </motion.div>
-
-                    {/* Icon */}
-                    <motion.div
-                      initial={{ scale: 0, rotate: -180 }}
-                      animate={{ scale: 1, rotate: 0 }}
-                      transition={{ duration: 0.6, delay: 0.3 }}
-                      className="w-16 h-16 rounded-2xl bg-[#1f4f2b] flex items-center justify-center mb-6 shadow-lg"
-                    >
-                      <Icon />
-                    </motion.div>
-
-                    {/* Title */}
-                    <motion.h2
-                      initial={{ y: 30, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ duration: 0.6, delay: 0.4 }}
-                      className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4"
-                    >
-                      {step.title}
-                    </motion.h2>
-
-                    {/* Description */}
-                    <motion.p
-                      initial={{ y: 30, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ duration: 0.6, delay: 0.5 }}
-                      className="text-base md:text-lg text-gray-100 mb-8 leading-relaxed max-w-lg"
-                    >
-                      {step.description}
-                    </motion.p>
-
-                    {/* Decorative Line */}
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: 80 }}
-                      transition={{ duration: 0.8, delay: 0.6 }}
-                      className="h-1 bg-[#1f4f2b] rounded-full"
-                    />
-                  </motion.div>
-                </div>
-              </div>
-
-              {/* Scroll Indicator for all but last step */}
-              {index < steps.length - 1 && (
-                <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-                  <div className="w-6 h-10 border-2 border-white/50 rounded-full flex justify-center">
-                    <div className="w-1 h-2 bg-white rounded-full mt-2 animate-scroll" />
-                  </div>
-                </div>
-              )}
-            </motion.div>
-          );
-        })}
-
-        {/* Final CTA Section */}
-        <motion.div
-          className="relative min-h-[60vh] w-full overflow-hidden"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: false, amount: 0.3 }}
-        >
-          {/* Background with subtle pattern */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#1f4f2b] via-[#2a6e3a] to-[#0a1f10]">
-            <div className="absolute inset-0 bg-black/20" />
-            {/* Decorative circles */}
-            <div className="absolute top-20 left-10 w-64 h-64 bg-white/5 rounded-full blur-3xl" />
-            <div className="absolute bottom-20 right-10 w-80 h-80 bg-white/5 rounded-full blur-3xl" />
-          </div>
+        {/* Steps Row with Progress Bar */}
+        <div className="relative mb-12">
           
-          {/* Content */}
-          <div className="relative min-h-[60vh] flex items-center justify-center text-center py-20">
-            <div className="max-w-4xl mx-auto px-6">
-              {/* Small badge */}
-              <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.5 }}
-                className="inline-block px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium mb-6"
+          {/* Progress Bar Container */}
+          <div className="absolute top-1/2 left-0 w-full -translate-y-1/2 px-6 md:px-8">
+            {/* Background Gray Line */}
+            <div className="w-full h-1.5 bg-gray-100 rounded-full" />
+            
+            {/* Green Filling Line */}
+            <motion.div
+              className="h-1.5 bg-gradient-to-r from-green-400 to-green-500 rounded-full relative"
+              style={{ 
+                width: `${progressPercentage}%`,
+                boxShadow: '0 0 12px rgba(34, 197, 94, 0.4)'
+              }}
+              initial={{ width: 0 }}
+              animate={{ width: `${progressPercentage}%` }}
+              transition={{ duration: 0.8, ease: 'easeInOut' }}
+            />
+          </div>
+
+          {/* Steps */}
+          <div className="relative flex justify-between items-center z-10">
+            {steps.map((step, index) => (
+              <motion.div 
+                key={index} 
+                className="flex flex-col items-center w-full cursor-pointer"
+                onClick={() => setActive(index)}
+                whileHover={{ y: -5 }}
+                transition={{ duration: 0.2 }}
               >
-                ✨ Join Our Community
-              </motion.div>
-              
-              {/* Main heading */}
-              <motion.h2
-                initial={{ y: 30, opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4"
-              >
-                Ready to Experience the Best Laundry Service?
-              </motion.h2>
-              
-              {/* Subheading */}
-              <motion.p
-                initial={{ y: 30, opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="text-lg md:text-xl text-gray-200 mb-8 max-w-2xl mx-auto"
-              >
-                Join over 10,000+ satisfied customers who enjoy fresh, clean laundry delivered right to their doorstep
-              </motion.p>
-              
-              {/* Features row */}
-              <motion.div
-                initial={{ y: 30, opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                className="flex flex-wrap justify-center gap-6 mb-10"
-              >
-                {[
-                  { text: "Free Pickup & Delivery", icon: "🚀" },
-                  { text: "24-48 Hour Turnaround", icon: "⚡" },
-                  { text: "Eco-Friendly Products", icon: "🌿" },
-                  { text: "100% Satisfaction", icon: "💯" }
-                ].map((feature, idx) => (
-                  <div key={idx} className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full">
-                    <span className="text-lg">{feature.icon}</span>
-                    <span className="text-white/90 text-sm">{feature.text}</span>
+                {/* Circle */}
+                <motion.div
+                  className={`relative w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
+                    active >= index
+                      ? 'border-green-500 bg-green-500 text-white shadow-lg shadow-green-200'
+                      : 'border-gray-300 bg-white text-gray-400 hover:border-green-300 hover:text-green-400'
+                  }`}
+                  animate={{
+                    scale: active === index ? 1.1 : 1,
+                  }}
+                  whileHover={{ scale: 1.05 }}
+                >
+                  <div className={active >= index ? 'text-white' : 'text-current'}>
+                    {step.icon}
                   </div>
-                ))}
-              </motion.div>
-              
-              {/* CTA Buttons */}
-              <motion.div
-                initial={{ y: 30, opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-                className="flex flex-col sm:flex-row gap-4 justify-center items-center"
-              >
-                <Link href="/services">
-                  <button className="group inline-flex items-center gap-2 px-8 py-4 bg-white text-[#1f4f2b] rounded-xl font-semibold hover:bg-gray-100 transition-all shadow-lg hover:shadow-2xl transform hover:-translate-y-1 text-base">
-                    Get Started Today
-                    <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
-                  </button>
-                </Link>
+
+                  {/* Glow Pulse */}
+                  {active === index && (
+                    <span className="absolute inset-0 rounded-full border-2 border-green-400 animate-ping opacity-75" />
+                  )}
+                </motion.div>
+
+                {/* Step Number & Title for Desktop */}
+                <div className="mt-3 text-center hidden md:block">
+                  <span className={`text-xs font-medium ${active >= index ? 'text-green-600' : 'text-gray-400'}`}>
+                    STEP {`0${index + 1}`}
+                  </span>
+                  <p className={`text-sm font-semibold mt-1 ${active >= index ? 'text-gray-800' : 'text-gray-400'}`}>
+                    {step.title}
+                  </p>
+                </div>
                 
-                <Link href="/pricing">
-                  <button className="group inline-flex items-center gap-2 px-8 py-4 bg-transparent border-2 border-white/30 text-white rounded-xl font-semibold hover:bg-white/10 transition-all transform hover:-translate-y-1 text-base">
-                    View Pricing
-                    <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </Link>
-              </motion.div>
-              
-              {/* Trust indicator */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.5 }}
-                className="mt-10 pt-8 border-t border-white/10"
-              >
-                <div className="flex flex-wrap justify-center items-center gap-6 text-white/60 text-sm">
-                  <span>⭐ 4.9/5 from 2,500+ reviews</span>
-                  <span>🔒 Secure Payment</span>
-                  <span>✅ Satisfaction Guaranteed</span>
+                {/* Mobile view - just step number */}
+                <div className="mt-2 text-center md:hidden">
+                  <span className={`text-xs font-medium ${active >= index ? 'text-green-600' : 'text-gray-400'}`}>
+                    {`0${index + 1}`}
+                  </span>
                 </div>
               </motion.div>
+            ))}
+          </div>
+        </div>
+
+        {/* Mobile step titles row */}
+        <div className="flex justify-between px-2 mb-8 md:hidden">
+          {steps.map((step, index) => (
+            <p key={index} className={`text-xs font-medium ${active >= index ? 'text-green-600' : 'text-gray-400'}`}>
+              {step.shortTitle}
+            </p>
+          ))}
+        </div>
+
+        {/* Active Content Card - Enhanced */}
+        <motion.div
+          key={active}
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -30 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          className="mt-8 max-w-3xl mx-auto"
+        >
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+            {/* Card Header */}
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-6 md:px-8 py-5 border-b border-green-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white shadow-md">
+                  {steps[active].icon}
+                </div>
+                <div>
+                  <h3 className="text-xl md:text-2xl font-bold text-gray-800">
+                    {steps[active].title}
+                  </h3>
+                  <p className="text-green-600 text-sm font-medium">
+                    Step {active + 1} of {steps.length}
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Card Body */}
+            <div className="p-6 md:p-8">
+              <p className="text-gray-700 text-base md:text-lg leading-relaxed mb-6">
+                {steps[active].fullDescription}
+              </p>
+              
+              {/* Features Grid */}
+              <div className="grid grid-cols-3 gap-3 md:gap-4 pt-4 border-t border-gray-100">
+                {steps[active].features.map((feature, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                    className="flex flex-col items-center text-center"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center mb-2">
+                      {idx === 0 && <Star size={14} className="text-green-600" />}
+                      {idx === 1 && <Clock size={14} className="text-green-600" />}
+                      {idx === 2 && <Shield size={14} className="text-green-600" />}
+                    </div>
+                    <span className="text-xs md:text-sm text-gray-600 font-medium">
+                      {feature}
+                    </span>
+                  </motion.div>
+                ))}
+              </div>
             </div>
           </div>
         </motion.div>
       </div>
-
-      {/* Add custom scroll animation styles */}
-      <style jsx>{`
-        @keyframes scroll {
-          0% {
-            transform: translateY(0);
-            opacity: 1;
-          }
-          100% {
-            transform: translateY(8px);
-            opacity: 0;
-          }
-        }
-        .animate-scroll {
-          animation: scroll 1.5s ease-in-out infinite;
-        }
-        @keyframes bounce {
-          0%, 100% {
-            transform: translateX(-50%) translateY(0);
-          }
-          50% {
-            transform: translateX(-50%) translateY(-10px);
-          }
-        }
-        .animate-bounce {
-          animation: bounce 2s ease-in-out infinite;
-        }
-      `}</style>
     </section>
   );
 }
