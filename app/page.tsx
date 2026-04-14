@@ -9,12 +9,14 @@ import ServicesSlider from '@/components/home/ServicesSlider';
 import { ServicesPricing } from '@/components/home/services-grid';
 import LaundryServiceSection from '@/components/home/laundryServicesSection';
 import HowItWorks from '@/components/home/how-it-works';
+import StatsSection from '@/components/home/statesSection';
 
 export default function Home() {
   return (
     <main className="flex flex-col min-h-screen">
       <Header />
       <HeroSection />
+      <StatsSection/>
       <ServicesSlider />
       <WhyChooseUs />
       <HowItWorks />
