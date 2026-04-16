@@ -8,24 +8,22 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           {/* Brand */}
-          {/* Brand */}
-<div>
-  <Link href="/" className="flex items-center mb-4">
-    <div className="relative w-32 h-12">
-      <Image
-        src="/images/laundrica png.png"
-        alt="Laundrica Logo"
-        fill
-        className="object-contain brightness-0 invert"
-        priority
-      />
-    </div>
-  </Link>
-
-  <p className="text-sm opacity-90">
-    Professional laundry services for your home and business.
-  </p>
-</div>
+          <div>
+            <Link href="/" className="flex items-center mb-4">
+              <div className="relative w-32 h-12">
+                <Image
+                  src="/images/laundrica png.png"
+                  alt="Laundrica Logo"
+                  fill
+                  className="object-contain brightness-0 invert"
+                  priority
+                />
+              </div>
+            </Link>
+            <p className="text-sm opacity-90">
+              Professional laundry services for your home and business.
+            </p>
+          </div>
 
           {/* Quick Links */}
           <div>
@@ -85,8 +83,15 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-primary-foreground/20 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center text-sm opacity-90">
+        {/* Short Legal Line - Trusted laundry partners */}
+        <div className="border-t border-primary-foreground/20 pt-6 mb-4">
+          <p className="text-xs text-center opacity-80">
+            Trusted laundry partners. Quality checked & delivered by Laundrica
+          </p>
+        </div>
+
+        <div className="pt-4">
+          <div className="flex flex-col md:flex-row justify-between items-center text-xs opacity-70">
             <p>&copy; 2024 Laundrica. All rights reserved.</p>
             <div className="flex gap-6 mt-4 md:mt-0">
               <Link href="/privacy" className="hover:opacity-80 transition-opacity">

@@ -4,14 +4,13 @@ import { useState, useEffect } from 'react';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
 import { serviceAPI } from '@/lib/api';
-import { ScrollAnimationWrapper } from '@/components/ScrollAnimationWrapper';
-import { 
-  Star, ChevronRight, Clock, Shield, Truck, 
-  Leaf, Award 
+import {
+  Star, ChevronRight, Clock, Shield, Truck,
+  Leaf, Award, ArrowRight, Sparkles, CheckCircle2
 } from 'lucide-react';
 
 interface Service {
@@ -33,8 +32,8 @@ export default function ServicesPage() {
   const [services, setServices] = useState<Service[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hoveredService, setHoveredService] = useState<string | null>(null);
 
-  // Map service names to their respective images (same as slider)
   const getServiceImage = (serviceName: string): string => {
     const imageMap: { [key: string]: string } = {
       'Laundry Services (Wash & Press)': '/images/laundry.jpg',
@@ -48,7 +47,6 @@ export default function ServicesPage() {
       'Uniform Services': '/images/Uniform.jpg',
       'Accessories Cleaning': '/images/AccessoriesCleaning.jpg'
     };
-    
     return imageMap[serviceName] || '/images/services/placeholder.jpg';
   };
 
@@ -60,12 +58,7 @@ export default function ServicesPage() {
     try {
       setIsLoading(true);
       setError(null);
-      
-      console.log('Fetching services from API...');
       const data = await serviceAPI.getAllServices();
-      console.log('API Response:', data);
-      
-      // Handle different response formats
       if (data && data.success && data.services) {
         setServices(data.services);
       } else if (data && data.data && Array.isArray(data.data)) {
@@ -73,14 +66,10 @@ export default function ServicesPage() {
       } else if (Array.isArray(data)) {
         setServices(data);
       } else {
-        console.warn('Unexpected data format:', data);
         setServices([]);
         setError('Received unexpected data format from server');
       }
     } catch (err: any) {
-      console.error('Error fetching services:', err);
-      
-      // User-friendly error messages
       if (err.message?.includes('Failed to fetch') || err.message?.includes('NetworkError')) {
         setError('❌ Cannot connect to backend server. Please make sure the backend is running on port 5000');
       } else if (err.message?.includes('JSON')) {
@@ -94,260 +83,321 @@ export default function ServicesPage() {
   };
 
   const features = [
-    { icon: <Truck className="w-6 h-6" />, title: "Free Pickup & Delivery", description: "We come to your doorstep" },
-    { icon: <Leaf className="w-6 h-6" />, title: "Eco-Friendly", description: "100% biodegradable products" },
-    { icon: <Clock className="w-6 h-6" />, title: "24-Hour Turnaround", description: "Quick & efficient service" },
-    { icon: <Award className="w-6 h-6" />, title: "Stain Experts", description: "Professional treatment" }
+    { icon: <Truck className="w-5 h-5" />, title: "Free Pickup & Delivery", description: "We come to your doorstep" },
+    { icon: <Leaf className="w-5 h-5" />, title: "Eco-Friendly", description: "100% biodegradable products" },
+    { icon: <Clock className="w-5 h-5" />, title: "24-Hour Turnaround", description: "Quick & efficient service" },
+    { icon: <Award className="w-5 h-5" />, title: "Stain Experts", description: "Professional treatment" },
   ];
 
-  const stats = [
-    { value: '10K+', label: 'Happy Customers' },
-    { value: '50K+', label: 'Items Cleaned' },
-    { value: '98%', label: 'Satisfaction Rate' },
-    { value: '24/7', label: 'Customer Support' },
+
+
+  const guarantees = [
+    'Certified organic detergents',
+    'Hypoallergenic options available',
+    'Expert fabric care specialists',
+    '100% satisfaction guarantee',
   ];
 
   if (isLoading) {
     return (
-      <main className="flex flex-col min-h-screen bg-gray-50">
+      <main className="flex flex-col min-h-screen" style={{ background: '#f8f9f4' }}>
         <Header />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <div className="w-16 h-16 border-4 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading services...</p>
-            <p className="text-xs text-gray-400 mt-2">Make sure backend is running on port 5000</p>
+            {/* Branded spinner */}
+            <div className="relative w-20 h-20 mx-auto mb-6">
+              <div className="absolute inset-0 rounded-full border-4 border-emerald-100"></div>
+              <div className="absolute inset-0 rounded-full border-4 border-t-emerald-600 animate-spin"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Sparkles className="w-7 h-7 text-emerald-600" />
+              </div>
+            </div>
+            <p className="text-gray-700 font-semibold text-lg" style={{ fontFamily: "'Playfair Display', serif" }}>
+              Preparing your experience…
+            </p>
+            <p className="text-xs text-gray-400 mt-2">Connecting to services</p>
           </div>
         </div>
         <Footer />
+        <style>{googleFonts}</style>
       </main>
     );
   }
 
   if (error) {
     return (
-      <main className="flex flex-col min-h-screen bg-gray-50">
+      <main className="flex flex-col min-h-screen" style={{ background: '#f8f9f4' }}>
         <Header />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center max-w-md mx-auto px-4">
-            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-100">
               <span className="text-3xl">⚠️</span>
             </div>
-            <p className="text-red-600 mb-4">{error}</p>
-            <div className="space-y-2">
-              <Button onClick={() => fetchServices()} className="bg-green-600 mr-2">
+            <p className="text-red-600 mb-4 font-medium">{error}</p>
+            <div className="flex justify-center gap-3">
+              <Button onClick={() => fetchServices()} className="bg-emerald-600 hover:bg-emerald-700">
                 Try Again
               </Button>
-              <Button 
-                onClick={() => window.open('http://localhost:5000/health', '_blank')} 
-                variant="outline"
-              >
-                Test Backend Connection
+              <Button onClick={() => window.open('http://localhost:5000/health', '_blank')} variant="outline">
+                Test Connection
               </Button>
-            </div>
-            <div className="mt-6 p-4 bg-gray-100 rounded-lg text-left text-sm">
-              <p className="font-semibold mb-2">Troubleshooting tips:</p>
-              <ul className="list-disc list-inside space-y-1 text-gray-600">
-                <li>Make sure backend is running: <code className="bg-gray-200 px-1 rounded">node server.js</code></li>
-                <li>Check if MongoDB is connected</li>
-                <li>Verify backend is on port 5000</li>
-                <li>Check console for more details</li>
-              </ul>
             </div>
           </div>
         </div>
         <Footer />
+        <style>{googleFonts}</style>
       </main>
     );
   }
 
   return (
-    <main className="flex flex-col min-h-screen bg-gray-50">
+    <main className="flex flex-col min-h-screen" style={{ background: '#f8f9f4', fontFamily: "'DM Sans', sans-serif" }}>
       <Header />
 
-      {/* Hero Section - Fixed collapse issue and reduced size */}
-      <div className="relative h-[500px] overflow-hidden">
-        <div className="absolute inset-0">
+      {/* ── HERO ────────────────────────────────────────────────── */}
+      <section className="relative min-h-[600px] overflow-hidden flex items-center" style={{ background: 'linear-gradient(135deg, #0f2b1a 0%, #1a4a2e 40%, #0d3320 100%)' }}>
+        {/* Decorative circles */}
+        <div className="absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full opacity-10"
+          style={{ background: 'radial-gradient(circle, #4ade80 0%, transparent 70%)' }} />
+        <div className="absolute -bottom-20 -left-20 w-[400px] h-[400px] rounded-full opacity-10"
+          style={{ background: 'radial-gradient(circle, #86efac 0%, transparent 70%)' }} />
+
+        {/* Geometric grid overlay */}
+        <div className="absolute inset-0 opacity-5"
+          style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.3) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+
+        {/* Right side image */}
+        <div className="absolute right-0 top-0 bottom-0 w-1/2 opacity-30 hidden lg:block">
           <Image
-            src="https://images.unsplash.com/photo-1545173168-9f1947eebb7f?w=1600"
-            alt="Laundry Services"
+            src="https://images.unsplash.com/photo-1545173168-9f1947eebb7f?w=1000"
+            alt="Laundry"
             fill
             className="object-cover"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-green-900/90 to-emerald-900/90" />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, #0f2b1a 10%, transparent 60%)' }} />
         </div>
 
-        <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="max-w-3xl text-white"
-          >
-            <motion.span
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-              className="inline-block px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-medium mb-6"
+        <div className="relative max-w-7xl mx-auto px-6 lg:px-12 py-24 w-full">
+          <div className="max-w-2xl">
+            {/* Eyebrow pill */}
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full border border-emerald-400/30 bg-emerald-400/10"
             >
-              Professional Laundry Services
-            </motion.span>
-            
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              Fresh, Clean Clothes
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-emerald-300">
-                Delivered to Your Door
-              </span>
-            </h1>
-            
-            <p className="text-lg text-white/90 mb-6 max-w-2xl">
-              Experience premium laundry care with free pickup and delivery. 
-              Eco-friendly products, expert stain removal, and 24-hour turnaround.
-            </p>
-            
-            <div className="flex flex-wrap gap-4">
+              <Sparkles className="w-4 h-4 text-emerald-400" />
+              <span className="text-emerald-300 text-sm font-medium tracking-wide uppercase">Premium Laundry Care</span>
+            </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-[1.05] mb-6"
+              style={{ fontFamily: "'Playfair Display', serif", letterSpacing: '-0.02em' }}
+            >
+              Your Clothes,
+              <br />
+              <span style={{ color: '#4ade80' }}>Perfected.</span>
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-lg text-white/70 mb-8 leading-relaxed max-w-lg"
+            >
+              From delicate silks to everyday essentials — our expert care ensures
+              every garment is returned fresh, crisp, and ready to wear.
+            </motion.p>
+
+            {/* Guarantees list */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.35 }}
+              className="grid grid-cols-2 gap-2 mb-10"
+            >
+              {guarantees.map((g, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                  <span className="text-white/70 text-sm">{g}</span>
+                </div>
+              ))}
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.45 }}
+              className="flex flex-wrap gap-4"
+            >
               <Link href="#services">
-                <Button size="lg" className="bg-white text-green-700 hover:bg-gray-100 text-base px-6 py-5 rounded-xl shadow-lg">
+                <button className="hero-btn-primary group inline-flex items-center gap-2 px-7 py-4 rounded-2xl font-semibold text-sm transition-all duration-300"
+                  style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)', color: 'white', boxShadow: '0 8px 32px rgba(34,197,94,0.4)' }}>
                   Explore Services
-                  <ChevronRight className="ml-2 w-4 h-4" />
-                </Button>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </button>
               </Link>
               <Link href="/schedule">
-               <Button
-  size="lg"
-  variant="outline"
-  className="border-2 border-white text-white bg-transparent hover:bg-white hover:text-green-700 text-base px-6 py-5 rounded-xl"
->
-  Schedule Pickup
-</Button>
+                <button className="inline-flex items-center gap-2 px-7 py-4 rounded-2xl font-semibold text-sm border border-white/20 text-white transition-all duration-300"
+                  style={{ backdropFilter: 'blur(8px)', background: 'rgba(255,255,255,0.08)' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.15)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}>
+                  Schedule Pickup
+                </button>
               </Link>
-            </div>
-          </motion.div>
-        </div>
-      </div>
-
-      {/* Stats Section - Removed top border gap */}
-      <section className="bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="text-center"
-              >
-                <div className="text-2xl md:text-3xl font-bold text-green-600 mb-1">
-                  {stat.value}
-                </div>
-                <div className="text-gray-600 text-sm">{stat.label}</div>
-              </motion.div>
-            ))}
+            </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Features Strip */}
-      <section className="py-12 bg-white border-t border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+
+      {/* ── FEATURES STRIP ──────────────────────────────────────── */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {features.map((feature, index) => (
+            {features.map((feature, i) => (
               <motion.div
-                key={index}
+                key={i}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="text-center"
+                transition={{ delay: i * 0.1 }}
+                className="group relative p-6 rounded-2xl border border-gray-100 hover:border-emerald-200 transition-all duration-300 hover:shadow-lg"
+                style={{ background: 'white' }}
               >
-                <div className="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center text-green-600 mx-auto mb-3">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-all duration-300 group-hover:scale-110"
+                  style={{ background: 'linear-gradient(135deg, #d1fae5, #a7f3d0)', color: '#059669' }}>
                   {feature.icon}
                 </div>
-                <h3 className="font-semibold text-gray-900 text-sm mb-1">{feature.title}</h3>
-                <p className="text-xs text-gray-600">{feature.description}</p>
+                <h3 className="font-bold text-gray-900 text-sm mb-1" style={{ fontFamily: "'Playfair Display', serif" }}>{feature.title}</h3>
+                <p className="text-xs text-gray-500 leading-relaxed">{feature.description}</p>
+                {/* Subtle hover line accent */}
+                <div className="absolute bottom-0 left-6 right-6 h-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  style={{ background: 'linear-gradient(90deg, #22c55e, #86efac)' }} />
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Services Grid */}
-      <section id="services" className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* ── SERVICES GRID ───────────────────────────────────────── */}
+      <section id="services" className="py-20" style={{ background: '#f8f9f4' }}>
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          {/* Section heading */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-10"
+            className="mb-14"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
-              Our Professional Services
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-px flex-1 max-w-[60px]" style={{ background: 'linear-gradient(to right, #22c55e, transparent)' }} />
+              <span className="text-emerald-600 text-xs font-semibold tracking-widest uppercase">What We Offer</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight"
+              style={{ fontFamily: "'Playfair Display', serif", letterSpacing: '-0.02em' }}>
+              Professional Services<br />
+              <span style={{ color: '#16a34a' }}>Built Around You</span>
             </h2>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Choose from our range of premium laundry services tailored to your needs
+            <p className="text-gray-500 mt-4 max-w-xl leading-relaxed">
+              Every service is handled with care, precision, and eco-friendly products — because your garments deserve the best.
             </p>
           </motion.div>
 
           {services.length === 0 ? (
-            <div className="text-center py-12 bg-white rounded-2xl">
-              <p className="text-gray-500">No services available at the moment.</p>
-              <p className="text-xs text-gray-400 mt-2">Try adding some services to your database</p>
+            <div className="text-center py-20 bg-white rounded-3xl border border-gray-100">
+              <div className="text-5xl mb-4">🧺</div>
+              <p className="text-gray-600 font-medium">No services available right now.</p>
+              <p className="text-xs text-gray-400 mt-1">Try adding services to your database</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-7">
               {services.map((service, index) => (
                 <motion.div
                   key={service._id || service.id || index}
-                  initial={{ opacity: 0, y: 30 }}
+                  initial={{ opacity: 0, y: 40 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  whileHover={{ y: -4 }}
+                  transition={{ duration: 0.55, delay: index * 0.08 }}
+                  onHoverStart={() => setHoveredService(service._id)}
+                  onHoverEnd={() => setHoveredService(null)}
                 >
                   <Link href={`/services/${service.slug}`}>
-                    <div className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer">
-                      <div className="relative h-56 overflow-hidden">
+                    <div className="group relative bg-white rounded-3xl overflow-hidden border border-gray-100 hover:border-transparent transition-all duration-500 cursor-pointer"
+                      style={{
+                        boxShadow: hoveredService === service._id
+                          ? '0 24px 64px rgba(22,163,74,0.18), 0 4px 24px rgba(0,0,0,0.08)'
+                          : '0 2px 16px rgba(0,0,0,0.06)',
+                        transform: hoveredService === service._id ? 'translateY(-6px)' : 'translateY(0)',
+                        transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                      }}>
+
+                      {/* Image */}
+                      <div className="relative h-60 overflow-hidden">
                         <Image
                           src={service.image || getServiceImage(service.name)}
                           alt={service.name}
                           fill
-                          className="object-cover transition-transform duration-500 group-hover:scale-110"
+                          className="object-cover transition-transform duration-700 group-hover:scale-105"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                        
-                        <div className="absolute top-4 left-4 flex gap-2">
-                          <div className="bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-1">
-                            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                            <span className="font-medium text-xs">{service.rating || 4.8}</span>
+                        {/* Layered overlay */}
+                        <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.55) 100%)' }} />
+
+                        {/* Badges */}
+                        <div className="absolute top-4 left-4 flex items-center gap-2">
+                          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold"
+                            style={{ background: 'rgba(255,255,255,0.95)', color: '#1a4a2e', backdropFilter: 'blur(8px)' }}>
+                            <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                            {service.rating || '4.9'}
                           </div>
-                          <div className="bg-green-600 text-white rounded-full px-3 py-1 text-xs font-medium">
-                            {service.turnaround || '24 Hours'}
+                          <div className="px-3 py-1.5 rounded-full text-xs font-semibold"
+                            style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)', color: 'white' }}>
+                            {service.turnaround || '24 Hrs'}
                           </div>
                         </div>
 
-                        <div className="absolute bottom-4 left-4 right-4">
-                          <h3 className="text-xl font-bold text-white mb-1">{service.name}</h3>
-                          <p className="text-white/90 text-xs line-clamp-2">{service.tagline || 'Professional laundry service'}</p>
+                        {/* Title overlay */}
+                        <div className="absolute bottom-0 left-0 right-0 p-5">
+                          <h3 className="text-xl font-bold text-white mb-1 leading-tight"
+                            style={{ fontFamily: "'Playfair Display', serif", textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
+                            {service.name}
+                          </h3>
+                          <p className="text-white/80 text-xs leading-snug line-clamp-1">
+                            {service.tagline || 'Professional care for your garments'}
+                          </p>
                         </div>
                       </div>
 
+                      {/* Card body */}
                       <div className="p-5">
-                        <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                          {service.fullDescription || 'Professional laundry and dry cleaning services with free pickup and delivery.'}
+                        <p className="text-gray-500 text-sm leading-relaxed mb-4 line-clamp-2">
+                          {service.fullDescription || 'Premium laundry and dry cleaning services with free pickup and delivery.'}
                         </p>
-                        
+
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-xs text-gray-500">
-                            <Truck className="w-3 h-3" />
-                            <span>Free pickup</span>
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                              <Truck className="w-3.5 h-3.5 text-emerald-500" />
+                              <span>Free pickup</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                              <Leaf className="w-3.5 h-3.5 text-emerald-500" />
+                              <span>Eco-safe</span>
+                            </div>
                           </div>
-                          
-                          <Button className="bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm px-4 py-2">
-                            Learn More
-                            <ChevronRight className="ml-1 w-3 h-3" />
-                          </Button>
+
+                          <button
+                            className="group/btn inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300"
+                            style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)', color: 'white', boxShadow: '0 4px 12px rgba(34,197,94,0.3)' }}
+                          >
+                            Book Now
+                            <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform" />
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -358,7 +408,103 @@ export default function ServicesPage() {
           )}
         </div>
       </section>
+
+      {/* ── BRAND TRUST BANNER ──────────────────────────────────── */}
+      <section className="py-20 overflow-hidden relative"
+        style={{ background: 'linear-gradient(135deg, #0f2b1a 0%, #1a4a2e 100%)' }}>
+        {/* Decoration */}
+        <div className="absolute inset-0 opacity-5"
+          style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, #4ade80 0%, transparent 50%), radial-gradient(circle at 80% 50%, #86efac 0%, transparent 50%)' }} />
+
+        <div className="relative max-w-7xl mx-auto px-6 lg:px-12">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-10">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="max-w-lg"
+            >
+              <div className="inline-flex items-center gap-2 mb-4 px-3 py-1.5 rounded-full bg-emerald-400/10 border border-emerald-400/20">
+                <Shield className="w-4 h-4 text-emerald-400" />
+                <span className="text-emerald-300 text-xs font-medium tracking-wide">Our Promise to You</span>
+              </div>
+              <h2 className="text-4xl font-bold text-white mb-4 leading-tight"
+                style={{ fontFamily: "'Playfair Display', serif" }}>
+                Care you can<br />
+                <span style={{ color: '#4ade80' }}>always trust.</span>
+              </h2>
+              <p className="text-white/60 leading-relaxed">
+                We treat every garment as if it were our own — with expert hands, premium eco-friendly products,
+                and a guarantee that puts your satisfaction first.
+              </p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="grid grid-cols-2 gap-4 w-full lg:max-w-sm"
+            >
+              {[
+                { icon: '♻️', label: 'Eco-friendly products' },
+                { icon: '🏆', label: 'Award-winning service' },
+                { icon: '🔒', label: 'Insured & secure' },
+                { icon: '⚡', label: '24-hr turnaround' },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-3 p-4 rounded-2xl border border-white/10"
+                  style={{ background: 'rgba(255,255,255,0.05)' }}>
+                  <span className="text-2xl">{item.icon}</span>
+                  <span className="text-white/80 text-sm font-medium">{item.label}</span>
+                </div>
+              ))}
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA ─────────────────────────────────────────────────── */}
+      <section className="py-20 bg-white">
+        <div className="max-w-3xl mx-auto px-6 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6"
+              style={{ background: 'linear-gradient(135deg, #d1fae5, #a7f3d0)' }}>
+              <Sparkles className="w-8 h-8 text-emerald-600" />
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4"
+              style={{ fontFamily: "'Playfair Display', serif" }}>
+              Ready for fresh?
+            </h2>
+            <p className="text-gray-500 mb-8 text-lg leading-relaxed">
+              Schedule a free pickup today and experience the difference that premium laundry care makes.
+            </p>
+            <div className="flex flex-wrap gap-4 justify-center">
+              <Link href="/schedule">
+                <button className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-semibold text-white transition-all duration-300 hover:scale-105"
+                  style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)', boxShadow: '0 8px 32px rgba(34,197,94,0.35)' }}>
+                  Schedule Free Pickup
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </Link>
+              <Link href="/contact">
+                <button className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-semibold text-gray-700 border border-gray-200 hover:border-emerald-300 hover:text-emerald-700 transition-all duration-300">
+                  Contact Us
+                </button>
+              </Link>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       <Footer />
+      <style>{googleFonts}</style>
     </main>
   );
 }
+
+const googleFonts = `
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+`;
