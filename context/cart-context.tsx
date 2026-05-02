@@ -2,10 +2,9 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { cartAPI } from '@/lib/api';
-import { useAuth } from './auth-context';
+import { useSession } from './session-context';
 
 export interface CartItem {
-  serviceItems: never[];
   id: string;
   name: string;
   price: number;
@@ -13,6 +12,10 @@ export interface CartItem {
   category: string;
   description?: string;
   image?: string;
+  serviceItems?: any[];
+  selectedColor?: string;
+  selectedSize?: string;
+  designImage?: string;
 }
 
 interface CartContextType {
@@ -31,26 +34,23 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { isAuthenticated } = useAuth();
+  const { sessionId } = useSession();
 
-  // Load cart from backend when authenticated
+  // Load cart from backend when session is ready
   useEffect(() => {
-    if (isAuthenticated) {
+    if (sessionId) {
       loadCartFromBackend();
-    } else {
-      // Load from localStorage for guests
-      loadCartFromLocalStorage();
     }
-  }, [isAuthenticated]);
+  }, [sessionId]);
 
   const loadCartFromBackend = async () => {
     try {
       setIsLoading(true);
-      const data = await cartAPI.getCart();
-      if (data.success && data.items) {
-        setCartItems(data.items);
+      const data = await cartAPI.getCart(sessionId);
+      if (data.success && data.cart?.items) {
+        setCartItems(data.cart.items);
         // Sync to localStorage as backup
-        localStorage.setItem('cart', JSON.stringify(data.items));
+        localStorage.setItem('cart', JSON.stringify(data.cart.items));
       }
     } catch (error) {
       console.error('Error loading cart from backend:', error);
@@ -75,36 +75,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addToCart = async (item: CartItem) => {
     try {
-      if (isAuthenticated) {
-        // Add to backend cart
-        const data = await cartAPI.addToCart({
-          productId: item.id,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-          category: item.category,
-          description: item.description,
-          image: item.image,
-        });
-        
-        if (data.success) {
-          // Refresh cart from backend
-          await loadCartFromBackend();
-        }
-      } else {
-        // Guest cart - store locally
-        const existingItemIndex = cartItems.findIndex(i => i.id === item.id);
-        let updatedCart;
-        
-        if (existingItemIndex >= 0) {
-          updatedCart = [...cartItems];
-          updatedCart[existingItemIndex].quantity += item.quantity;
-        } else {
-          updatedCart = [...cartItems, item];
-        }
-        
-        setCartItems(updatedCart);
-        saveCartToLocalStorage(updatedCart);
+      const data = await cartAPI.addToCart(sessionId, {
+        productId: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        category: item.category,
+        description: item.description,
+        image: item.image,
+        serviceItems: item.serviceItems,
+        selectedColor: item.selectedColor,
+        selectedSize: item.selectedSize,
+        designImage: item.designImage,
+      });
+
+      if (data.success) {
+        await loadCartFromBackend();
       }
     } catch (error) {
       console.error('Error adding to cart:', error);
@@ -114,16 +100,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const updateQuantity = async (id: string, quantity: number) => {
     try {
-      if (isAuthenticated) {
-        await cartAPI.updateCartItem(id, quantity);
-        await loadCartFromBackend();
-      } else {
-        const updatedCart = cartItems.map(item =>
-          item.id === id ? { ...item, quantity } : item
-        );
-        setCartItems(updatedCart);
-        saveCartToLocalStorage(updatedCart);
-      }
+      await cartAPI.updateCartItem(sessionId, id, quantity);
+      await loadCartFromBackend();
     } catch (error) {
       console.error('Error updating quantity:', error);
       throw error;
@@ -132,14 +110,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const removeFromCart = async (id: string) => {
     try {
-      if (isAuthenticated) {
-        await cartAPI.removeFromCart(id);
-        await loadCartFromBackend();
-      } else {
-        const updatedCart = cartItems.filter(item => item.id !== id);
-        setCartItems(updatedCart);
-        saveCartToLocalStorage(updatedCart);
-      }
+      await cartAPI.removeFromCart(sessionId, id);
+      await loadCartFromBackend();
     } catch (error) {
       console.error('Error removing from cart:', error);
       throw error;
@@ -148,13 +120,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clearCart = async () => {
     try {
-      if (isAuthenticated) {
-        await cartAPI.clearCart();
-        setCartItems([]);
-      } else {
-        setCartItems([]);
-        saveCartToLocalStorage([]);
-      }
+      await cartAPI.clearCart(sessionId);
+      setCartItems([]);
+      saveCartToLocalStorage([]);
     } catch (error) {
       console.error('Error clearing cart:', error);
       throw error;

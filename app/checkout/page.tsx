@@ -8,10 +8,10 @@ import { Footer } from '@/components/footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/context/cart-context';
-import { useAuth } from '@/context/auth-context';
-import { OTPLoginModal } from '@/components/auth/otp-login-modal';
+import { useSession } from '@/context/session-context';
 import { orderAPI } from '@/lib/api';
-import { ArrowLeft, Check, AlertCircle, Truck, Clock, Shield, MapPin } from 'lucide-react';
+import { ArrowLeft, Check, AlertCircle, Truck, Clock, Shield, MapPin, MessageCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface CheckoutFormData {
   firstName: string;
@@ -20,73 +20,48 @@ interface CheckoutFormData {
   phone: string;
   address: string;
   city: string;
-  state: string;
-  zipCode: string;
+  notes: string;
   pickupDate: string;
   pickupTime: string;
-  specialInstructions: string;
-  cardNumber: string;
-  cardExpiry: string;
-  cardCVC: string;
 }
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { cartItems, getTotalPrice, clearCart } = useCart();
-  const { user, isAuthenticated } = useAuth();
+  const { sessionId } = useSession();
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
-  const [orderId, setOrderId] = useState('');
-  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [orderResult, setOrderResult] = useState<any>(null);
   const [error, setError] = useState('');
 
-  // Split user name safely
-  const getUserName = () => {
-    if (!user?.name) return { firstName: '', lastName: '' };
-    const nameParts = user.name.split(' ');
-    return {
-      firstName: nameParts[0] || '',
-      lastName: nameParts.slice(1).join(' ') || ''
-    };
-  };
-
-  const { firstName: defaultFirstName, lastName: defaultLastName } = getUserName();
-
   const [formData, setFormData] = useState<CheckoutFormData>({
-    firstName: defaultFirstName,
-    lastName: defaultLastName,
-    email: user?.email || '',
-    phone: user?.phone || '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
     address: '',
-    city: '',
-    state: '',
-    zipCode: '',
+    city: 'Dubai',
+    notes: '',
     pickupDate: '',
     pickupTime: '',
-    specialInstructions: '',
-    cardNumber: '',
-    cardExpiry: '',
-    cardCVC: '',
   });
-
-  useEffect(() => {
-    // Check authentication on mount
-    if (!isAuthenticated) {
-      setShowLoginModal(true);
-    }
-  }, [isAuthenticated]);
 
   const totalPrice = getTotalPrice();
   const deliveryFee = totalPrice > 100 ? 0 : 15;
-  const tax = totalPrice * 0.05; // 5% VAT for UAE
+  const tax = totalPrice * 0.05;
   const finalTotal = totalPrice + deliveryFee + tax;
+
+  useEffect(() => {
+    if (cartItems.length === 0 && !orderPlaced) {
+      router.push('/cart');
+    }
+  }, [cartItems, orderPlaced, router]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // FIXED: Updated handleSubmit with better error handling
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
@@ -94,40 +69,38 @@ export default function CheckoutPage() {
 
     try {
       // Validate required fields
-      if (!formData.address || !formData.city || !formData.phone) {
-        throw new Error('Please fill in all required shipping fields');
+      if (!formData.firstName || !formData.lastName) {
+        throw new Error('Please enter your full name');
       }
-
+      if (!formData.phone) {
+        throw new Error('Please enter your phone number');
+      }
+      if (!formData.address) {
+        throw new Error('Please enter your delivery address');
+      }
       if (!formData.pickupDate || !formData.pickupTime) {
         throw new Error('Please select pickup date and time');
       }
 
       // Prepare order data
       const orderData = {
+        sessionId,
+        customerInfo: {
+          name: `${formData.firstName} ${formData.lastName}`.trim(),
+          phone: formData.phone,
+          email: formData.email || '',
+          address: formData.address,
+          city: formData.city || 'Dubai',
+          notes: formData.notes,
+        },
         items: cartItems.map(item => ({
-          productId: item.id, // This is the slug from cart
+          productId: item.id,
           name: item.name,
           quantity: item.quantity,
-          price: item.price, // Include price as fallback
+          price: item.price,
           image: item.image,
           serviceItems: item.serviceItems || [],
         })),
-        shippingAddress: {
-          firstName: formData.firstName || user?.name?.split(' ')[0] || '',
-          lastName: formData.lastName || '',
-          email: formData.email || user?.email || '',
-          phone: formData.phone || user?.phone || '',
-          address: formData.address,
-          city: formData.city,
-          state: formData.state,
-          zipCode: formData.zipCode,
-        },
-        paymentMethod: 'card',
-        pickupDetails: {
-          date: formData.pickupDate,
-          time: formData.pickupTime,
-          instructions: formData.specialInstructions,
-        },
       };
 
       console.log('Sending order data:', orderData);
@@ -136,8 +109,9 @@ export default function CheckoutPage() {
       console.log('Order response:', response);
 
       if (response.success) {
-        setOrderId(response.order._id);
+        setOrderResult(response);
         setOrderPlaced(true);
+        toast.success('Order placed successfully!');
         await clearCart();
       } else {
         throw new Error(response.message || 'Failed to create order');
@@ -146,13 +120,10 @@ export default function CheckoutPage() {
     } catch (err: any) {
       console.error('Order creation error:', err);
       setError(err.message || 'Something went wrong. Please try again.');
+      toast.error(err.message || 'Failed to place order');
     } finally {
       setIsProcessing(false);
     }
-  };
-
-  const handleLoginSuccess = () => {
-    setShowLoginModal(false);
   };
 
   // Generate time slots
@@ -179,31 +150,7 @@ export default function CheckoutPage() {
     return dates;
   };
 
-  if (cartItems.length === 0 && !orderPlaced) {
-    return (
-      <main className="flex flex-col min-h-screen">
-        <Header />
-        <div className="flex-1 bg-gray-50 py-20 px-4">
-          <div className="max-w-2xl mx-auto text-center">
-            <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
-              <AlertCircle className="w-10 h-10 text-gray-400" />
-            </div>
-            <h1 className="text-4xl font-bold mb-4 text-gray-900">Checkout</h1>
-            <p className="text-xl text-gray-600 mb-8">Your cart is empty</p>
-            <Link href="/services">
-              <Button size="lg" className="bg-green-600 hover:bg-green-700">
-                <ArrowLeft className="mr-2" size={18} />
-                Back to Services
-              </Button>
-            </Link>
-          </div>
-        </div>
-        <Footer />
-      </main>
-    );
-  }
-
-  if (orderPlaced) {
+  if (orderPlaced && orderResult) {
     return (
       <main className="flex flex-col min-h-screen">
         <Header />
@@ -215,44 +162,46 @@ export default function CheckoutPage() {
               </div>
               <h1 className="text-3xl font-bold mb-2 text-gray-900">Order Confirmed!</h1>
               <p className="text-lg text-gray-600 mb-6">Thank you for your order</p>
-              
+
               <div className="bg-gray-50 rounded-xl p-6 mb-8 text-left">
                 <div className="mb-4">
-                  <p className="text-sm text-gray-500 mb-1">Order ID</p>
-                  <p className="text-xl font-bold text-green-600">{orderId}</p>
+                  <p className="text-sm text-gray-500 mb-1">Order Number</p>
+                  <p className="text-xl font-bold text-green-600">{orderResult.order?.orderNumber}</p>
                 </div>
-                
+
                 <div className="mb-4">
-                  <p className="text-sm text-gray-500 mb-1">Pickup Date</p>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {formData.pickupDate ? new Date(formData.pickupDate).toLocaleDateString() : 'Will be scheduled'}
-                  </p>
-                </div>
-                
-                <div className="mb-4">
-                  <p className="text-sm text-gray-500 mb-1">Pickup Time</p>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {formData.pickupTime || 'To be confirmed'}
-                  </p>
-                </div>
-                
-                <div className="border-t border-gray-200 pt-4 mt-4">
                   <p className="text-sm text-gray-500 mb-1">Total Amount</p>
-                  <p className="text-2xl font-bold text-green-600">AED {finalTotal.toFixed(2)}</p>
+                  <p className="text-2xl font-bold text-green-600">AED {orderResult.order?.total?.toFixed(2)}</p>
                 </div>
               </div>
-              
+
+              {/* WhatsApp Button */}
+              {orderResult.whatsappLink && (
+                <a href={orderResult.whatsappLink} target="_blank" rel="noopener noreferrer">
+                  <Button className="w-full bg-green-600 hover:bg-green-700 text-white mb-3 py-6 text-lg gap-2">
+                    <MessageCircle className="w-5 h-5" />
+                    Confirm Order via WhatsApp
+                  </Button>
+                </a>
+              )}
+
               <div className="space-y-3">
-                <Link href="/orders" className="block">
-                  <Button size="lg" className="w-full bg-green-600 hover:bg-green-700">
-                    View My Orders
+                <Link href={`/track/${orderResult.order?.orderNumber}`} className="block">
+                  <Button variant="outline" size="lg" className="w-full border-green-600 text-green-600 hover:bg-green-50">
+                    Track Your Order
                   </Button>
                 </Link>
                 <Link href="/services" className="block">
-                  <Button variant="outline" size="lg" className="w-full border-green-600 text-green-600 hover:bg-green-50">
+                  <Button variant="outline" size="lg" className="w-full">
                     Continue Shopping
                   </Button>
                 </Link>
+              </div>
+
+              <div className="mt-6 p-3 bg-blue-50 rounded-lg">
+                <p className="text-xs text-blue-800">
+                  📱 Please click the WhatsApp button above to confirm your order. Our team will contact you shortly.
+                </p>
               </div>
             </div>
           </div>
@@ -266,7 +215,6 @@ export default function CheckoutPage() {
     <main className="flex flex-col min-h-screen">
       <Header />
 
-      {/* Hero Section */}
       <section className="bg-gradient-to-r from-green-600 to-emerald-600 text-white py-12 px-4">
         <div className="max-w-6xl mx-auto">
           <h1 className="text-3xl md:text-4xl font-bold mb-2">Checkout</h1>
@@ -276,9 +224,7 @@ export default function CheckoutPage() {
 
       <div className="flex-1 py-12 px-4 bg-gray-50">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-3 gap-8">
-          {/* Checkout Form */}
           <form onSubmit={handleSubmit} className="lg:col-span-2 space-y-6">
-            {/* Error Message */}
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl">
                 <p className="font-medium">Error</p>
@@ -286,124 +232,43 @@ export default function CheckoutPage() {
               </div>
             )}
 
-            {/* Shipping Information */}
+            {/* Contact Information */}
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
               <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-2">
                 <MapPin className="w-6 h-6 text-green-600" />
-                Shipping Address
+                Contact Information
               </h2>
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    First Name *
-                  </label>
-                  <Input
-                    placeholder="First Name"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    required
-                    className="rounded-xl"
-                  />
+                  <label className="block text-sm font-medium text-gray-700 mb-2">First Name *</label>
+                  <Input name="firstName" value={formData.firstName} onChange={handleInputChange} required className="rounded-xl" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Last Name *
-                  </label>
-                  <Input
-                    placeholder="Last Name"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                    required
-                    className="rounded-xl"
-                  />
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Last Name *</label>
+                  <Input name="lastName" value={formData.lastName} onChange={handleInputChange} required className="rounded-xl" />
                 </div>
               </div>
-              
+
               <div className="mt-4 grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email *
-                  </label>
-                  <Input
-                    placeholder="Email"
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    required
-                    className="rounded-xl"
-                  />
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                  <Input name="email" type="email" value={formData.email} onChange={handleInputChange} className="rounded-xl" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone Number *
-                  </label>
-                  <Input
-                    placeholder="Phone"
-                    name="phone"
-                    type="tel"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    required
-                    className="rounded-xl"
-                  />
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
+                  <Input name="phone" type="tel" value={formData.phone} onChange={handleInputChange} required className="rounded-xl" />
                 </div>
               </div>
-              
+
               <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Address *
-                </label>
-                <Input
-                  placeholder="Street address"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  required
-                  className="rounded-xl"
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-2">Delivery Address *</label>
+                <Input name="address" value={formData.address} onChange={handleInputChange} required className="rounded-xl" />
               </div>
-              
-              <div className="mt-4 grid md:grid-cols-3 gap-4">
+
+              <div className="mt-4 grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    City *
-                  </label>
-                  <Input
-                    placeholder="City"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleInputChange}
-                    required
-                    className="rounded-xl"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Area *
-                  </label>
-                  <Input
-                    placeholder="Area/State"
-                    name="state"
-                    value={formData.state}
-                    onChange={handleInputChange}
-                    required
-                    className="rounded-xl"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Zip Code
-                  </label>
-                  <Input
-                    placeholder="Zip Code"
-                    name="zipCode"
-                    value={formData.zipCode}
-                    onChange={handleInputChange}
-                    className="rounded-xl"
-                  />
+                  <label className="block text-sm font-medium text-gray-700 mb-2">City *</label>
+                  <Input name="city" value={formData.city} onChange={handleInputChange} required className="rounded-xl" />
                 </div>
               </div>
             </div>
@@ -414,12 +279,10 @@ export default function CheckoutPage() {
                 <Truck className="w-6 h-6 text-green-600" />
                 Schedule Pickup
               </h2>
-              
+
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Pickup Date *
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Pickup Date *</label>
                   <select
                     name="pickupDate"
                     value={formData.pickupDate}
@@ -430,21 +293,14 @@ export default function CheckoutPage() {
                     <option value="">Select a date</option>
                     {getAvailableDates().map((date) => (
                       <option key={date} value={date}>
-                        {new Date(date).toLocaleDateString('en-US', { 
-                          weekday: 'long', 
-                          year: 'numeric', 
-                          month: 'long', 
-                          day: 'numeric' 
-                        })}
+                        {new Date(date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                       </option>
                     ))}
                   </select>
                 </div>
-                
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Pickup Time *
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Pickup Time *</label>
                   <select
                     name="pickupTime"
                     value={formData.pickupTime}
@@ -459,72 +315,17 @@ export default function CheckoutPage() {
                   </select>
                 </div>
               </div>
-              
+
               <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Special Instructions (Optional)
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Special Instructions (Optional)</label>
                 <textarea
-                  name="specialInstructions"
-                  value={formData.specialInstructions}
+                  name="notes"
+                  value={formData.notes}
                   onChange={handleInputChange}
                   rows={3}
                   placeholder="Any special requests? (e.g., delicate items, allergies, etc.)"
                   className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
-              </div>
-            </div>
-
-            {/* Payment Information */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-              <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-2">
-                <Shield className="w-6 h-6 text-green-600" />
-                Payment Method
-              </h2>
-              
-              <div className="space-y-4">
-                <div className="p-4 bg-green-50 rounded-xl border border-green-200">
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="radio"
-                      id="card"
-                      name="paymentMethod"
-                      value="card"
-                      defaultChecked
-                      className="w-4 h-4 text-green-600"
-                    />
-                    <label htmlFor="card" className="font-medium text-gray-900">
-                      Credit / Debit Card
-                    </label>
-                  </div>
-                  <p className="text-sm text-gray-500 mt-2 ml-7">
-                    Pay securely with your card. Your payment is encrypted and secure.
-                  </p>
-                </div>
-                
-                <div className="p-4 border border-gray-200 rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="radio"
-                      id="cash"
-                      name="paymentMethod"
-                      value="cash"
-                      className="w-4 h-4 text-green-600"
-                    />
-                    <label htmlFor="cash" className="font-medium text-gray-900">
-                      Cash on Pickup
-                    </label>
-                  </div>
-                  <p className="text-sm text-gray-500 mt-2 ml-7">
-                    Pay when we pick up your laundry
-                  </p>
-                </div>
-              </div>
-              
-              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                <p className="text-xs text-blue-800">
-                  🔒 Your payment information is secure. We use SSL encryption.
-                </p>
               </div>
             </div>
 
@@ -535,12 +336,7 @@ export default function CheckoutPage() {
                   Back to Cart
                 </Button>
               </Link>
-              <Button
-                type="submit"
-                size="lg"
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-xl"
-                disabled={isProcessing}
-              >
+              <Button type="submit" size="lg" className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-xl" disabled={isProcessing}>
                 {isProcessing ? (
                   <div className="flex items-center justify-center gap-2">
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -562,24 +358,18 @@ export default function CheckoutPage() {
                     <Truck className="w-5 h-5" />
                     Order Summary
                   </h2>
-                  <p className="text-sm text-white/80 mt-1">
-                    {cartItems.length} item{cartItems.length !== 1 ? 's' : ''}
-                  </p>
+                  <p className="text-sm text-white/80 mt-1">{cartItems.length} item(s)</p>
                 </div>
-                
+
                 <div className="p-6">
                   <div className="space-y-3 mb-6 pb-6 border-b border-gray-200 max-h-80 overflow-y-auto">
                     {cartItems.map((item) => (
                       <div key={item.id} className="flex justify-between text-sm">
                         <div className="flex-1">
-                          <span className="text-gray-600 font-medium">
-                            {item.name}
-                          </span>
+                          <span className="text-gray-600 font-medium">{item.name}</span>
                           <span className="text-gray-400 ml-2">x{item.quantity}</span>
                         </div>
-                        <span className="font-medium text-gray-900">
-                          AED {(item.price * item.quantity).toFixed(2)}
-                        </span>
+                        <span className="font-medium text-gray-900">AED {(item.price * item.quantity).toFixed(2)}</span>
                       </div>
                     ))}
                   </div>
@@ -591,19 +381,12 @@ export default function CheckoutPage() {
                     </div>
                     <div className="flex justify-between text-gray-600">
                       <span>Delivery Fee</span>
-                      <span>
-                        {deliveryFee === 0 ? 'FREE' : `AED ${deliveryFee.toFixed(2)}`}
-                      </span>
+                      <span>{deliveryFee === 0 ? 'FREE' : `AED ${deliveryFee.toFixed(2)}`}</span>
                     </div>
                     <div className="flex justify-between text-gray-600">
                       <span>Tax (5% VAT)</span>
                       <span>AED {tax.toFixed(2)}</span>
                     </div>
-                    {totalPrice < 100 && (
-                      <div className="text-xs text-green-600 bg-green-50 p-2 rounded-lg">
-                        Add AED {(100 - totalPrice).toFixed(2)} more for free delivery
-                      </div>
-                    )}
                   </div>
 
                   <div className="flex justify-between items-center text-xl font-bold">
@@ -611,11 +394,10 @@ export default function CheckoutPage() {
                     <span className="text-green-600">AED {finalTotal.toFixed(2)}</span>
                   </div>
 
-                  <div className="mt-6 pt-4 border-t border-gray-200">
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <Clock className="w-4 h-4 text-green-600" />
-                      <span>Free pickup within 24 hours of scheduling</span>
-                    </div>
+                  <div className="mt-6 p-3 bg-blue-50 rounded-lg">
+                    <p className="text-xs text-blue-800">
+                      💡 <strong>Note:</strong> After placing your order, you'll be redirected to WhatsApp to confirm. Our team will contact you for payment.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -623,17 +405,6 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
-
-      {/* OTP Login Modal */}
-      <OTPLoginModal
-        isOpen={showLoginModal}
-        onClose={() => {
-          setShowLoginModal(false);
-          router.push('/cart');
-        }}
-        onSuccess={handleLoginSuccess}
-        message="Please login to complete your checkout"
-      />
 
       <Footer />
     </main>

@@ -1,7 +1,6 @@
-// app/cart/page.tsx (updated version)
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Button } from '@/components/ui/button';
@@ -9,24 +8,20 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/cart-context';
-import { useAuth } from '@/context/auth-context';
-import { OTPLoginModal } from '@/components/auth/otp-login-modal';
-import { 
-  Minus, Plus, Trash2, ShoppingBag, ArrowLeft, 
-  Truck, Shield, Clock, Leaf, CreditCard, MapPin 
+import {
+  Minus, Plus, Trash2, ShoppingBag, ArrowLeft,
+  Truck, Shield, Clock, Leaf, CreditCard, MapPin
 } from 'lucide-react';
 
 export default function CartPage() {
   const { cartItems, updateQuantity, removeFromCart, clearCart } = useCart();
-  const { isAuthenticated,  } = useAuth();
   const router = useRouter();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [promoCode, setPromoCode] = useState('');
   const [promoApplied, setPromoApplied] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const deliveryFee = subtotal > 100 ? 0 : 10;
+  const deliveryFee = subtotal > 100 ? 0 : 15;
   const discount = promoApplied ? subtotal * 0.1 : 0;
   const total = subtotal + deliveryFee - discount;
 
@@ -45,21 +40,17 @@ export default function CartPage() {
   };
 
   const handleProceedToCheckout = () => {
-    if (!isAuthenticated) {
-      setShowLoginModal(true);
-    } else {
-      setIsCheckingOut(true);
-      setTimeout(() => {
-        router.push('/checkout');
-      }, 1000);
-    }
+    setIsCheckingOut(true);
+    setTimeout(() => {
+      router.push('/checkout');
+    }, 1000);
   };
 
   if (cartItems.length === 0) {
     return (
       <main className="flex flex-col min-h-screen bg-gray-50">
         <Header />
-        
+
         <section className="flex-1 flex items-center justify-center py-20">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -100,12 +91,12 @@ export default function CartPage() {
                 {cartItems.reduce((sum, item) => sum + item.quantity, 0)} items in your cart
               </p>
             </div>
-       <Button
-  onClick={clearCart}
-  className="bg-transparent border border-white text-white hover:bg-white/10 hover:text-white rounded-xl"
->
-  Clear Cart
-</Button>
+            <Button
+              onClick={clearCart}
+              className="bg-transparent border border-white text-white hover:bg-white/10 rounded-xl"
+            >
+              Clear Cart
+            </Button>
           </div>
         </div>
       </section>
@@ -171,7 +162,7 @@ export default function CartPage() {
                         </div>
 
                         <div className="w-20 text-right">
-                          <p className="font-bold text-gray-900">AED {item.price * item.quantity}</p>
+                          <p className="font-bold text-gray-900">AED {(item.price * item.quantity).toFixed(2)}</p>
                         </div>
                       </motion.div>
                     ))}
@@ -182,14 +173,10 @@ export default function CartPage() {
               {/* Continue Shopping */}
               <div className="mt-6">
                 <Link href="/services">
-                 <Button
-  variant="outline"
-  className="border-gray-300 text-gray-700 hover:bg-gray-100 rounded-xl"
-  onClick={() => router.back()}
->
-  <ArrowLeft className="mr-2 w-4 h-4" />
-  Continue Shopping
-</Button>
+                  <Button variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-100 rounded-xl">
+                    <ArrowLeft className="mr-2 w-4 h-4" />
+                    Continue Shopping
+                  </Button>
                 </Link>
               </div>
             </div>
@@ -204,7 +191,7 @@ export default function CartPage() {
                       Order Summary
                     </h2>
                   </div>
-                  
+
                   <div className="p-6">
                     {/* Promo Code */}
                     <div className="mb-6">
@@ -323,19 +310,6 @@ export default function CartPage() {
           </div>
         </div>
       </section>
-
-      {/* OTP Login Modal */}
-      <OTPLoginModal
-        isOpen={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
-        onSuccess={() => {
-          setIsCheckingOut(true);
-          setTimeout(() => {
-            router.push('/checkout');
-          }, 1000);
-        }}
-        message="Please login to proceed with checkout"
-      />
 
       <Footer />
     </main>

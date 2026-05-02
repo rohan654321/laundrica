@@ -2,12 +2,12 @@
 
 import { ReactNode } from 'react';
 import { CartProvider } from '@/context/cart-context';
-import { AuthProvider } from '@/context/auth-context';
+import { SessionProvider } from '@/context/session-context';
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
-    <AuthProvider>
+    <SessionProvider>
       <CartProvider>{children}</CartProvider>
-    </AuthProvider>
+    </SessionProvider>
   );
 }
