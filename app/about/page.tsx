@@ -14,10 +14,20 @@ export default function AboutPage() {
 
       {/* Hero Banner Section - Centered properly */}
       <section>
-        <div className="relative h-[300px] sm:h-[350px] md:h-[400px] lg:h-[450px] bg-cover bg-center bg-fixed flex items-center justify-center" style={{backgroundImage: "url('/images/curtainCleaning.jpg')"}}>
+        <div className="relative h-[200px] sm:h-[250px] md:h-[300px] lg:h-[350px] bg-cover bg-center bg-fixed flex items-center justify-center" style={{backgroundImage: "url('/images/curtainCleaning.jpg')"}}>
           {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/80 via-primary/60 to-primary/40" />
-          <div className="absolute inset-0 bg-gradient-to-t from-primary/90 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r 
+  from-[#0b3d2a]/85 
+  via-[#0b3d2a]/55 
+  to-transparent"
+          />
+
+          {/* BOTTOM SHADE */}
+          <div className="absolute inset-0 bg-gradient-to-t 
+  from-[#0b3d2a]/75 
+  via-transparent 
+  to-transparent"
+          />
           
           {/* Centered Content */}
           <div className="relative z-30 text-center max-w-4xl mx-auto px-6">
@@ -151,8 +161,18 @@ export default function AboutPage() {
           <h3 className="text-lg sm:text-xl font-medium text-muted-foreground text-center mt-2">Our Guarantee</h3>
         </div>
         <div className="relative h-64 sm:h-80 md:h-96 bg-cover bg-center bg-fixed flex items-center justify-center" style={{backgroundImage: "url('/images/curtainCleaning.jpg')"}}>
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/85 via-primary/70 to-primary/50" />
-          <div className="absolute inset-0 bg-gradient-to-t from-primary/90 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r 
+  from-[#0b3d2a]/85 
+  via-[#0b3d2a]/55 
+  to-transparent"
+          />
+
+          {/* BOTTOM SHADE */}
+          <div className="absolute inset-0 bg-gradient-to-t 
+  from-[#0b3d2a]/75 
+  via-transparent 
+  to-transparent"
+          />
           <div className="text-white text-center max-w-4xl mx-auto px-6 z-30 relative">
             <p className="text-sm sm:text-base md:text-lg mb-6 leading-relaxed">
               Laundrica has been the trusted name in garment care. We are committed to returning every piece in immaculate condition. In the rare instance of loss or damage, we provide reimbursement up to the full value of the item, with a $1,000 maximum per order.

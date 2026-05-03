@@ -16,7 +16,7 @@ export default function Home() {
     <main className="flex flex-col min-h-screen">
       <Header />
       <HeroSection />
-      <StatsSection/>
+      {/* <StatsSection/> */}
       <ServicesSlider />
       <WhyChooseUs />
       <HowItWorks />
@@ -31,4 +31,8 @@ export default function Home() {
       <Footer />
     </main>
   );
+}
+
+function useState(arg0: boolean): [any, any] {
+  throw new Error('Function not implemented.');
 }

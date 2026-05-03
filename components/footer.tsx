@@ -12,7 +12,7 @@ export function Footer() {
             <Link href="/" className="flex items-center mb-4">
               <div className="relative w-32 h-12">
                 <Image
-                  src="/images/laundrica png.png"
+                  src="/images/Loundrica.png"
                   alt="Laundrica Logo"
                   fill
                   className="object-contain brightness-0 invert"
