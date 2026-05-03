@@ -6,6 +6,7 @@ import { useSession } from './session-context';
 
 export interface CartItem {
   id: string;
+  cartItemId?: string; // MongoDB _id from backend
   name: string;
   price: number;
   quantity: number;
@@ -16,14 +17,22 @@ export interface CartItem {
   selectedColor?: string;
   selectedSize?: string;
   designImage?: string;
+  productId?: string;
+  metadata?: {
+    originalItemId?: string;
+    serviceName?: string;
+    unit?: string;
+    serviceId?: string;
+  };
 }
 
 interface CartContextType {
   cartItems: CartItem[];
-  addToCart: (item: CartItem) => Promise<void>;
+  addToCart: (item: Omit<CartItem, 'id'> & { id?: string; productId?: string }) => Promise<void>;
   updateQuantity: (id: string, quantity: number) => Promise<void>;
   removeFromCart: (id: string) => Promise<void>;
   clearCart: () => Promise<void>;
+  refreshCart: () => Promise<void>;
   getCartCount: () => number;
   getTotalPrice: () => number;
   isLoading: boolean;
@@ -44,13 +53,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [sessionId]);
 
   const loadCartFromBackend = async () => {
+    if (!sessionId) return;
+
     try {
       setIsLoading(true);
       const data = await cartAPI.getCart(sessionId);
       if (data.success && data.cart?.items) {
-        setCartItems(data.cart.items);
+        // Map backend items to include cartItemId (MongoDB _id)
+        const items = data.cart.items.map((item: any) => ({
+          ...item,
+          id: item._id, // Use MongoDB _id as the primary id
+          cartItemId: item._id, // Store as cartItemId for clarity
+          productId: item.productId || item.id,
+        }));
+        setCartItems(items);
         // Sync to localStorage as backup
-        localStorage.setItem('cart', JSON.stringify(data.cart.items));
+        localStorage.setItem('cart', JSON.stringify(items));
       }
     } catch (error) {
       console.error('Error loading cart from backend:', error);
@@ -73,10 +91,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('cart', JSON.stringify(items));
   };
 
-  const addToCart = async (item: CartItem) => {
+  const refreshCart = async () => {
+    await loadCartFromBackend();
+  };
+
+  const addToCart = async (item: Omit<CartItem, 'id'> & { id?: string; productId?: string }) => {
+    if (!sessionId) {
+      console.error('No session ID available');
+      throw new Error('Session not initialized');
+    }
+
     try {
-      const data = await cartAPI.addToCart(sessionId, {
-        productId: item.id,
+      // Generate a unique productId if not provided
+      const productId = item.productId || item.id || `product-${Date.now()}-${Math.random()}`;
+
+      await cartAPI.addToCart(sessionId, {
+        productId: productId,
         name: item.name,
         price: item.price,
         quantity: item.quantity,
@@ -89,9 +119,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         designImage: item.designImage,
       });
 
-      if (data.success) {
-        await loadCartFromBackend();
-      }
+      await loadCartFromBackend();
     } catch (error) {
       console.error('Error adding to cart:', error);
       throw error;
@@ -99,6 +127,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const updateQuantity = async (id: string, quantity: number) => {
+    if (!sessionId) {
+      throw new Error('Session not initialized');
+    }
+
     try {
       await cartAPI.updateCartItem(sessionId, id, quantity);
       await loadCartFromBackend();
@@ -109,6 +141,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const removeFromCart = async (id: string) => {
+    if (!sessionId) {
+      throw new Error('Session not initialized');
+    }
+
     try {
       await cartAPI.removeFromCart(sessionId, id);
       await loadCartFromBackend();
@@ -119,6 +155,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const clearCart = async () => {
+    if (!sessionId) {
+      throw new Error('Session not initialized');
+    }
+
     try {
       await cartAPI.clearCart(sessionId);
       setCartItems([]);
@@ -145,6 +185,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         updateQuantity,
         removeFromCart,
         clearCart,
+        refreshCart,
         getCartCount,
         getTotalPrice,
         isLoading,
