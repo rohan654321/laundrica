@@ -1,17 +1,21 @@
+// components/Header.tsx
 'use client';
 
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '@/context/cart-context';
-import { ShoppingCart, Menu, X, Sparkles } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { ShoppingCart, Menu, X, Sparkles, ChevronDown } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export function Header() {
   const { cartItems } = useCart();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [hoveredLink, setHoveredLink] = useState<string | null>(null);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+
+  const servicesDropdownRef = useRef<HTMLDivElement>(null);
+  const bookDropdownRef = useRef<HTMLDivElement>(null);
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -23,25 +27,49 @@ export function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (servicesDropdownRef.current && !servicesDropdownRef.current.contains(event.target as Node)) {
+        if (openDropdown === 'services') setOpenDropdown(null);
+      }
+      if (bookDropdownRef.current && !bookDropdownRef.current.contains(event.target as Node)) {
+        if (openDropdown === 'book') setOpenDropdown(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [openDropdown]);
+
+  // Updated service links with your actual services and slugs
+  const serviceLinks = [
+    { href: '/services/professional-laundry-services-in-dubai/orders', label: 'Laundry Services (Wash & Press)' },
+    { href: '/services/dry-cleaning-services-in-dubai/orders', label: 'Dry Cleaning Services' },
+    { href: '/services/shoe-and-bag-spa-services-in-dubai/orders', label: 'Shoe Cleaning & Spa' },
+    { href: '/services/carpet-cleaning-services-in-dubai/orders', label: 'Carpet Cleaning' },
+    { href: '/services/curtain-cleaning-services-in-dubai/orders', label: 'Curtain Cleaning' },
+    { href: '/services/commercial-laundry-services-in-dubai/orders', label: 'Commercial Laundry' },
+  ];
+
+  const bookOptions = [
+    { href: '/booking', label: 'Online Booking', icon: '🌐' },
+    { href: 'https://wa.me/971XXXXXXXXX', label: 'WhatsApp Booking', icon: '💬', external: true },
+  ];
+
   const navLinks = [
-    { href: '/', label: 'Home' },
-    { href: '/services', label: 'Services' },
     { href: '/pricing', label: 'Pricing' },
-    { href: '/about', label: 'About' },
+    { href: '/about', label: 'About Us' },
     { href: '/contact', label: 'Contact' },
-    // { href: '/track-order', label: 'Track Order' },÷
   ];
 
   return (
     <>
-      <header className={`sticky top-0 z-50 w-full transition-all duration-300 ${scrolled ? 'bg-white shadow-md' : 'bg-white'
-        }`}>
+      <header className={`sticky top-0 z-50 w-full transition-all duration-300 ${scrolled ? 'bg-white/90 backdrop-blur-md shadow-md' : 'bg-white/90 backdrop-blur-md'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-16 lg:h-20">
             {/* Logo */}
             <div className="flex-shrink-0">
               <Link href="/" className="flex flex-col">
-                <div className="relative w-28 h-12">
+                <div className="relative w-32 h-12">
                   <Image
                     src="/images/Loundrica.png"
                     alt="Laundrica Logo"
@@ -50,33 +78,52 @@ export function Header() {
                     priority
                   />
                 </div>
-
               </Link>
             </div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-6">
+            <nav className="hidden lg:flex items-center gap-8">
+              {/* Services Dropdown */}
+              <div ref={servicesDropdownRef} className="relative">
+                <button
+                  onClick={() => setOpenDropdown(openDropdown === 'services' ? null : 'services')}
+                  className={`relative px-1 py-2 text-gray-600 hover:text-emerald-900 font-medium transition-colors duration-300 text-sm tracking-tight flex items-center gap-1 ${openDropdown === 'services' ? 'text-emerald-900' : ''}`}
+                >
+                  Services
+                  <ChevronDown size={14} className={`transition-transform duration-200 ${openDropdown === 'services' ? 'rotate-180' : ''}`} />
+                </button>
+                <AnimatePresence>
+                  {openDropdown === 'services' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute top-full left-0 mt-2 w-72 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50"
+                    >
+                      <div className="py-2">
+                        {serviceLinks.map((service) => (
+                          <Link
+                            key={service.href}
+                            href={service.href}
+                            className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-900 transition-colors"
+                            onClick={() => setOpenDropdown(null)}
+                          >
+                            {service.label}
+                          </Link>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  onMouseEnter={() => setHoveredLink(link.label)}
-                  onMouseLeave={() => setHoveredLink(null)}
-                  className="relative px-2 py-2 text-gray-700 hover:text-primary font-medium transition-colors duration-300"
+                  className="relative px-1 py-2 text-gray-600 hover:text-emerald-900 font-medium transition-colors duration-300 text-sm tracking-tight"
                 >
                   {link.label}
-                  {hoveredLink === link.label && (
-                    <motion.div
-                      layoutId="zigzag"
-                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      style={{
-                        clipPath: 'polygon(0% 0%, 10% 100%, 20% 0%, 30% 100%, 40% 0%, 50% 100%, 60% 0%, 70% 100%, 80% 0%, 90% 100%, 100% 0%)'
-                      }}
-                    />
-                  )}
                 </Link>
               ))}
             </nav>
@@ -85,37 +132,73 @@ export function Header() {
             <div className="flex items-center gap-3">
               {/* Cart Button */}
               <Link href="/cart">
-                <button className="relative w-10 h-10 bg-white border-2 border-primary/30 hover:border-primary transition-all duration-300 group flex items-center justify-center">
-                  <div className="absolute inset-0 bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
-                  <ShoppingCart size={18} className="relative z-10 text-gray-700 group-hover:text-white transition-colors duration-300" />
+                <button className="relative w-10 h-10 rounded-full bg-white border border-gray-200 hover:border-emerald-900 transition-all duration-300 group flex items-center justify-center">
+                  <ShoppingCart size={18} className="text-gray-600 group-hover:text-emerald-900 transition-colors" />
                   {cartCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 bg-emerald-900 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
                       {cartCount}
                     </span>
                   )}
                 </button>
               </Link>
 
-              {/* Schedule Button */}
-              <Link href="/services">
-                <button className="hidden md:flex relative h-10 px-5 bg-primary border-2 border-primary hover:bg-primary/90 transition-all duration-300 group items-center justify-center gap-2">
-                  <div className="absolute inset-0 bg-white transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
-                  <Sparkles size={16} className="relative z-10 text-white group-hover:text-primary transition-colors duration-300" />
-                  <span className="relative z-10 text-white group-hover:text-primary transition-colors duration-300 font-medium text-sm">Schedule</span>
+              {/* Book a Wash Dropdown */}
+              <div ref={bookDropdownRef} className="relative">
+                <button
+                  onClick={() => setOpenDropdown(openDropdown === 'book' ? null : 'book')}
+                  className="hidden lg:flex relative h-11 px-6 bg-emerald-900 hover:bg-emerald-800 transition-all duration-300 items-center justify-center gap-2 rounded-full shadow-lg"
+                >
+                  <Sparkles size={16} className="text-white" />
+                  <span className="text-white font-semibold text-sm">Book a Wash</span>
+                  <ChevronDown size={14} className={`text-white transition-transform duration-200 ${openDropdown === 'book' ? 'rotate-180' : ''}`} />
                 </button>
-              </Link>
+                <AnimatePresence>
+                  {openDropdown === 'book' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute top-full right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50"
+                    >
+                      <div className="py-2">
+                        {bookOptions.map((option) => (
+                          option.external ? (
+                            <a
+                              key={option.href}
+                              href={option.href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-900 transition-colors"
+                              onClick={() => setOpenDropdown(null)}
+                            >
+                              <span className="text-lg">{option.icon}</span>
+                              <span>{option.label}</span>
+                            </a>
+                          ) : (
+                            <Link
+                              key={option.href}
+                              href={option.href}
+                              className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-900 transition-colors"
+                              onClick={() => setOpenDropdown(null)}
+                            >
+                              <span className="text-lg">{option.icon}</span>
+                              <span>{option.label}</span>
+                            </Link>
+                          )
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
 
               {/* Mobile Menu Button */}
               <button
-                className="md:hidden relative w-10 h-10 bg-white border-2 border-primary/30 hover:border-primary transition-all duration-300 group flex items-center justify-center"
+                className="lg:hidden relative w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center"
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
               >
-                <div className="absolute inset-0 bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
-                {isMenuOpen ? (
-                  <X size={18} className="relative z-10 text-gray-700 group-hover:text-white transition-colors duration-300" />
-                ) : (
-                  <Menu size={18} className="relative z-10 text-gray-700 group-hover:text-white transition-colors duration-300" />
-                )}
+                {isMenuOpen ? <X size={18} className="text-gray-600" /> : <Menu size={18} className="text-gray-600" />}
               </button>
             </div>
           </div>
@@ -128,24 +211,49 @@ export function Header() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="md:hidden bg-white border-t border-gray-100"
+              className="lg:hidden bg-white border-t border-gray-100"
             >
               <div className="p-4 flex flex-col gap-2">
                 {navLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="px-4 py-3 text-gray-700 hover:text-primary hover:bg-primary/5 font-medium transition-all duration-300"
+                    className="px-4 py-3 text-gray-700 hover:text-emerald-900 hover:bg-emerald-50 font-medium transition-all rounded-lg"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     {link.label}
                   </Link>
                 ))}
-                <Link href="/services" onClick={() => setIsMenuOpen(false)}>
-                  <button className="w-full h-10 bg-primary text-white border-2 border-primary hover:bg-white hover:text-primary transition-all duration-300 font-medium">
-                    Schedule Pickup
+
+                {/* Mobile Services Section */}
+                <div className="px-4 py-2">
+                  <p className="text-xs uppercase tracking-wider text-gray-400 font-semibold mb-2">Our Services</p>
+                  <div className="space-y-1">
+                    {serviceLinks.map((service) => (
+                      <Link
+                        key={service.href}
+                        href={service.href}
+                        className="block py-2.5 text-sm text-gray-600 hover:text-emerald-900 transition-colors"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        {service.label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="border-t border-gray-100 my-2"></div>
+
+                <Link href="/booking" onClick={() => setIsMenuOpen(false)}>
+                  <button className="w-full h-11 bg-emerald-900 text-white rounded-full font-semibold mb-2">
+                    Online Booking
                   </button>
                 </Link>
+                <a href="https://wa.me/971XXXXXXXXX" target="_blank" rel="noopener noreferrer">
+                  <button className="w-full h-11 border border-emerald-900 text-emerald-900 rounded-full font-semibold">
+                    WhatsApp Booking
+                  </button>
+                </a>
               </div>
             </motion.nav>
           )}
