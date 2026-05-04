@@ -29,7 +29,7 @@ export function Header() {
     { href: '/pricing', label: 'Pricing' },
     { href: '/about', label: 'About' },
     { href: '/contact', label: 'Contact' },
-    { href: '/track-order', label: 'Track Order' },
+    // { href: '/track-order', label: 'Track Order' },÷
   ];
 
   return (
@@ -43,14 +43,14 @@ export function Header() {
               <Link href="/" className="flex flex-col">
                 <div className="relative w-28 h-12">
                   <Image
-                    src="/images/laundrica png.png"
+                    src="/images/Loundrica.png"
                     alt="Laundrica Logo"
                     fill
                     className="object-contain"
                     priority
                   />
                 </div>
-                <span className="text-[10px] text-primary font-medium tracking-wide">Luxury freshness within reach</span>
+
               </Link>
             </div>
 

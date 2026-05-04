@@ -1,17 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { useCart } from '@/context/cart-context';
 import { useSession } from '@/context/session-context';
 import { serviceAPI } from '@/lib/api';
-import { Minus, Plus, ShoppingCart, ArrowLeft, Check, Clock, Shield, Truck, Leaf, AlertCircle, Phone, MessageCircle, Sparkles } from 'lucide-react';
+import { Minus, Plus, ShoppingCart, ArrowLeft, Check, Clock, Shield, Truck, Leaf, AlertCircle, Phone, MessageCircle, Trash2, MapPin, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 // Define types
@@ -51,92 +50,127 @@ interface Service {
   isActive: boolean;
 }
 
+// Define which categories belong to which service type
+const SERVICE_CATEGORY_MAP: Record<string, CategoryType[]> = {
+  'laundry': ['men', 'women', 'children', 'household'],
+  'dry-cleaning': ['men', 'women', 'children', 'household'],
+  'carpet-cleaning': ['carpet'],
+  'shoe-cleaning': ['shoes'],
+  'curtain-cleaning': ['household'],
+  'commercial': ['men', 'women', 'household'],
+};
+
+// Default categories with their details
+const ALL_CATEGORIES: Record<CategoryType, Category> = {
+  men: { id: 'men', label: 'Men', icon: '👔', description: 'Shirts, pants, suits, and more' },
+  women: { id: 'women', label: 'Women', icon: '👗', description: 'Dresses, blouses, skirts, and more' },
+  children: { id: 'children', label: 'Children', icon: '🧸', description: 'Kids clothing, uniforms, and more' },
+  household: { id: 'household', label: 'Household', icon: '🏠', description: 'Curtains, bedding, towels, and more' },
+  carpet: { id: 'carpet', label: 'Carpet Cleaning', icon: '🧹', description: 'Professional carpet and rug cleaning', contactForPricing: true },
+  shoes: { id: 'shoes', label: 'Shoe Cleaning', icon: '👟', description: 'Premium shoe cleaning and restoration', contactForPricing: true },
+};
+
+// Default items for each category
+const DEFAULT_ITEMS: Record<CategoryType, ServiceItem[]> = {
+  men: [
+    { _id: 'men-shirts', name: 'T-shirts / Polo Shirts', price: 8, unit: 'piece', description: 'Professional pressing and folding', category: 'men' },
+    { _id: 'men-formal-shirts', name: 'Formal Shirts', price: 10, unit: 'piece', description: 'Crisp ironing and stain removal', category: 'men' },
+    { _id: 'men-pants', name: 'Trousers / Pants', price: 12, unit: 'piece', description: 'Crease-free pressing', category: 'men' },
+    { _id: 'men-jeans', name: 'Jeans', price: 15, unit: 'piece', description: 'Color-safe washing', category: 'men' },
+    { _id: 'men-kandora', name: 'Kandora / Dishdasha', price: 18, unit: 'piece', description: 'Expert care for traditional wear', category: 'men' },
+    { _id: 'men-suits', name: 'Suit (2 piece)', price: 45, unit: 'set', description: 'Expert dry cleaning', category: 'men' },
+    { _id: 'men-blazer', name: 'Blazer / Sport Coat', price: 25, unit: 'piece', description: 'Professional care', category: 'men' },
+    { _id: 'men-sweater', name: 'Sweater / Jumper', price: 18, unit: 'piece', description: 'Gentle wool care', category: 'men' },
+    { _id: 'men-shorts', name: 'Shorts', price: 8, unit: 'piece', description: 'Fresh and clean', category: 'men' },
+  ],
+  women: [
+    { _id: 'women-shirts', name: 'T-shirts / Blouses', price: 8, unit: 'piece', description: 'Gentle fabric care', category: 'women' },
+    { _id: 'women-pants', name: 'Trousers / Pants', price: 12, unit: 'piece', description: 'Perfect pressing', category: 'women' },
+    { _id: 'women-jeans', name: 'Jeans', price: 15, unit: 'piece', description: 'Color protection', category: 'women' },
+    { _id: 'women-abaya', name: 'Abaya', price: 25, unit: 'piece', description: 'Special care for abayas', category: 'women' },
+    { _id: 'women-dress-casual', name: 'Casual Dress', price: 20, unit: 'piece', description: 'Gentle washing', category: 'women' },
+    { _id: 'women-dress-formal', name: 'Formal Dress / Gown', price: 35, unit: 'piece', description: 'Premium dry cleaning', category: 'women' },
+    { _id: 'women-skirt', name: 'Skirt', price: 10, unit: 'piece', description: 'Expert pressing', category: 'women' },
+    { _id: 'women-saree', name: 'Saree', price: 40, unit: 'piece', description: 'Traditional saree care', category: 'women' },
+    { _id: 'women-lehenga', name: 'Lehenga / Choli', price: 50, unit: 'set', description: 'Special care for wedding wear', category: 'women' },
+  ],
+  children: [
+    { _id: 'kids-shirts', name: 'Kids Shirts', price: 6, unit: 'piece', description: 'Safe for sensitive skin', category: 'children' },
+    { _id: 'kids-pants', name: 'Kids Pants', price: 8, unit: 'piece', description: 'Stain removal treatment', category: 'children' },
+    { _id: 'kids-uniforms', name: 'School Uniforms', price: 10, unit: 'piece', description: 'Quick turnaround', category: 'children' },
+    { _id: 'kids-dress', name: 'Kids Dress', price: 10, unit: 'piece', description: 'Gentle care', category: 'children' },
+    { _id: 'kids-jeans', name: 'Kids Jeans', price: 8, unit: 'piece', description: 'Durable cleaning', category: 'children' },
+    { _id: 'kids-shorts', name: 'Kids Shorts', price: 5, unit: 'piece', description: 'Fresh and clean', category: 'children' },
+  ],
+  household: [
+    { _id: 'house-bedsheet-single', name: 'Bed Sheet (Single)', price: 15, unit: 'piece', description: 'Crisp and fresh', category: 'household' },
+    { _id: 'house-bedsheet-double', name: 'Bed Sheet (Double)', price: 20, unit: 'piece', description: 'Professional pressing', category: 'household' },
+    { _id: 'house-bedsheet-king', name: 'Bed Sheet (King)', price: 25, unit: 'piece', description: 'Expert care', category: 'household' },
+    { _id: 'house-pillow', name: 'Pillow Cover', price: 6, unit: 'pair', description: 'Clean and fresh', category: 'household' },
+    { _id: 'house-duvet', name: 'Duvet / Comforter', price: 45, unit: 'piece', description: 'Deep cleaning', category: 'household' },
+    { _id: 'house-towel-bath', name: 'Bath Towel', price: 8, unit: 'piece', description: 'Fluffy and absorbent', category: 'household' },
+    { _id: 'house-curtains', name: 'Curtains', price: 30, unit: 'panel', description: 'Dust-free cleaning', category: 'household' },
+  ],
+  carpet: [
+    { _id: 'carpet-area', name: 'Area Rugs', price: 0, unit: 'sq ft', description: 'Professional deep cleaning for area rugs', category: 'carpet', contactForPricing: true },
+    { _id: 'carpet-wall-to-wall', name: 'Wall-to-Wall Carpet', price: 0, unit: 'room', description: 'Complete carpet cleaning service', category: 'carpet', contactForPricing: true },
+    { _id: 'carpet-stain', name: 'Stain Removal', price: 0, unit: 'stain', description: 'Specialized stain treatment', category: 'carpet', contactForPricing: true },
+    { _id: 'carpet-protection', name: 'Carpet Protection', price: 0, unit: 'treatment', description: 'Protective coating application', category: 'carpet', contactForPricing: true },
+  ],
+  shoes: [
+    { _id: 'shoes-sneakers', name: 'Sneakers', price: 0, unit: 'pair', description: 'Deep cleaning and deodorizing for sneakers', category: 'shoes', contactForPricing: true },
+    { _id: 'shoes-leather', name: 'Leather Shoes', price: 0, unit: 'pair', description: 'Premium leather cleaning and conditioning', category: 'shoes', contactForPricing: true },
+    { _id: 'shoes-suede', name: 'Suede Shoes', price: 0, unit: 'pair', description: 'Specialized suede cleaning and restoration', category: 'shoes', contactForPricing: true },
+    { _id: 'shoes-luxury', name: 'Luxury Footwear', price: 0, unit: 'pair', description: 'Premium care for designer shoes', category: 'shoes', contactForPricing: true },
+  ],
+};
+
 export default function ServiceOrderPage() {
   const params = useParams();
   const router = useRouter();
   const slug = params.slug as string;
-  const { addToCart, cartItems } = useCart();
+  const { addToCart, cartItems = [], updateQuantity, removeFromCart, refreshCart } = useCart();
   const { sessionId } = useSession();
 
   const [service, setService] = useState<Service | null>(null);
   const [serviceItems, setServiceItems] = useState<ServiceItem[]>([]);
-  const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [activeCategory, setActiveCategory] = useState<CategoryType>('men');
-  const [addedItems, setAddedItems] = useState<Record<string, boolean>>({});
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [showContactModal, setShowContactModal] = useState(false);
   const [contactItem, setContactItem] = useState<ServiceItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [promoCode, setPromoCode] = useState('');
+  const [promoApplied, setPromoApplied] = useState(false);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [isClearingCart, setIsClearingCart] = useState(false);
+  const [updatingItemId, setUpdatingItemId] = useState<string | null>(null);
 
-  // Define categories
-  const categories: Category[] = [
-    { id: 'men', label: 'Men', icon: '👔', description: 'Shirts, pants, suits, and more' },
-    { id: 'women', label: 'Women', icon: '👗', description: 'Dresses, blouses, skirts, and more' },
-    { id: 'children', label: 'Children', icon: '🧸', description: 'Kids clothing, uniforms, and more' },
-    { id: 'household', label: 'Household', icon: '🏠', description: 'Curtains, bedding, towels, and more' },
-    { id: 'carpet', label: 'Carpet Cleaning', icon: '🧹', description: 'Professional carpet and rug cleaning', contactForPricing: true },
-    { id: 'shoes', label: 'Shoe Cleaning', icon: '👟', description: 'Premium shoe cleaning and restoration', contactForPricing: true },
-  ];
+  const getAvailableCategories = useCallback((): Category[] => {
+    if (!service) return [];
+    const serviceType = service.category;
+    const categoryIds = SERVICE_CATEGORY_MAP[serviceType] || SERVICE_CATEGORY_MAP['laundry'];
+    return categoryIds.map(id => ALL_CATEGORIES[id]);
+  }, [service]);
 
-  // Default items if API doesn't return any
-  const defaultItems: Record<CategoryType, ServiceItem[]> = {
-    men: [
-      { _id: 'men-shirts', name: 'T-shirts / Polo Shirts', price: 8, unit: 'piece', description: 'Professional pressing and folding', category: 'men' },
-      { _id: 'men-formal-shirts', name: 'Formal Shirts', price: 10, unit: 'piece', description: 'Crisp ironing and stain removal', category: 'men' },
-      { _id: 'men-pants', name: 'Trousers / Pants', price: 12, unit: 'piece', description: 'Crease-free pressing', category: 'men' },
-      { _id: 'men-jeans', name: 'Jeans', price: 15, unit: 'piece', description: 'Color-safe washing', category: 'men' },
-      { _id: 'men-kandora', name: 'Kandora / Dishdasha', price: 18, unit: 'piece', description: 'Expert care for traditional wear', category: 'men' },
-      { _id: 'men-suits', name: 'Suit (2 piece)', price: 45, unit: 'set', description: 'Expert dry cleaning', category: 'men' },
-      { _id: 'men-blazer', name: 'Blazer / Sport Coat', price: 25, unit: 'piece', description: 'Professional care', category: 'men' },
-      { _id: 'men-sweater', name: 'Sweater / Jumper', price: 18, unit: 'piece', description: 'Gentle wool care', category: 'men' },
-      { _id: 'men-shorts', name: 'Shorts', price: 8, unit: 'piece', description: 'Fresh and clean', category: 'men' },
-    ],
-    women: [
-      { _id: 'women-shirts', name: 'T-shirts / Blouses', price: 8, unit: 'piece', description: 'Gentle fabric care', category: 'women' },
-      { _id: 'women-pants', name: 'Trousers / Pants', price: 12, unit: 'piece', description: 'Perfect pressing', category: 'women' },
-      { _id: 'women-jeans', name: 'Jeans', price: 15, unit: 'piece', description: 'Color protection', category: 'women' },
-      { _id: 'women-abaya', name: 'Abaya', price: 25, unit: 'piece', description: 'Special care for abayas', category: 'women' },
-      { _id: 'women-dress-casual', name: 'Casual Dress', price: 20, unit: 'piece', description: 'Gentle washing', category: 'women' },
-      { _id: 'women-dress-formal', name: 'Formal Dress / Gown', price: 35, unit: 'piece', description: 'Premium dry cleaning', category: 'women' },
-      { _id: 'women-skirt', name: 'Skirt', price: 10, unit: 'piece', description: 'Expert pressing', category: 'women' },
-      { _id: 'women-saree', name: 'Saree', price: 40, unit: 'piece', description: 'Traditional saree care', category: 'women' },
-      { _id: 'women-lehenga', name: 'Lehenga / Choli', price: 50, unit: 'set', description: 'Special care for wedding wear', category: 'women' },
-    ],
-    children: [
-      { _id: 'kids-shirts', name: 'Kids Shirts', price: 6, unit: 'piece', description: 'Safe for sensitive skin', category: 'children' },
-      { _id: 'kids-pants', name: 'Kids Pants', price: 8, unit: 'piece', description: 'Stain removal treatment', category: 'children' },
-      { _id: 'kids-uniforms', name: 'School Uniforms', price: 10, unit: 'piece', description: 'Quick turnaround', category: 'children' },
-      { _id: 'kids-dress', name: 'Kids Dress', price: 10, unit: 'piece', description: 'Gentle care', category: 'children' },
-      { _id: 'kids-jeans', name: 'Kids Jeans', price: 8, unit: 'piece', description: 'Durable cleaning', category: 'children' },
-      { _id: 'kids-shorts', name: 'Kids Shorts', price: 5, unit: 'piece', description: 'Fresh and clean', category: 'children' },
-    ],
-    household: [
-      { _id: 'house-bedsheet-single', name: 'Bed Sheet (Single)', price: 15, unit: 'piece', description: 'Crisp and fresh', category: 'household' },
-      { _id: 'house-bedsheet-double', name: 'Bed Sheet (Double)', price: 20, unit: 'piece', description: 'Professional pressing', category: 'household' },
-      { _id: 'house-bedsheet-king', name: 'Bed Sheet (King)', price: 25, unit: 'piece', description: 'Expert care', category: 'household' },
-      { _id: 'house-pillow', name: 'Pillow Cover', price: 6, unit: 'pair', description: 'Clean and fresh', category: 'household' },
-      { _id: 'house-duvet', name: 'Duvet / Comforter', price: 45, unit: 'piece', description: 'Deep cleaning', category: 'household' },
-      { _id: 'house-towel-bath', name: 'Bath Towel', price: 8, unit: 'piece', description: 'Fluffy and absorbent', category: 'household' },
-      { _id: 'house-curtains', name: 'Curtains', price: 30, unit: 'panel', description: 'Dust-free cleaning', category: 'household' },
-    ],
-    carpet: [
-      { _id: 'carpet-area', name: 'Area Rugs', price: 0, unit: 'sq ft', description: 'Professional deep cleaning for area rugs', category: 'carpet', contactForPricing: true },
-      { _id: 'carpet-wall-to-wall', name: 'Wall-to-Wall Carpet', price: 0, unit: 'room', description: 'Complete carpet cleaning service', category: 'carpet', contactForPricing: true },
-      { _id: 'carpet-stain', name: 'Stain Removal', price: 0, unit: 'stain', description: 'Specialized stain treatment', category: 'carpet', contactForPricing: true },
-      { _id: 'carpet-protection', name: 'Carpet Protection', price: 0, unit: 'treatment', description: 'Protective coating application', category: 'carpet', contactForPricing: true },
-    ],
-    shoes: [
-      { _id: 'shoes-sneakers', name: 'Sneakers', price: 0, unit: 'pair', description: 'Deep cleaning and deodorizing for sneakers', category: 'shoes', contactForPricing: true },
-      { _id: 'shoes-leather', name: 'Leather Shoes', price: 0, unit: 'pair', description: 'Premium leather cleaning and conditioning', category: 'shoes', contactForPricing: true },
-      { _id: 'shoes-suede', name: 'Suede Shoes', price: 0, unit: 'pair', description: 'Specialized suede cleaning and restoration', category: 'shoes', contactForPricing: true },
-      { _id: 'shoes-luxury', name: 'Luxury Footwear', price: 0, unit: 'pair', description: 'Premium care for designer shoes', category: 'shoes', contactForPricing: true },
-    ],
-  };
+  const availableCategories = useMemo(() => getAvailableCategories(), [getAvailableCategories]);
+
+  useEffect(() => {
+    if (availableCategories.length > 0 && !availableCategories.find(c => c.id === activeCategory)) {
+      setActiveCategory(availableCategories[0].id);
+    }
+  }, [availableCategories, activeCategory]);
 
   useEffect(() => {
     fetchServiceAndItems();
+  }, [slug]);
+
+  // ✅ Save current slug to localStorage whenever it changes
+  useEffect(() => {
+    if (slug) {
+      localStorage.setItem('lastVisitedServiceSlug', slug);
+    }
   }, [slug]);
 
   const fetchServiceAndItems = async () => {
@@ -144,7 +178,6 @@ export default function ServiceOrderPage() {
       setIsLoading(true);
       setError(null);
 
-      // Fetch service details
       const servicesData = await serviceAPI.getAllServices();
       let foundService = null;
 
@@ -155,58 +188,39 @@ export default function ServiceOrderPage() {
       }
 
       if (!foundService) {
-        setError('Service not found');
+        const localService = getLocalServiceBySlug(slug);
+        if (localService) {
+          setService(localService);
+        } else {
+          setError('Service not found');
+        }
         return;
       }
 
       setService(foundService);
 
-      // Fetch service items from API
-      const itemsData = await serviceAPI.getServiceItems(foundService._id);
-      if (itemsData.success && itemsData.items && itemsData.items.length > 0) {
-        // Group items by category
-        const categorizedItems: Record<string, ServiceItem[]> = {};
-        itemsData.items.forEach((item: ServiceItem) => {
-          if (!categorizedItems[item.category]) {
-            categorizedItems[item.category] = [];
-          }
-          categorizedItems[item.category].push(item);
-        });
-
-        // Update default items with API data
-        for (const [category, items] of Object.entries(categorizedItems)) {
-          if (defaultItems[category as CategoryType]) {
-            // Merge: keep API items that exist, add default ones if missing
-            const existingIds = new Set(items.map(i => i._id));
-            const mergedItems = [...items];
-            for (const defaultItem of defaultItems[category as CategoryType]) {
-              if (!existingIds.has(defaultItem._id)) {
-                mergedItems.push(defaultItem);
-              }
-            }
-            defaultItems[category as CategoryType] = mergedItems;
-          }
+      try {
+        const itemsData = await serviceAPI.getServiceItems(foundService._id);
+        if (itemsData && itemsData.success && itemsData.items && itemsData.items.length > 0) {
+          setServiceItems(itemsData.items);
         }
+      } catch (itemsError) {
+        console.log('No service items found, using defaults');
       }
 
     } catch (err: any) {
       console.error('Error fetching service:', err);
-      // Don't set error if we have default items - just use defaults
-      if (!service) {
-        // Try to find service from local data based on slug
-        const localService = getLocalServiceBySlug(slug);
-        if (localService) {
-          setService(localService);
-        } else {
-          setError(err.message || 'Failed to load service');
-        }
+      const localService = getLocalServiceBySlug(slug);
+      if (localService) {
+        setService(localService);
+      } else {
+        setError(err.message || 'Failed to load service');
       }
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Fallback local services
   const getLocalServiceBySlug = (slug: string): Service | null => {
     const localServices: Record<string, Service> = {
       'professional-laundry-services-in-dubai': {
@@ -229,63 +243,148 @@ export default function ServiceOrderPage() {
         turnaround: '24-48 hours',
         isActive: true,
       },
+      'carpet-cleaning-services-in-dubai': {
+        _id: 'carpet-1',
+        name: 'Carpet Cleaning Services',
+        slug: 'carpet-cleaning-services-in-dubai',
+        description: 'Professional deep cleaning for carpets and rugs.',
+        tagline: 'Deep clean, fresh carpets',
+        category: 'carpet-cleaning',
+        turnaround: '24-48 hours',
+        isActive: true,
+      },
+      'shoe-cleaning-services-in-dubai': {
+        _id: 'shoe-1',
+        name: 'Shoe Cleaning Services',
+        slug: 'shoe-cleaning-services-in-dubai',
+        description: 'Premium shoe cleaning and restoration.',
+        tagline: 'Like new, every time',
+        category: 'shoe-cleaning',
+        turnaround: '24-48 hours',
+        isActive: true,
+      },
     };
     return localServices[slug] || null;
   };
 
-  const updateQuantity = (itemId: string, change: number) => {
-    setQuantities(prev => {
-      const current = prev[itemId] || 0;
-      const newValue = Math.max(0, current + change);
-      if (newValue === 0) {
-        const { [itemId]: _, ...rest } = prev;
-        return rest;
-      }
-      return { ...prev, [itemId]: newValue };
+  // Helper to get cart item by matching productId or metadata
+  const getCartItemByOriginalId = (originalItemId: string) => {
+    if (!Array.isArray(cartItems)) return null;
+    return cartItems.find((item: any) => {
+      if (item.metadata?.originalItemId === originalItemId) return true;
+      if (item.productId === `${service?._id}-${originalItemId}`) return true;
+      return false;
     });
   };
 
-  const handleAddToCart = async (item: ServiceItem) => {
-    const quantity = quantities[item._id] || 0;
-    if (quantity === 0) return;
+  const getCartQuantity = (itemId: string) => {
+    const cartItem = getCartItemByOriginalId(itemId);
+    return cartItem?.quantity || 0;
+  };
+
+  const handleIncrement = async (item: ServiceItem) => {
+    if (!sessionId) {
+      toast.error('Session not initialized');
+      return;
+    }
+
+    setUpdatingItemId(item._id);
+    const currentCartItem = getCartItemByOriginalId(item._id);
+    const currentQty = currentCartItem?.quantity || 0;
+    const newQty = currentQty + 1;
 
     try {
-      await addToCart({
-        id: `${service?._id}-${item._id}`,
-        name: `${service?.name} - ${item.name}`,
-        price: item.price,
-        quantity,
-        category: activeCategory,
-        description: item.description,
-        image: service?.image || service?.icon || '',
-        serviceItems: []
-      });
-
-      // Show success animation
-      setAddedItems(prev => ({ ...prev, [item._id]: true }));
-      setSuccessMessage(`Added ${quantity} × ${item.name} to cart!`);
+      if (currentCartItem && currentCartItem.id) {
+        await updateQuantity(currentCartItem.id, newQty);
+        setSuccessMessage(`${item.name} quantity updated`);
+      } else {
+        const cartItem = {
+          productId: `${service?._id}-${item._id}`,
+          name: item.name,
+          price: item.price,
+          quantity: newQty,
+          category: activeCategory,
+          description: item.description,
+          image: service?.image || service?.icon || '',
+          serviceItems: [],
+          slug,
+          metadata: {
+            originalItemId: item._id,
+            serviceName: service?.name,
+            unit: item.unit,
+            serviceId: service?._id
+          }
+        };
+        await addToCart(cartItem);
+        setSuccessMessage(`${item.name} added to cart`);
+      }
+      await refreshCart();
       setShowSuccessToast(true);
-
-      setTimeout(() => {
-        setShowSuccessToast(false);
-      }, 3000);
-
-      setTimeout(() => {
-        setAddedItems(prev => ({ ...prev, [item._id]: false }));
-      }, 1000);
-
-      // Reset quantity for this item
-      setQuantities(prev => {
-        const { [item._id]: _, ...rest } = prev;
-        return rest;
-      });
+      setTimeout(() => setShowSuccessToast(false), 1500);
     } catch (err) {
-      console.error('Error adding to cart:', err);
-      toast.error('Failed to add to cart');
+      console.error('Error updating cart:', err);
+      toast.error('Failed to update cart');
+    } finally {
+      setUpdatingItemId(null);
     }
   };
 
-  // Handle WhatsApp contact for pricing
+  const handleDecrement = async (item: ServiceItem) => {
+    if (!sessionId) {
+      toast.error('Session not initialized');
+      return;
+    }
+
+    const currentCartItem = getCartItemByOriginalId(item._id);
+    if (!currentCartItem || !currentCartItem.id) return;
+
+    setUpdatingItemId(item._id);
+    const currentQty = currentCartItem.quantity;
+    const newQty = currentQty - 1;
+
+    try {
+      if (newQty === 0) {
+        await removeFromCart(currentCartItem.id);
+        setSuccessMessage(`${item.name} removed from cart`);
+      } else {
+        await updateQuantity(currentCartItem.id, newQty);
+        setSuccessMessage(`${item.name} quantity updated`);
+      }
+      await refreshCart();
+      setShowSuccessToast(true);
+      setTimeout(() => setShowSuccessToast(false), 1500);
+    } catch (err) {
+      console.error('Error updating cart:', err);
+      toast.error('Failed to update cart');
+    } finally {
+      setUpdatingItemId(null);
+    }
+  };
+
+  const handleRemoveItem = async (item: ServiceItem) => {
+    if (!sessionId) {
+      toast.error('Session not initialized');
+      return;
+    }
+
+    const currentCartItem = getCartItemByOriginalId(item._id);
+    if (!currentCartItem || !currentCartItem.id) return;
+
+    setUpdatingItemId(item._id);
+    try {
+      await removeFromCart(currentCartItem.id);
+      setSuccessMessage(`${item.name} removed from cart`);
+      await refreshCart();
+      setShowSuccessToast(true);
+      setTimeout(() => setShowSuccessToast(false), 1500);
+    } catch (err) {
+      console.error('Error removing from cart:', err);
+      toast.error('Failed to remove from cart');
+    } finally {
+      setUpdatingItemId(null);
+    }
+  };
+
   const handleWhatsAppContact = (item: ServiceItem) => {
     const phoneNumber = "971501234567";
     const message = encodeURIComponent(
@@ -302,62 +401,92 @@ export default function ServiceOrderPage() {
 
   const getCurrentItems = (): ServiceItem[] => {
     if (serviceItems.length > 0) {
-      return serviceItems.filter(item => item.category === activeCategory);
+      const filtered = serviceItems.filter(item => item.category === activeCategory);
+      if (filtered.length > 0) return filtered;
     }
-    return defaultItems[activeCategory] || [];
+    return DEFAULT_ITEMS[activeCategory] || [];
   };
 
-  const getTotalItems = () => {
-    const items = getCurrentItems();
-    return items.reduce((sum, item) => sum + (quantities[item._id] || 0), 0);
+  const subtotal = useMemo(() => {
+    if (!Array.isArray(cartItems)) return 0;
+    return cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  }, [cartItems]);
+
+  const deliveryFee = subtotal > 100 ? 0 : 15;
+  const discount = promoApplied ? subtotal * 0.1 : 0;
+  const total = subtotal + deliveryFee - discount;
+
+  const handleApplyPromo = () => {
+    if (promoCode.toLowerCase() === 'fresh10') {
+      setPromoApplied(true);
+      toast.success('Promo code applied! 10% discount');
+    } else {
+      toast.error('Invalid promo code');
+    }
   };
 
-  const getTotalPrice = () => {
-    const items = getCurrentItems();
-    let total = 0;
-    items.forEach((item) => {
-      if (!item.contactForPricing) {
-        total += (quantities[item._id] || 0) * item.price;
+  const handleProceedToCheckout = () => {
+    setIsCheckingOut(true);
+    setTimeout(() => {
+      router.push('/checkout');
+    }, 1000);
+  };
+
+  const clearCart = async () => {
+    if (!sessionId) {
+      toast.error('Session not initialized');
+      return;
+    }
+
+    if (!Array.isArray(cartItems) || cartItems.length === 0) return;
+
+    setIsClearingCart(true);
+    try {
+      const itemsToRemove = [...cartItems];
+      for (const item of itemsToRemove) {
+        if (item && item.id) {
+          await removeFromCart(item.id);
+        }
       }
-    });
-    return total;
+      await refreshCart();
+      toast.success('Cart cleared');
+    } catch (err) {
+      console.error('Error clearing cart:', err);
+      toast.error('Failed to clear cart completely');
+    } finally {
+      setIsClearingCart(false);
+    }
   };
 
-  const getCartCount = () => {
-    return cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  };
+  const currentCategory = availableCategories.find(c => c.id === activeCategory);
+  const isContactCategory = currentCategory?.contactForPricing || false;
+  const currentItems = getCurrentItems();
+  const cartItemsCount = Array.isArray(cartItems) ? cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0) : 0;
 
   const getHeroImage = () => {
     if (service?.image) return service.image;
-    const fallbackImages: Record<string, string> = {
-      'laundry': '/images/services/laundry.jpg',
-      'dry-cleaning': '/images/services/dry-cleaning.jpg',
-      'shoe-cleaning': '/images/services/shoe-cleaning.jpg',
-      'carpet-cleaning': '/images/services/carpet-cleaning.jpg',
-      'curtain-cleaning': '/images/services/curtain-cleaning.jpg',
+    const imageMap: Record<string, string> = {
+      'laundry': '/images/laundry.jpg',
+      'dry-cleaning': '/images/dryCleaning.jpg',
+      'carpet-cleaning': '/images/carpetCleaning.jpg',
+      'shoe-cleaning': '/images/shoeCleaning.jpg',
+      'curtain-cleaning': '/images/curtainCleaning.jpg',
+      'commercial': '/images/commercialCleaning.jpg',
     };
-    return fallbackImages[service?.category || 'laundry'] || '/images/services/placeholder.jpg';
+    return imageMap[service?.category || 'laundry'] || '/images/laundry.jpg';
   };
 
-  const currentCategory = categories.find(c => c.id === activeCategory);
-  const isContactCategory = currentCategory?.contactForPricing || false;
-  const currentItems = getCurrentItems();
-
-  // Loading State
   if (isLoading) {
     return (
-      <main className="flex flex-col min-h-screen bg-gray-50">
+      <main className="flex flex-col min-h-screen bg-white">
         <Header />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <div className="relative w-20 h-20 mx-auto mb-6">
-              <div className="absolute inset-0 rounded-full border-4 border-emerald-100"></div>
-              <div className="absolute inset-0 rounded-full border-4 border-t-emerald-600 animate-spin"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Sparkles className="w-7 h-7 text-emerald-600 animate-pulse" />
-              </div>
+            <div className="relative w-16 h-16 mx-auto mb-4">
+              <div className="absolute inset-0 border-2 border-emerald-100"></div>
+              <div className="absolute inset-0 border-2 border-t-emerald-600 animate-spin"></div>
             </div>
-            <p className="text-gray-700 font-semibold">Loading service details...</p>
+            <p className="text-gray-600">Loading service details...</p>
           </div>
         </div>
         <Footer />
@@ -365,20 +494,19 @@ export default function ServiceOrderPage() {
     );
   }
 
-  // Error State
   if (error || !service) {
     return (
-      <main className="flex flex-col min-h-screen bg-gray-50">
+      <main className="flex flex-col min-h-screen bg-white">
         <Header />
         <div className="flex-1 flex items-center justify-center py-20">
           <div className="text-center max-w-md mx-auto px-4">
-            <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertCircle className="w-10 h-10 text-red-500" />
+            <div className="w-16 h-16 bg-red-50 flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-8 h-8 text-red-500" />
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Service Not Found</h1>
             <p className="text-gray-600 mb-6">{error || 'The service you are looking for does not exist.'}</p>
             <Link href="/services">
-              <Button className="bg-emerald-600 hover:bg-emerald-700">
+              <Button className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2">
                 <ArrowLeft className="mr-2 w-4 h-4" />
                 Back to Services
               </Button>
@@ -391,82 +519,65 @@ export default function ServiceOrderPage() {
   }
 
   return (
-    <main className="flex flex-col min-h-screen bg-gray-50">
+    <main className="flex flex-col min-h-screen bg-white">
       <Header />
 
-      {/* Success Toast */}
       <AnimatePresence>
         {showSuccessToast && (
           <motion.div
-            initial={{ opacity: 0, y: -50 }}
+            initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -50 }}
-            className="fixed top-20 right-4 z-50 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2"
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-20 right-4 z-50 bg-emerald-600 text-white px-4 py-2 shadow-lg flex items-center gap-2 text-sm"
           >
-            <Check className="w-5 h-5" />
+            <Check className="w-4 h-4" />
             {successMessage}
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Contact Modal */}
       <AnimatePresence>
         {showContactModal && contactItem && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
             onClick={() => setShowContactModal(false)}
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl"
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white max-w-md w-full p-6 shadow-xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Phone className="w-8 h-8 text-amber-600" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Contact for Pricing</h3>
-                <p className="text-gray-600">
-                  For {contactItem.name}, pricing varies based on size, material, and specific requirements.
-                  Please contact us directly for a personalized quote.
-                </p>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold text-gray-900">Contact for Pricing</h3>
+                <button onClick={() => setShowContactModal(false)} className="text-gray-400 hover:text-gray-600">
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-
+              <p className="text-gray-600 mb-6">
+                For {contactItem.name}, pricing varies based on size, material, and specific requirements.
+                Please contact us directly for a personalized quote.
+              </p>
               <div className="space-y-3">
                 <Button
                   onClick={() => handleWhatsAppContact(contactItem)}
-                  className="w-full bg-[#25D366] hover:bg-[#20b859] text-white py-3 rounded-xl flex items-center justify-center gap-2"
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 flex items-center justify-center gap-2"
                 >
-                  <MessageCircle className="w-5 h-5" />
+                  <MessageCircle className="w-4 h-4" />
                   Contact via WhatsApp
                 </Button>
-
                 <Button
                   onClick={handleCallContact}
                   variant="outline"
-                  className="w-full border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-50 py-3 rounded-xl flex items-center justify-center gap-2"
+                  className="w-full border border-emerald-600 text-emerald-600 hover:bg-emerald-50 py-2 flex items-center justify-center gap-2"
                 >
-                  <Phone className="w-5 h-5" />
+                  <Phone className="w-4 h-4" />
                   Call for Quote
                 </Button>
-
-                <button
-                  onClick={() => setShowContactModal(false)}
-                  className="w-full text-gray-500 hover:text-gray-700 py-2 text-sm"
-                >
-                  Close
-                </button>
-              </div>
-
-              <div className="mt-6 pt-4 border-t border-gray-200">
-                <p className="text-xs text-gray-500 text-center">
-                  Our team will respond within minutes during business hours
-                </p>
               </div>
             </motion.div>
           </motion.div>
@@ -474,332 +585,367 @@ export default function ServiceOrderPage() {
       </AnimatePresence>
 
       {/* Hero Section */}
-      <section className="relative h-[300px] overflow-hidden">
+      <div className="relative bg-emerald-900">
         <div className="absolute inset-0">
-          <Image
+          <img
             src={getHeroImage()}
             alt={service.name}
-            fill
-            className="object-cover"
-            priority
-            onError={(e) => {
-              const target = e.currentTarget;
-              target.src = '/images/services/placeholder.jpg';
-            }}
+            className="w-full h-full object-cover opacity-30"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-green-900/90 to-emerald-900/90" />
         </div>
-
-        <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-white"
-          >
-            <Link href="/services">
-              <button className="inline-flex items-center gap-2 text-white/80 hover:text-white mb-4 transition-colors">
-                <ArrowLeft className="w-4 h-4" />
-                Back to Services
-              </button>
-            </Link>
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">{service.name}</h1>
-            <p className="text-xl text-white/90 max-w-2xl">{service.tagline || service.description}</p>
-            {service.turnaround && (
-              <div className="flex items-center gap-2 mt-4">
-                <Clock className="w-4 h-4 text-emerald-300" />
-                <span className="text-white/80">Turnaround: {service.turnaround}</span>
-              </div>
-            )}
-          </motion.div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+          <Link href="/services">
+            <button className="inline-flex items-center gap-2 text-white/80 hover:text-white mb-6 transition-colors">
+              <ArrowLeft className="w-4 h-4" />
+              Back to Services
+            </button>
+          </Link>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
+            {service.name}
+          </h1>
+          <p className="text-white/80 text-lg max-w-2xl mb-4">
+            {service.tagline || service.description}
+          </p>
+          {service.turnaround && (
+            <div className="flex items-center gap-2 text-white/70">
+              <Clock className="w-4 h-4" />
+              <span>Turnaround: {service.turnaround}</span>
+            </div>
+          )}
         </div>
-      </section>
+      </div>
 
       {/* Main Content */}
-      <section className="py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Category Navigation */}
-          <div className="mb-8">
-            <div className="flex flex-wrap gap-3">
-              {categories.map((category) => (
-                <button
-                  key={category.id}
-                  onClick={() => setActiveCategory(category.id)}
-                  className={`px-6 py-3 rounded-xl font-medium transition-all ${activeCategory === category.id
-                      ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/25'
-                      : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
-                    }`}
-                >
-                  <span className="mr-2 text-xl">{category.icon}</span>
-                  <span>{category.label}</span>
-                  {category.contactForPricing && (
-                    <span className="ml-2 text-xs bg-amber-500 text-white px-2 py-0.5 rounded-full">
-                      Contact
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-            <p className="text-sm text-gray-500 mt-3">
-              {currentCategory?.description}
-            </p>
-            {isContactCategory && (
-              <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                <p className="text-sm text-amber-800 flex items-center gap-2">
-                  <Phone className="w-4 h-4" />
-                  <span>Pricing varies based on requirements. Contact us for a personalized quote.</span>
-                </p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Items Section */}
+          <div className="lg:col-span-2">
+            <div className="mb-8 border-b border-gray-200">
+              <div className="flex flex-wrap gap-1">
+                {availableCategories.map((category) => (
+                  <button
+                    key={category.id}
+                    onClick={() => setActiveCategory(category.id)}
+                    className={`px-5 py-2 font-medium transition-all ${activeCategory === category.id
+                      ? 'text-emerald-600 border-b-2 border-emerald-600'
+                      : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                  >
+                    <span className="mr-2">{category.icon}</span>
+                    {category.label}
+                    {category.contactForPricing && (
+                      <span className="ml-2 text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5">
+                        Contact
+                      </span>
+                    )}
+                  </button>
+                ))}
               </div>
-            )}
-          </div>
+            </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Items Grid */}
-            <div className="lg:col-span-2">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={activeCategory}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                  className="grid md:grid-cols-2 gap-4"
-                >
-                  {currentItems.map((item, index) => (
-                    <motion.div
-                      key={item._id}
-                      layout
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: index * 0.05 }}
-                      whileHover={{ y: -4 }}
-                      className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100"
-                    >
-                      <div className="p-6">
-                        <div className="mb-4">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-2">{item.name}</h3>
-                          <p className="text-sm text-gray-600 line-clamp-2">{item.description}</p>
-                        </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              {currentItems.map((item) => {
+                const cartQty = getCartQuantity(item._id);
+                const isUpdating = updatingItemId === item._id;
+                return (
+                  <div
+                    key={item._id}
+                    className="border border-gray-200 hover:border-emerald-200 transition-colors"
+                  >
+                    <div className="p-5">
+                      <div className="mb-3">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-1">{item.name}</h3>
+                        <p className="text-sm text-gray-500">{item.description}</p>
+                      </div>
 
-                        <div className="flex items-center justify-between mb-4">
-                          <div>
-                            {item.contactForPricing || isContactCategory ? (
-                              <div className="flex items-center gap-2">
-                                <span className="text-amber-600 font-semibold">Contact for Price</span>
-                                <Phone className="w-4 h-4 text-amber-500" />
-                              </div>
-                            ) : (
-                              <>
-                                <span className="text-2xl font-bold text-emerald-600">AED {item.price}</span>
-                                <span className="text-sm text-gray-500 ml-1">/{item.unit}</span>
-                              </>
-                            )}
-                          </div>
-                          {service.turnaround && !(item.contactForPricing || isContactCategory) && (
-                            <div className="flex items-center gap-1 text-xs text-gray-500">
-                              <Clock className="w-3 h-3" />
-                              <span>{service.turnaround}</span>
+                      <div className="flex items-center justify-between mt-4">
+                        <div>
+                          {item.contactForPricing || isContactCategory ? (
+                            <div className="flex items-center gap-2">
+                              <span className="text-emerald-600 font-medium">Contact for Price</span>
+                            </div>
+                          ) : (
+                            <div>
+                              <span className="text-xl font-bold text-gray-900">AED {item.price}</span>
+                              <span className="text-sm text-gray-500 ml-1">/{item.unit}</span>
                             </div>
                           )}
                         </div>
 
                         {item.contactForPricing || isContactCategory ? (
-                          <div className="flex flex-col gap-2">
-                            <Button
-                              onClick={() => {
-                                setContactItem(item);
-                                setShowContactModal(true);
-                              }}
-                              className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white py-3 rounded-xl flex items-center justify-center gap-2"
-                            >
-                              <MessageCircle className="w-4 h-4" />
-                              Contact for Quote
-                            </Button>
-                          </div>
+                          <Button
+                            onClick={() => {
+                              setContactItem(item);
+                              setShowContactModal(true);
+                            }}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-1.5 text-sm"
+                          >
+                            Contact
+                          </Button>
                         ) : (
-                          <>
-                            <div className="flex items-center gap-3">
-                              <div className="flex items-center bg-gray-100 rounded-xl">
-                                <button
-                                  className="w-10 h-10 flex items-center justify-center text-gray-600 hover:text-emerald-600 transition-colors disabled:opacity-50"
-                                  onClick={() => updateQuantity(item._id, -1)}
-                                  disabled={!quantities[item._id]}
-                                >
-                                  <Minus className="w-4 h-4" />
-                                </button>
-                                <span className="w-12 text-center font-medium text-gray-900">
-                                  {quantities[item._id] || 0}
-                                </span>
-                                <button
-                                  className="w-10 h-10 flex items-center justify-center text-gray-600 hover:text-emerald-600 transition-colors"
-                                  onClick={() => updateQuantity(item._id, 1)}
-                                >
-                                  <Plus className="w-4 h-4" />
-                                </button>
-                              </div>
-
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center border border-gray-200">
                               <button
-                                className={`flex-1 h-10 rounded-xl font-medium transition-all ${addedItems[item._id]
-                                    ? 'bg-emerald-500 text-white'
-                                    : quantities[item._id]
-                                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/25'
-                                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                  }`}
-                                onClick={() => handleAddToCart(item)}
-                                disabled={!quantities[item._id]}
+                                className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-emerald-600 disabled:opacity-50"
+                                onClick={() => handleDecrement(item)}
+                                disabled={cartQty === 0 || isUpdating}
                               >
-                                {addedItems[item._id] ? (
-                                  <Check className="w-5 h-5 mx-auto" />
+                                <Minus className="w-3.5 h-3.5" />
+                              </button>
+                              <span className="w-10 text-center text-gray-900">
+                                {isUpdating ? (
+                                  <div className="w-3 h-3 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto" />
                                 ) : (
-                                  'Add to Cart'
+                                  cartQty
                                 )}
+                              </span>
+                              <button
+                                className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-emerald-600"
+                                onClick={() => handleIncrement(item)}
+                                disabled={isUpdating}
+                              >
+                                <Plus className="w-3.5 h-3.5" />
                               </button>
                             </div>
-                          </>
+                            {cartQty > 0 && (
+                              <button
+                                onClick={() => handleRemoveItem(item)}
+                                className="text-gray-400 hover:text-red-500"
+                                disabled={isUpdating}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
                         )}
                       </div>
-                    </motion.div>
-                  ))}
-                </motion.div>
-              </AnimatePresence>
-
-              {/* Empty State */}
-              {currentItems.length === 0 && (
-                <div className="bg-white rounded-2xl p-12 text-center">
-                  <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <AlertCircle className="w-10 h-10 text-gray-400" />
+                    </div>
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No Items Available</h3>
-                  <p className="text-gray-500">
-                    No items are currently available in this category. Please check another category.
-                  </p>
-                </div>
-              )}
+                );
+              })}
             </div>
 
-            {/* Order Summary - Sticky */}
-            <div className="lg:col-span-1">
-              <div className="sticky top-24">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="bg-white rounded-2xl shadow-xl overflow-hidden"
-                >
-                  <div className="bg-gradient-to-r from-emerald-600 to-green-600 p-6 text-white">
-                    <h3 className="text-xl font-semibold flex items-center gap-2">
-                      <ShoppingCart className="w-5 h-5" />
-                      Order Summary
-                    </h3>
-                    <p className="text-white/80 text-sm mt-1">
-                      {getTotalItems()} items selected
-                    </p>
+            {currentItems.length === 0 && (
+              <div className="border border-gray-200 p-12 text-center">
+                <AlertCircle className="w-10 h-10 text-gray-400 mx-auto mb-3" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">No Items Available</h3>
+                <p className="text-gray-500">Please check another category.</p>
+              </div>
+            )}
+          </div>
+
+          {/* Order Summary */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-24 border border-gray-200 bg-white">
+              <div className="bg-emerald-600 p-4 text-white">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ShoppingCart className="w-5 h-5" />
+                    <h3 className="font-semibold">Your Cart</h3>
+                    <span className="text-sm text-emerald-100">({cartItemsCount})</span>
                   </div>
+                  {cartItemsCount > 0 && (
+                    <button
+                      onClick={clearCart}
+                      disabled={isClearingCart}
+                      className="text-xs text-emerald-100 hover:text-white transition-colors disabled:opacity-50"
+                    >
+                      {isClearingCart ? 'Clearing...' : 'Clear all'}
+                    </button>
+                  )}
+                </div>
+              </div>
 
-                  <div className="p-6">
-                    {/* Current Selection Summary */}
-                    <div className="mb-6">
-                      <h4 className="text-sm font-medium text-gray-500 mb-3">Current Selection</h4>
-                      <div className="space-y-2 max-h-64 overflow-y-auto">
-                        {Object.entries(quantities).map(([itemId, qty]) => {
-                          const item = currentItems.find(i => i._id === itemId);
-                          if (!item || item.contactForPricing) return null;
-                          return (
-                            <div key={itemId} className="flex justify-between text-sm py-1">
-                              <span className="text-gray-600">
-                                {item.name} x{qty}
-                              </span>
-                              <span className="font-medium text-gray-900">
-                                AED {(item.price * qty).toFixed(2)}
-                              </span>
+              <div className="p-4">
+                <div className="max-h-80 overflow-y-auto mb-4">
+                  {cartItemsCount === 0 ? (
+                    <div className="text-center py-8">
+                      <ShoppingCart className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                      <p className="text-gray-500 text-sm">Your cart is empty</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {cartItems.map((item: any) => {
+                        const originalItem = currentItems.find(i => i._id === item.metadata?.originalItemId);
+                        const isUpdating = updatingItemId === originalItem?._id;
+                        return (
+                          <div key={item.id} className="flex items-start justify-between border-b border-gray-100 pb-3">
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-900">{item.name}</p>
+                              <p className="text-xs text-gray-500">AED {item.price} each</p>
                             </div>
-                          );
-                        })}
-                        {Object.keys(quantities).filter(key => {
-                          const item = currentItems.find(i => i._id === key);
-                          return item && !item.contactForPricing;
-                        }).length === 0 && (
-                            <p className="text-sm text-gray-500 text-center py-4">
-                              No items selected
-                            </p>
-                          )}
-                      </div>
+                            <div className="flex items-center gap-2">
+                              <div className="flex items-center border border-gray-200">
+                                <button
+                                  className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-emerald-600 disabled:opacity-50"
+                                  onClick={() => {
+                                    if (originalItem) {
+                                      handleDecrement(originalItem);
+                                    }
+                                  }}
+                                  disabled={isUpdating || !originalItem}
+                                >
+                                  <Minus className="w-3 h-3" />
+                                </button>
+                                <span className="w-8 text-center text-sm">
+                                  {isUpdating ? (
+                                    <div className="w-3 h-3 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto" />
+                                  ) : (
+                                    item.quantity
+                                  )}
+                                </span>
+                                <button
+                                  className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-emerald-600 disabled:opacity-50"
+                                  onClick={() => {
+                                    if (originalItem) {
+                                      handleIncrement(originalItem);
+                                    }
+                                  }}
+                                  disabled={isUpdating || !originalItem}
+                                >
+                                  <Plus className="w-3 h-3" />
+                                </button>
+                              </div>
+                              <button
+                                onClick={() => {
+                                  if (originalItem) {
+                                    handleRemoveItem(originalItem);
+                                  } else if (item.id) {
+                                    removeFromCart(item.id);
+                                  }
+                                }}
+                                className="text-gray-400 hover:text-red-500 disabled:opacity-50"
+                                disabled={isUpdating}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
+                  )}
+                </div>
 
-                    {/* Total */}
-                    <div className="pt-4 border-t border-gray-200">
-                      <div className="flex justify-between items-center mb-4">
-                        <span className="text-gray-600">Total Items:</span>
-                        <span className="font-semibold text-lg text-gray-900">{getTotalItems()}</span>
-                      </div>
-                      <div className="flex justify-between items-center mb-6">
-                        <span className="text-lg font-semibold text-gray-900">Total Amount:</span>
-                        <span className="text-2xl font-bold text-emerald-600">AED {getTotalPrice()}</span>
-                      </div>
-
-                      <Link href="/cart">
-                        <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-6 text-lg font-medium rounded-xl mb-3">
-                          View Cart ({getCartCount()} items)
+                {cartItemsCount > 0 && (
+                  <>
+                    <div className="mb-4">
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={promoCode}
+                          onChange={(e) => setPromoCode(e.target.value)}
+                          placeholder="Promo code"
+                          className="flex-1 px-3 py-1.5 text-sm border border-gray-200 focus:outline-none focus:border-emerald-400"
+                          disabled={promoApplied}
+                        />
+                        <Button
+                          onClick={handleApplyPromo}
+                          disabled={promoApplied}
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 text-sm"
+                        >
+                          Apply
                         </Button>
-                      </Link>
-
-                      <Link href="/checkout">
-                        <Button variant="outline" className="w-full border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-50 py-6 text-lg font-medium rounded-xl">
-                          Proceed to Checkout
-                        </Button>
-                      </Link>
+                      </div>
+                      {promoApplied && (
+                        <p className="text-xs text-emerald-600 mt-1">✓ 10% discount applied</p>
+                      )}
                     </div>
 
-                    {/* Features */}
-                    <div className="mt-6 pt-4 border-t border-gray-200">
-                      <h4 className="text-sm font-medium text-gray-700 mb-3">Service Features</h4>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <Truck className="w-4 h-4 text-emerald-600" />
-                          <span>Free pickup</span>
+                    <div className="space-y-2 mb-4 pt-2 border-t border-gray-100">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Subtotal</span>
+                        <span className="font-medium text-gray-900">AED {subtotal.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Delivery Fee</span>
+                        <span className="font-medium text-gray-900">
+                          {deliveryFee === 0 ? 'FREE' : `AED ${deliveryFee}`}
+                        </span>
+                      </div>
+                      {promoApplied && (
+                        <div className="flex justify-between text-sm text-emerald-600">
+                          <span>Discount (10%)</span>
+                          <span>-AED {discount.toFixed(2)}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <Clock className="w-4 h-4 text-emerald-600" />
-                          <span>{service.turnaround || '24hr'}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <Shield className="w-4 h-4 text-emerald-600" />
-                          <span>Quality assured</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <Leaf className="w-4 h-4 text-emerald-600" />
-                          <span>Eco-friendly</span>
+                      )}
+                      <div className="pt-2 border-t border-gray-200">
+                        <div className="flex justify-between">
+                          <span className="font-semibold text-gray-900">Total</span>
+                          <span className="text-xl font-bold text-emerald-600">AED {total.toFixed(2)}</span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Info Note */}
-                    <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                      <p className="text-xs text-blue-800">
-                        💡 <strong>Note:</strong> All items are professionally cleaned, pressed, and folded. Free pickup and delivery included.
+                    {subtotal < 100 && (
+                      <div className="mb-4 p-3 bg-emerald-50">
+                        <p className="text-xs text-emerald-700 mb-2">
+                          Add AED {(100 - subtotal).toFixed(2)} more for free delivery
+                        </p>
+                        <div className="w-full h-1 bg-emerald-100">
+                          <div
+                            className="h-full bg-emerald-600 transition-all"
+                            style={{ width: `${Math.min((subtotal / 100) * 100, 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <Button
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 font-medium"
+                      onClick={handleProceedToCheckout}
+                      disabled={isCheckingOut}
+                    >
+                      {isCheckingOut ? (
+                        <div className="flex items-center justify-center gap-2">
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent animate-spin" />
+                          Processing...
+                        </div>
+                      ) : (
+                        'Proceed to Checkout'
+                      )}
+                    </Button>
+
+                    <div className="grid grid-cols-4 gap-2 mt-4">
+                      {[
+                        { icon: Shield, label: 'Secure' },
+                        { icon: Truck, label: 'Free*' },
+                        { icon: Clock, label: '24-48h' },
+                        { icon: Leaf, label: 'Eco' },
+                      ].map((badge, idx) => (
+                        <div key={idx} className="text-center py-2 bg-emerald-50">
+                          <badge.icon className="w-4 h-4 mx-auto mb-0.5 text-emerald-600" />
+                          <p className="text-[10px] text-gray-600">{badge.label}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-3 p-2 bg-emerald-50 flex items-start gap-2">
+                      <MapPin className="w-3.5 h-3.5 text-emerald-600 mt-0.5" />
+                      <p className="text-[11px] text-gray-600">
+                        Free delivery on orders AED 100+. Estimated 24-48 hours.
                       </p>
                     </div>
+                  </>
+                )}
 
-                    {/* WhatsApp Support */}
-                    <div className="mt-4 p-3 bg-green-50 rounded-lg flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <MessageCircle className="w-4 h-4 text-green-600" />
-                        <span className="text-xs text-green-800">Need help?</span>
-                      </div>
-                      <button
-                        onClick={() => window.open('https://wa.me/971501234567', '_blank')}
-                        className="text-xs text-green-600 font-semibold hover:underline"
-                      >
-                        Chat with us
-                      </button>
-                    </div>
+                <div className={`mt-4 p-3 bg-emerald-50 flex items-center justify-between ${cartItemsCount === 0 ? 'mt-0' : ''}`}>
+                  <div className="flex items-center gap-2">
+                    <MessageCircle className="w-4 h-4 text-emerald-600" />
+                    <span className="text-xs text-emerald-800">Need help?</span>
                   </div>
-                </motion.div>
+                  <button
+                    onClick={() => window.open('https://wa.me/971501234567', '_blank')}
+                    className="text-xs text-emerald-600 font-medium hover:underline"
+                  >
+                    Chat with us
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </section>
+      </div>
 
       <Footer />
     </main>

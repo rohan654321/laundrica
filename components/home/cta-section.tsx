@@ -3,9 +3,17 @@
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight, Sparkles, MessageCircle } from 'lucide-react';
 
 export function CTASection() {
+  const handleWhatsAppOrder = () => {
+    const phoneNumber = "971501234567";
+    const message = encodeURIComponent(
+      "Hello! I'd like to place an order for laundry services. Please share the details and pricing."
+    );
+    window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
+  };
+
   return (
     <section className="py-20 md:py-32 px-4 relative overflow-hidden">
       {/* Animated background */}
@@ -48,11 +56,15 @@ export function CTASection() {
                 Schedule Now <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
-            <Link href="/contact">
-              <Button size="lg" variant="outline" className="rounded-full px-8">
-                Get Support
-              </Button>
-            </Link>
+            <Button
+              size="lg"
+              variant="outline"
+              className="rounded-full px-8 gap-2"
+              onClick={handleWhatsAppOrder}
+            >
+              <MessageCircle className="w-4 h-4" />
+              Order by WhatsApp
+            </Button>
           </div>
 
           {/* Trust badges */}

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ShoppingBag, Truck, Droplets, PackageCheck, Clock, Shield, Leaf, Star } from 'lucide-react';
+import { ShoppingBag, Truck, Droplets, PackageCheck, Clock, Shield, Leaf, Star, CheckCircle } from 'lucide-react';
 
 const steps = [
   {
@@ -28,6 +28,14 @@ const steps = [
     fullDescription: 'Your clothes receive expert care with our state-of-the-art washing technology. We separate by color, fabric type, and use premium eco-friendly detergents for lasting freshness.',
     icon: <Droplets size={28} />,
     features: ['Eco-friendly', 'Fabric care', 'Stain removal'],
+  },
+  {
+    title: 'Quality Check',
+    shortTitle: 'Check',
+    description: 'Every item undergoes rigorous quality inspection before packaging.',
+    fullDescription: 'Our trained quality assurance team meticulously examines each garment for cleanliness, fabric integrity, and finishing details. We ensure your clothes meet our premium standards before they are packed for delivery.',
+    icon: <CheckCircle size={28} />,
+    features: ['Meticulous inspection', 'Stain verification', 'Finishing check'],
   },
   {
     title: 'Delivery',
@@ -56,7 +64,7 @@ export default function HowItWorksPremium() {
   return (
     <section className="py-20 md:py-28 bg-gradient-to-br from-white via-gray-50 to-white">
       <div className="max-w-6xl mx-auto px-6 md:px-8">
-        
+
         {/* Heading */}
         <div className="text-center mb-12 md:mb-16">
           <motion.div
@@ -75,16 +83,16 @@ export default function HowItWorksPremium() {
 
         {/* Steps Row with Progress Bar */}
         <div className="relative mb-12">
-          
+
           {/* Progress Bar Container */}
           <div className="absolute top-1/2 left-0 w-full -translate-y-1/2 px-6 md:px-8">
             {/* Background Gray Line */}
             <div className="w-full h-1.5 bg-gray-100 rounded-full" />
-            
+
             {/* Green Filling Line */}
             <motion.div
               className="h-1.5 bg-gradient-to-r from-green-400 to-green-500 rounded-full relative"
-              style={{ 
+              style={{
                 width: `${progressPercentage}%`,
                 boxShadow: '0 0 12px rgba(34, 197, 94, 0.4)'
               }}
@@ -97,8 +105,8 @@ export default function HowItWorksPremium() {
           {/* Steps */}
           <div className="relative flex justify-between items-center z-10">
             {steps.map((step, index) => (
-              <motion.div 
-                key={index} 
+              <motion.div
+                key={index}
                 className="flex flex-col items-center w-full cursor-pointer"
                 onClick={() => setActive(index)}
                 whileHover={{ y: -5 }}
@@ -106,11 +114,10 @@ export default function HowItWorksPremium() {
               >
                 {/* Circle */}
                 <motion.div
-                  className={`relative w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
-                    active >= index
+                  className={`relative w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${active >= index
                       ? 'border-green-500 bg-green-500 text-white shadow-lg shadow-green-200'
                       : 'border-gray-300 bg-white text-gray-400 hover:border-green-300 hover:text-green-400'
-                  }`}
+                    }`}
                   animate={{
                     scale: active === index ? 1.1 : 1,
                   }}
@@ -135,7 +142,7 @@ export default function HowItWorksPremium() {
                     {step.title}
                   </p>
                 </div>
-                
+
                 {/* Mobile view - just step number */}
                 <div className="mt-2 text-center md:hidden">
                   <span className={`text-xs font-medium ${active >= index ? 'text-green-600' : 'text-gray-400'}`}>
@@ -182,13 +189,13 @@ export default function HowItWorksPremium() {
                 </div>
               </div>
             </div>
-            
+
             {/* Card Body */}
             <div className="p-6 md:p-8">
               <p className="text-gray-700 text-base md:text-lg leading-relaxed mb-6">
                 {steps[active].fullDescription}
               </p>
-              
+
               {/* Features Grid */}
               <div className="grid grid-cols-3 gap-3 md:gap-4 pt-4 border-t border-gray-100">
                 {steps[active].features.map((feature, idx) => (

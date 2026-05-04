@@ -9,7 +9,10 @@ import { FeatureComparison } from '@/components/pricing/feature-comparison';
 import { ServiceMenu } from '@/components/pricing/service-menu';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import { Sparkles, Shirt, Home, Crown, Download, FileText } from 'lucide-react';
+import { Sparkles, Shirt, Home, Crown, Download, FileText, Check, Clock, Heart, Leaf, Zap, Award, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 
 export default function PricingPage() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
@@ -51,122 +54,209 @@ export default function PricingPage() {
     <main className="flex flex-col min-h-screen bg-white">
       <Header />
 
-      {/* Hero Section - Forest Green Theme */}
-      <section className="relative pt-24 pb-16 px-4 bg-gradient-to-br from-[#1f4f2b] via-[#2a6e3a] to-[#1f4f2b] overflow-hidden">
-        {/* Decorative elements */}
-        <motion.div
-          className="absolute top-20 -left-32 w-96 h-96 bg-white/5 rounded-full blur-3xl"
-          animate={{ x: [0, 30, 0], y: [0, 20, 0] }}
-          transition={{ duration: 12, repeat: Infinity }}
-        />
-        <motion.div
-          className="absolute bottom-20 -right-32 w-96 h-96 bg-amber-400/10 rounded-full blur-3xl"
-          animate={{ x: [0, -30, 0], y: [0, -20, 0] }}
-          transition={{ duration: 10, repeat: Infinity }}
-        />
+      {/* Hero Banner Section with Parallax - Reduced Height */}
+      <section>
+        <div
+          className="relative h-[350px] bg-cover bg-center bg-fixed flex items-center justify-center"
+          style={{
+            backgroundImage: "url('/images/curtainCleaning.jpg')",
+            
+          }}
+        >
 
-        <div className="relative z-10 max-w-5xl mx-auto text-center">
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-4 py-2 mb-6 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
-              <Sparkles className="w-4 h-4 text-amber-300" />
-              <span className="text-sm font-medium text-white">Luxury | Fresh | Clean</span>
-            </motion.div>
+          <div className="absolute inset-0 bg-gradient-to-r 
+  from-[#0b3d2a]/85 
+  via-[#0b3d2a]/55 
+  to-transparent"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t 
+  from-[#0b3d2a]/70 
+  to-transparent"
+          />
+          <div className="relative z-30 text-white text-center">
+            
 
-            <motion.h1
-              variants={itemVariants}
-              className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight"
-            >
+            {/* TOP BADGE */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 mb-6 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
+              <span className="text-yellow-400 text-sm">✨</span>
+              <span className="text-sm text-white">Luxury | Fresh | Clean</span>
+            </div>
+
+            {/* HEADING */}
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight">
               Premium Care for
-              <span className="block text-amber-300">Every Fabric</span>
-            </motion.h1>
+              <span className="block text-yellow-400">Every Fabric</span>
+            </h1>
 
-            <motion.p
-              variants={itemVariants}
-              className="text-lg md:text-xl text-white/80 mb-8 max-w-2xl mx-auto"
-            >
+            {/* SUBTEXT */}
+            <p className="text-sm sm:text-base md:text-lg text-white/80 max-w-2xl mx-auto">
               Professional laundry, dry cleaning, and garment care. Free pickup & delivery in Dubai.
-            </motion.p>
+            </p>
 
-            <motion.div variants={itemVariants} className="flex flex-wrap justify-center gap-4">
-              <div className="flex items-center gap-2 text-white/90 text-sm">
-                <i className="fas fa-phone-alt text-amber-300"></i>
-                <span>050 925 9667</span>
-              </div>
-              <div className="flex items-center gap-2 text-white/90 text-sm">
-                <i className="fas fa-map-marker-alt text-amber-300"></i>
-                <span>Azizi Riviera 42, Meydan, Dubai</span>
-              </div>
-            </motion.div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
-      {/* A La Carte Services Section - From PDF */}
-      <section className="py-20 px-4 bg-[#f8faf6]">
+      {/* Effortless Care Section - Matching About Page */}
+      <section className="bg-white py-16 px-4">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <motion.h2
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="text-4xl font-bold text-[#1f4f2b] mb-4"
-            >
-              A La Carte Services
-            </motion.h2>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="text-lg text-gray-600"
-            >
-              Pay per item — no subscription needed
-            </motion.p>
-            <p className="text-sm text-gray-500 mt-2">*Prices in AED | Subject to variation based on garment condition</p>
-          </div>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl text-[#1f4f2b] font-medium mb-10 text-center">
+            Effortless Care, <span className="text-foreground"> Elevated Service</span>
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Link href="/contact" className="group bg-card rounded-lg p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 block border border-border">
+              <div className="flex items-start space-x-4">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-[#1f4f2b]/10 rounded-full flex items-center justify-center group-hover:bg-[#1f4f2b] transition-colors duration-300 flex-shrink-0">
+                  <Clock className="w-6 h-6 sm:w-7 sm:h-7 text-[#1f4f2b] group-hover:text-white transition-colors duration-300" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-lg sm:text-xl text-card-foreground mb-2">
+                    <span className="group-hover:text-[#1f4f2b] transition-colors">Save Time and Money</span>
+                  </h3>
+                  <p className="text-sm sm:text-base text-muted-foreground">No unnecessary trips; we come to you!</p>
+                </div>
+              </div>
+            </Link>
 
-          {/* SQUARE DOWNLOAD BUTTON - BEFORE THE TABLE */}
-          <div className="flex justify-center mb-6">
-            <motion.button
-              onClick={handleDownloadPDF}
-              whileHover={{ scale: 1.05, rotate: 0 }}
-              whileTap={{ scale: 0.95 }}
-              className="w-12 h-12 bg-[#1f4f2b] hover:bg-[#2a6e3a] text-white rounded-lg flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg group"
-              title="Download Price List PDF"
-            >
-              <Download className="w-5 h-5 group-hover:animate-bounce" />
-            </motion.button>
-          </div>
+            <Link href="/contact" className="group bg-card rounded-lg p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 block border border-border">
+              <div className="flex items-start space-x-4">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-[#1f4f2b]/10 rounded-full flex items-center justify-center group-hover:bg-[#1f4f2b] transition-colors duration-300 flex-shrink-0">
+                  <Heart className="w-6 h-6 sm:w-7 sm:h-7 text-[#1f4f2b] group-hover:text-white transition-colors duration-300" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-lg sm:text-xl text-card-foreground mb-2">
+                    <span className="group-hover:text-[#1f4f2b] transition-colors">Pure Care for Every Fabric</span>
+                  </h3>
+                  <p className="text-sm sm:text-base text-muted-foreground">Professional, fabric-safe cleaning that protects colors, texture, and quality.</p>
+                </div>
+              </div>
+            </Link>
 
-          {/* Category Tabs */}
-          <div className="flex flex-wrap justify-center gap-3 mb-10">
-            {[
-              { id: 'men', label: 'Men Clothing', icon: 'fa-user-tie' },
-              { id: 'women', label: 'Women Clothing', icon: 'fa-female' },
-              { id: 'household', label: 'Household Items', icon: 'fa-home' },
-              { id: 'other', label: 'Special Items', icon: 'fa-gem' },
-            ].map((cat) => (
-              <motion.button
-                key={cat.id}
-                onClick={() => setActiveCategory(cat.id as any)}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className={`px-6 py-3 rounded-full font-semibold transition-all flex items-center gap-2 ${
-                  activeCategory === cat.id
-                    ? 'bg-[#1f4f2b] text-white shadow-lg'
-                    : 'bg-white text-[#1f4f2b] border border-[#1f4f2b]/20 hover:bg-[#e8f3e6]'
-                }`}
-              >
-                <i className={`fas ${cat.icon}`}></i>
-                <span>{cat.label}</span>
-              </motion.button>
-            ))}
+            <Link href="#" className="group bg-card rounded-lg p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 block sm:col-span-2 lg:col-span-1 border border-border">
+              <div className="flex items-start space-x-4">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-[#1f4f2b]/10 rounded-full flex items-center justify-center group-hover:bg-[#1f4f2b] transition-colors duration-300 flex-shrink-0">
+                  <Leaf className="w-6 h-6 sm:w-7 sm:h-7 text-[#1f4f2b] group-hover:text-white transition-colors duration-300" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-lg sm:text-xl text-card-foreground mb-2">
+                    <span className="group-hover:text-[#1f4f2b] transition-colors">Eco-Responsible Cleaning</span>
+                  </h3>
+                  <p className="text-sm sm:text-base text-muted-foreground">Perc-free solutions that respect your wardrobe and the planet.</p>
+                </div>
+              </div>
+            </Link>
           </div>
+        </div>
+      </section>
 
-          <ServiceMenu activeCategory={activeCategory} />
+      {/* Excellence Without Exception - Parallax Section */}
+      <section className="bg-white my-12">
+        <div className="mb-10">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl text-[#1f4f2b] font-medium text-center">
+            Excellence<span className="text-foreground"> Without Exception</span>
+          </h2>
+          <h3 className="text-lg sm:text-xl font-medium text-muted-foreground text-center mt-2">Our Guarantee</h3>
+        </div>
+        <div
+          className="relative h-64 sm:h-80 md:h-96 bg-cover bg-center bg-fixed flex items-center justify-center"
+          style={{ backgroundImage: "url('/images/curtainCleaning.jpg')" }}
+        >{/* LEFT → RIGHT DEPTH */}
+          <div className="absolute inset-0 bg-gradient-to-r 
+  from-[#0b3d2a]/85 
+  via-[#0b3d2a]/55 
+  to-transparent"
+          />
+
+          {/* BOTTOM SHADE */}
+          <div className="absolute inset-0 bg-gradient-to-t 
+  from-[#0b3d2a]/75 
+  via-transparent 
+  to-transparent"
+          />
+          <div className="text-white text-center max-w-4xl mx-auto px-6 z-30 relative">
+            <p className="text-sm sm:text-base md:text-lg mb-6 leading-relaxed">
+              Laundrica has been the trusted name in garment care. We are committed to returning every piece in immaculate condition. In the rare instance of loss or damage, we provide reimbursement up to the full value of the item.
+            </p>
+            <Link href="/best-laundry-services-in-dubai">
+              <Button className="bg-white text-[#1f4f2b] hover:bg-gray-100 shadow-lg">
+                Get Service Now
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Why Choose Us Section */}
+      <section className="bg-white mb-20 px-4">
+        <div className="mb-12">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl text-[#1f4f2b] font-medium text-center">
+            Why<span className="text-foreground"> Choose Us</span>
+          </h2>
+          <h3 className="text-lg sm:text-xl font-medium text-muted-foreground text-center mt-2">Our Advantages</h3>
+        </div>
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="bg-card p-5 rounded-lg shadow-md hover:shadow-lg transition-all hover:-translate-y-1 flex items-center gap-4 border border-border hover:border-[#1f4f2b]/30">
+              <div className="flex-shrink-0 w-14 h-14 rounded-full bg-[#1f4f2b]/10 flex items-center justify-center">
+                <Zap className="w-7 h-7 text-[#1f4f2b]" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-semibold text-[#1f4f2b] text-base sm:text-lg">Personalized Care</h3>
+                <p className="text-muted-foreground text-sm sm:text-base mt-1">Every fabric type treated with precision.</p>
+              </div>
+            </div>
+
+            <div className="bg-card p-5 rounded-lg shadow-md hover:shadow-lg transition-all hover:-translate-y-1 flex items-center gap-4 border border-border hover:border-[#1f4f2b]/30">
+              <div className="flex-shrink-0 w-14 h-14 rounded-full bg-[#1f4f2b]/10 flex items-center justify-center">
+                <Award className="w-7 h-7 text-[#1f4f2b]" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-semibold text-[#1f4f2b] text-base sm:text-lg">Flexible Pricing</h3>
+                <p className="text-muted-foreground text-sm sm:text-base mt-1">Options designed to suit your needs.</p>
+              </div>
+            </div>
+
+            <div className="bg-card p-5 rounded-lg shadow-md hover:shadow-lg transition-all hover:-translate-y-1 flex items-center gap-4 border border-border hover:border-[#1f4f2b]/30">
+              <div className="flex-shrink-0 w-14 h-14 rounded-full bg-[#1f4f2b]/10 flex items-center justify-center">
+                <Clock className="w-7 h-7 text-[#1f4f2b]" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-semibold text-[#1f4f2b] text-base sm:text-lg">Effortless Convenience</h3>
+                <p className="text-muted-foreground text-sm sm:text-base mt-1">Your laundry, completed with a single request.</p>
+              </div>
+            </div>
+
+            <div className="bg-card p-5 rounded-lg shadow-md hover:shadow-lg transition-all hover:-translate-y-1 flex items-center gap-4 border border-border hover:border-[#1f4f2b]/30">
+              <div className="flex-shrink-0 w-14 h-14 rounded-full bg-[#1f4f2b]/10 flex items-center justify-center">
+                <Heart className="w-7 h-7 text-[#1f4f2b]" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-semibold text-[#1f4f2b] text-base sm:text-lg">Premium Products</h3>
+                <p className="text-muted-foreground text-sm sm:text-base mt-1">Only the finest detergents and cleaning solutions.</p>
+              </div>
+            </div>
+
+            <div className="bg-card p-5 rounded-lg shadow-md hover:shadow-lg transition-all hover:-translate-y-1 flex items-center gap-4 border border-border hover:border-[#1f4f2b]/30">
+              <div className="flex-shrink-0 w-14 h-14 rounded-full bg-[#1f4f2b]/10 flex items-center justify-center">
+                <Zap className="w-7 h-7 text-[#1f4f2b]" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-semibold text-[#1f4f2b] text-base sm:text-lg">Express Service</h3>
+                <p className="text-muted-foreground text-sm sm:text-base mt-1">Delivery in as little as eight hours.</p>
+              </div>
+            </div>
+
+            <div className="bg-card p-5 rounded-lg shadow-md hover:shadow-lg transition-all hover:-translate-y-1 flex items-center gap-4 border border-border hover:border-[#1f4f2b]/30">
+              <div className="flex-shrink-0 w-14 h-14 rounded-full bg-[#1f4f2b]/10 flex items-center justify-center">
+                <Check className="w-7 h-7 text-[#1f4f2b]" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-semibold text-[#1f4f2b] text-base sm:text-lg">Real-Time Updates</h3>
+                <p className="text-muted-foreground text-sm sm:text-base mt-1">Complete transparency throughout the process.</p>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

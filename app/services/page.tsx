@@ -9,9 +9,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { serviceAPI } from '@/lib/api';
 import {
-  WashingMachine, Shirt,        // instead of DryCleaning
-  Footprints,   // instead of Shoe
-  LayoutGrid,   // instead of Carpet
+  WashingMachine, Shirt,
+  Footprints,
+  LayoutGrid,
   Blinds,
   Briefcase, Sparkles, Clock, Truck, Leaf, Shield,
   ChevronRight, Star, MessageCircle, Globe, Phone,
@@ -29,6 +29,7 @@ interface Service {
   isActive: boolean;
   isFeatured: boolean;
   sortOrder: number;
+  image?: string;
 }
 
 export default function ServicesPage() {
@@ -37,43 +38,29 @@ export default function ServicesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'website' | 'whatsapp'>('website');
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    fetchServices();
-  }, []);
+  useEffect(() => { fetchServices(); }, []);
 
   const fetchServices = async () => {
     try {
       setIsLoading(true);
       setError(null);
       const data = await serviceAPI.getAllServices();
-
       let servicesList: Service[] = [];
-      if (data && data.success && data.services) {
-        servicesList = data.services;
-      } else if (data && data.data && Array.isArray(data.data)) {
-        servicesList = data.data;
-      } else if (Array.isArray(data)) {
-        servicesList = data;
-      }
-
-      // Sort by sortOrder
+      if (data?.success && data.services) servicesList = data.services;
+      else if (data?.data && Array.isArray(data.data)) servicesList = data.data;
+      else if (Array.isArray(data)) servicesList = data;
       servicesList.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
       setServices(servicesList);
-
-      // Select first service by default
-      if (servicesList.length > 0) {
-        setSelectedService(servicesList[0]);
-      }
+      if (servicesList.length > 0) setSelectedService(servicesList[0]);
     } catch (err: any) {
-      console.error('Error fetching services:', err);
       setError(err.message || 'Failed to load services');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Get icon based on category
   const getCategoryIcon = (category: string, size = "w-5 h-5") => {
     const iconMap: Record<string, React.ReactNode> = {
       'laundry': <WashingMachine className={size} />,
@@ -86,68 +73,57 @@ export default function ServicesPage() {
     return iconMap[category] || <Sparkles className={size} />;
   };
 
-  // Get category color
-  const getCategoryColor = (category: string) => {
-    const colorMap: Record<string, string> = {
-      'laundry': 'from-green-500 to-emerald-600',
-      'dry-cleaning': 'from-blue-500 to-indigo-600',
-      'shoe-cleaning': 'from-purple-500 to-pink-600',
-      'carpet-cleaning': 'from-orange-500 to-red-600',
-      'curtain-cleaning': 'from-teal-500 to-cyan-600',
-      'commercial': 'from-gray-600 to-gray-800',
-    };
-    return colorMap[category] || 'from-green-500 to-emerald-600';
-  };
-
-  // Get category badge color
-  const getCategoryBadgeColor = (category: string) => {
-    const colorMap: Record<string, string> = {
-      'laundry': 'bg-green-100 text-green-700',
-      'dry-cleaning': 'bg-blue-100 text-blue-700',
-      'shoe-cleaning': 'bg-purple-100 text-purple-700',
-      'carpet-cleaning': 'bg-orange-100 text-orange-700',
-      'curtain-cleaning': 'bg-teal-100 text-teal-700',
-      'commercial': 'bg-gray-100 text-gray-700',
-    };
-    return colorMap[category] || 'bg-emerald-100 text-emerald-700';
-  };
-
   const getCategoryLabel = (category: string) => {
     const labelMap: Record<string, string> = {
-      'laundry': 'Laundry',
-      'dry-cleaning': 'Dry Cleaning',
-      'shoe-cleaning': 'Shoe Care',
-      'carpet-cleaning': 'Carpet',
-      'curtain-cleaning': 'Curtains',
-      'commercial': 'Commercial',
+      'laundry': 'Laundry', 'dry-cleaning': 'Dry Cleaning',
+      'shoe-cleaning': 'Shoe Care', 'carpet-cleaning': 'Carpet',
+      'curtain-cleaning': 'Curtains', 'commercial': 'Commercial',
     };
     return labelMap[category] || category;
   };
 
-  // Handle WhatsApp order
   const handleWhatsAppOrder = () => {
     const phoneNumber = "971501234567";
-    const message = encodeURIComponent(
-      `Hello! I'm interested in ${selectedService?.name} service. Could you please share more details and help me place an order?`
-    );
+    const message = encodeURIComponent(`Hello! I'm interested in ${selectedService?.name} service. Could you please help me place an order?`);
     window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
   };
 
-  // Loading State
+  // Get hero image based on selected service category
+  const getHeroImage = () => {
+    if (selectedService?.image && !imageErrors.has(selectedService.image)) {
+      return selectedService.image;
+    }
+    const imageMap: Record<string, string> = {
+      'laundry': '/images/laundry.jpg',
+      'dry-cleaning': '/images/dryCleaning.jpg',
+      'carpet-cleaning': '/images/carpetCleaning.jpg',
+      'shoe-cleaning': '/images/shoeCleaning.jpg',
+      'curtain-cleaning': '/images/curtainCleaning.jpg',
+      'commercial': '/images/commercialCleaning.jpg',
+    };
+    return imageMap[selectedService?.category || 'laundry'] || '/images/laundry.jpg';
+  };
+
+  const handleImageError = () => {
+    if (selectedService?.image && !imageErrors.has(selectedService.image)) {
+      setImageErrors(prev => new Set(prev).add(selectedService.image!));
+    }
+  };
+
   if (isLoading) {
     return (
-      <main className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-white">
+      <main className="flex flex-col min-h-screen bg-gray-50">
         <Header />
-        <div className="flex-1 flex items-center justify-center py-20">
+        <div className="flex-1 flex items-center justify-center py-32">
           <div className="text-center">
-            <div className="relative w-16 h-16 mx-auto mb-4">
-              <div className="absolute inset-0 rounded-full border-4 border-emerald-100"></div>
-              <div className="absolute inset-0 rounded-full border-4 border-t-emerald-600 animate-spin"></div>
+            <div className="relative w-20 h-20 mx-auto mb-6">
+              <div className="absolute inset-0  border-4 border-emerald-100"></div>
+              <div className="absolute inset-0  border-4 border-t-emerald-600 animate-spin"></div>
               <div className="absolute inset-0 flex items-center justify-center">
-                <Sparkles className="w-6 h-6 text-emerald-600 animate-pulse" />
+                <Sparkles className="w-7 h-7 text-emerald-600" />
               </div>
             </div>
-            <p className="text-gray-500 text-sm">Loading services...</p>
+            <p className="text-gray-700 font-semibold">Loading services...</p>
           </div>
         </div>
         <Footer />
@@ -157,17 +133,15 @@ export default function ServicesPage() {
 
   if (error) {
     return (
-      <main className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-white">
+      <main className="flex flex-col min-h-screen bg-gray-50">
         <Header />
-        <div className="flex-1 flex items-center justify-center py-20 px-4">
+        <div className="flex-1 flex items-center justify-center py-32 px-4">
           <div className="text-center max-w-md">
-            <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">⚠️</span>
+            <div className="w-20 h-20 bg-red-50  flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl">⚠️</span>
             </div>
-            <p className="text-red-600 mb-4">{error}</p>
-            <Button onClick={fetchServices} className="bg-emerald-600 hover:bg-emerald-700">
-              Try Again
-            </Button>
+            <p className="text-red-500 mb-5">{error}</p>
+            <button onClick={fetchServices} className="bg-emerald-600 text-white px-6 py-2 ">Try Again</button>
           </div>
         </div>
         <Footer />
@@ -176,169 +150,134 @@ export default function ServicesPage() {
   }
 
   return (
-    <main className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-white">
+    <main className="flex flex-col min-h-screen bg-gray-50">
       <Header />
 
-      {/* Minimal Hero Section - Small, Clean */}
-      <section className="pt-20 pb-8 px-4 border-b border-gray-100">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-0.5 bg-emerald-500 rounded-full"></div>
-                <span className="text-emerald-600 text-sm font-medium tracking-wide">OUR SERVICES</span>
-              </div>
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
-                Choose Your <span className="text-emerald-600">Service</span>
-              </h1>
-              <p className="text-gray-500 mt-2 max-w-lg">
-                Professional laundry & dry cleaning services tailored to your needs
-              </p>
+      {/* Hero Banner Section - Dynamic Image based on selected service */}
+      <section>
+        <div
+          className="relative h-[200px] sm:h-[250px] md:h-[300px] lg:h-[350px] bg-cover bg-center bg-fixed flex items-center justify-center"
+          style={{ backgroundImage: `url('${getHeroImage()}')` }}
+        >
+          {/* Gradient Overlay - Forest Green */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0b3d2a]/85 via-[#0b3d2a]/55 to-transparent" />
+
+          {/* BOTTOM SHADE */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0b3d2a]/75 via-transparent to-transparent" />
+
+          {/* Centered Content */}
+          <div className="relative z-30 text-center max-w-4xl mx-auto px-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 mb-6 bg-white/10 backdrop-blur-sm  border border-white/20 mx-auto w-fit">
+              <Leaf className="w-4 h-4 text-yellow-300" />
+              <span className="text-sm font-medium text-white">Eco-Friendly Cleaning</span>
             </div>
-            <div className="flex gap-3">
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <Truck className="w-4 h-4 text-emerald-500" />
-                <span>Free Pickup</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <Clock className="w-4 h-4 text-emerald-500" />
-                <span>24hr Turnaround</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <Leaf className="w-4 h-4 text-emerald-500" />
-                <span>Eco-Friendly</span>
-              </div>
-            </div>
+            <h1 className="text-white text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 leading-tight">
+              Care That <span className="text-yellow-300">Your Clothes</span>
+            </h1>
+            <h2 className="text-white text-lg sm:text-xl md:text-2xl lg:text-3xl font-medium">
+              Choose from our premium laundry & dry-cleaning services
+            </h2>
           </div>
         </div>
-      </section>
 
-      {/* Main Content - Sidebar + Content Layout */}
-      <section className="flex-1 py-8 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col lg:flex-row gap-8">
-            {/* LEFT SIDEBAR - Service Tabs */}
-            <div className="lg:w-80 flex-shrink-0">
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden sticky top-24">
-                <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-                  <h2 className="font-semibold text-gray-900">All Services</h2>
-                  <p className="text-xs text-gray-500 mt-0.5">{services.length} services available</p>
+        {/* Layout */}
+        <div className="layout-wrap flex-1 py-12 px-4">
+          <div className="max-w-7xl mx-auto">
+            <div className="layout-grid" style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '28px', alignItems: 'start' }}>
+              {/* Sidebar */}
+              <aside className="sidebar-card" style={{ background: '#fff', border: '1px solid #daeee3', boxShadow: '0 2px 12px rgba(30,138,82,.07)', overflow: 'hidden', position: 'sticky', top: '88px' }}>
+                <div className="sidebar-head" style={{ padding: '18px 20px', background: 'linear-gradient(135deg, #f0faf4, #fff)', borderBottom: '1px solid #daeee3', display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                  <span className="sidebar-count" style={{ fontFamily: 'Playfair Display, serif', fontSize: '1.8rem', color: '#1e8a52', fontWeight: 700 }}>{services.length}</span>
+                  <span className="sidebar-label" style={{ color: '#6b8070', fontSize: '.82rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.06em' }}>Services Available</span>
                 </div>
-                <div className="divide-y divide-gray-100 max-h-[500px] overflow-y-auto">
-                  {services.map((service) => (
+                <nav className="sidebar-nav" style={{ maxHeight: '520px', overflowY: 'auto' }}>
+                  {services.map(service => (
                     <button
                       key={service._id}
                       onClick={() => setSelectedService(service)}
-                      className={`w-full text-left p-4 transition-all duration-200 group ${selectedService?._id === service._id
-                          ? 'bg-emerald-50 border-l-4 border-l-emerald-500'
-                          : 'hover:bg-gray-50'
-                        }`}
+                      style={{
+                        width: '100%', display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 18px',
+                        border: 'none', background: selectedService?._id === service._id ? '#f0faf4' : 'none',
+                        cursor: 'pointer', transition: 'background .18s', textAlign: 'left',
+                        borderLeft: selectedService?._id === service._id ? '3px solid #2da065' : '3px solid transparent'
+                      }}
                     >
-                      <div className="flex items-start gap-3">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-200 ${selectedService?._id === service._id
-                            ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25'
-                            : 'bg-gray-100 text-gray-500 group-hover:bg-emerald-100 group-hover:text-emerald-600'
-                          }`}>
-                          {getCategoryIcon(service.category, "w-5 h-5")}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className={`font-medium truncate ${selectedService?._id === service._id ? 'text-emerald-700' : 'text-gray-900'
-                            }`}>
-                            {service.name}
-                          </h3>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className={`text-xs px-2 py-0.5 rounded-full ${getCategoryBadgeColor(service.category)}`}>
-                              {getCategoryLabel(service.category)}
-                            </span>
-                            {service.turnaround && (
-                              <span className="text-xs text-gray-400">{service.turnaround}</span>
-                            )}
-                          </div>
-                        </div>
-                        {selectedService?._id === service._id && (
-                          <ChevronRight className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                        )}
-                      </div>
+                      <span style={{
+                        width: '40px', height: '40px',
+                        background: selectedService?._id === service._id ? '#1e8a52' : '#d9f2e3',
+                        color: selectedService?._id === service._id ? '#fff' : '#1e8a52',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                        boxShadow: selectedService?._id === service._id ? '0 4px 14px rgba(30,138,82,.35)' : 'none'
+                      }}>
+                        {getCategoryIcon(service.category)}
+                      </span>
+                      <span style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{ display: 'block', fontWeight: 700, fontSize: '.9rem', color: '#0f2d1c' }}>{service.name}</span>
+                        <span style={{ display: 'block', fontSize: '.75rem', color: '#6b8070', marginTop: '2px' }}>
+                          {getCategoryLabel(service.category)}
+                          {service.turnaround && <> · {service.turnaround}</>}
+                        </span>
+                      </span>
+                      {selectedService?._id === service._id && <ChevronRight className="w-4 h-4" style={{ color: '#2da065' }} />}
                     </button>
                   ))}
-                </div>
-              </div>
-            </div>
+                </nav>
+              </aside>
 
-            {/* RIGHT CONTENT - Service Details */}
-            <div className="flex-1">
-              <AnimatePresence mode="wait">
-                {selectedService && (
-                  <motion.div
-                    key={selectedService._id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.3 }}
-                    className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
-                  >
-                    {/* Service Header with Gradient */}
-                    <div className={`bg-gradient-to-r ${getCategoryColor(selectedService.category)} p-6 text-white`}>
-                      <div className="flex items-start justify-between">
+              {/* Detail Panel */}
+              <div className="detail-col">
+                <AnimatePresence mode="wait">
+                  {selectedService && (
+                    <motion.div
+                      key={selectedService._id}
+                      initial={{ opacity: 0, y: 18 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -18 }}
+                      transition={{ duration: 0.28 }}
+                      className="detail-card"
+                      style={{ background: '#fff', border: '1px solid #daeee3', boxShadow: '0 6px 28px rgba(30,138,82,.12)', overflow: 'hidden' }}
+                    >
+                      <div className="detail-header" style={{ padding: '28px 28px 0', display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                        <div style={{ width: '52px', height: '52px', background: 'linear-gradient(135deg, #2da065, #16703f)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 6px 18px rgba(30,138,82,.3)' }}>
+                          {getCategoryIcon(selectedService.category, 'w-6 h-6')}
+                        </div>
                         <div>
-                          <div className="flex items-center gap-2 mb-3">
-                            <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center">
-                              {getCategoryIcon(selectedService.category, "w-4 h-4 text-white")}
+                          <div style={{ fontSize: '.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.1em', color: '#2da065', marginBottom: '4px' }}>{getCategoryLabel(selectedService.category)}</div>
+                          <h2 style={{ fontFamily: 'Playfair Display, serif', fontSize: '1.7rem', color: '#0f2d1c', lineHeight: 1.25 }}>{selectedService.name}</h2>
+                          {selectedService.isFeatured && (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: '#fef3c7', color: '#92400e', fontSize: '.72rem', fontWeight: 700, padding: '4px 10px', marginTop: '6px' }}>
+                              <Star className="w-3 h-3 fill-current" /> Featured
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <p style={{ padding: '14px 28px 0', color: '#374a3c', fontSize: '.95rem', lineHeight: 1.65 }}>
+                        {selectedService.description || 'Professional cleaning service with premium quality and gentle care for all your garments.'}
+                      </p>
+
+                      {/* Stat chips */}
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', padding: '22px 28px 0' }}>
+                        {[
+                          { icon: <Truck className="w-4 h-4" />, label: 'Pickup', value: 'Free Doorstep' },
+                          { icon: <Clock className="w-4 h-4" />, label: 'Turnaround', value: selectedService.turnaround || '24–48 hrs' },
+                          { icon: <Leaf className="w-4 h-4" />, label: 'Products', value: 'Eco-Friendly' },
+                          { icon: <Shield className="w-4 h-4" />, label: 'Insurance', value: '100% Covered' },
+                        ].map(s => (
+                          <div key={s.label} style={{ background: '#f0faf4', border: '1px solid #d9f2e3', padding: '12px 14px', display: 'flex', gap: '10px', alignItems: 'center' }}>
+                            <span style={{ color: '#2da065', flexShrink: 0 }}>{s.icon}</span>
+                            <div>
+                              <div style={{ fontSize: '.68rem', color: '#6b8070', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.06em' }}>{s.label}</div>
+                              <div style={{ fontSize: '.82rem', fontWeight: 700, color: '#0f2d1c', marginTop: '2px' }}>{s.value}</div>
                             </div>
-                            <span className="text-white/80 text-sm">{getCategoryLabel(selectedService.category)}</span>
                           </div>
-                          <h2 className="text-2xl md:text-3xl font-bold mb-2">{selectedService.name}</h2>
-                          <p className="text-white/80 text-sm max-w-lg">
-                            {selectedService.description || 'Professional cleaning service with premium quality and care.'}
-                          </p>
-                        </div>
-                        {selectedService.isFeatured && (
-                          <div className="bg-amber-400 text-amber-900 px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
-                            <Star className="w-3 h-3 fill-current" />
-                            Featured
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Service Details Body */}
-                    <div className="p-6">
-                      {/* Features Grid */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                          <Truck className="w-5 h-5 text-emerald-500" />
-                          <div>
-                            <p className="text-xs text-gray-500">Pickup</p>
-                            <p className="text-sm font-medium text-gray-900">Free Doorstep</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                          <Clock className="w-5 h-5 text-emerald-500" />
-                          <div>
-                            <p className="text-xs text-gray-500">Turnaround</p>
-                            <p className="text-sm font-medium text-gray-900">{selectedService.turnaround || '24-48 hours'}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                          <Leaf className="w-5 h-5 text-emerald-500" />
-                          <div>
-                            <p className="text-xs text-gray-500">Products</p>
-                            <p className="text-sm font-medium text-gray-900">Eco-Friendly</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                          <Shield className="w-5 h-5 text-emerald-500" />
-                          <div>
-                            <p className="text-xs text-gray-500">Insurance</p>
-                            <p className="text-sm font-medium text-gray-900">100% Covered</p>
-                          </div>
-                        </div>
+                        ))}
                       </div>
 
-                      {/* Service Benefits */}
-                      <div className="mb-8">
-                        <h3 className="font-semibold text-gray-900 mb-3">Why choose our {selectedService.name.toLowerCase()}?</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {/* Benefits */}
+                      <div style={{ padding: '22px 28px 0' }}>
+                        <h3 style={{ fontWeight: 700, color: '#0f2d1c', marginBottom: '12px', fontSize: '.95rem' }}>Why choose this service?</h3>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                           {[
                             'Professional cleaning techniques',
                             'Premium eco-friendly products',
@@ -346,157 +285,125 @@ export default function ServicesPage() {
                             'Quality checked before return',
                             'Free pickup & delivery',
                             '24/7 customer support',
-                          ].map((benefit, idx) => (
-                            <div key={idx} className="flex items-center gap-2">
-                              <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                              <span className="text-sm text-gray-600">{benefit}</span>
+                          ].map(b => (
+                            <div key={b} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '.85rem', color: '#374a3c' }}>
+                              <CheckCircle2 className="w-4 h-4" style={{ color: '#2da065', flexShrink: 0 }} />
+                              <span>{b}</span>
                             </div>
                           ))}
                         </div>
                       </div>
 
-                      {/* Action Buttons */}
-                      <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-100">
-                        {/* Tab Selector */}
-                        <div className="flex bg-gray-100 rounded-xl p-1">
+                      {/* CTA */}
+                      <div style={{ padding: '24px 28px 0', display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', borderTop: '1px solid #daeee3', margin: '22px 28px 0', paddingTop: '22px' }}>
+                        <div style={{ display: 'flex', background: '#f0faf4', padding: '4px', border: '1px solid #d9f2e3', paddingTop: '4px'}}>
                           <button
                             onClick={() => setActiveTab('website')}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'website'
-                                ? 'bg-white text-emerald-600 shadow-sm'
-                                : 'text-gray-500 hover:text-gray-700'
-                              }`}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: '7px', padding: '8px 16px',
+                              border: 'none', background: activeTab === 'website' ? '#fff' : 'none',
+                               fontSize: '.82rem', fontWeight: 600,
+                              color: activeTab === 'website' ? '#1e8a52' : '#6b8070',
+                              cursor: 'pointer', boxShadow: activeTab === 'website' ? '0 2px 12px rgba(30,138,82,.07)' : 'none'
+                            }}
                           >
-                            <Globe className="w-4 h-4" />
-                            Book Online
+                            <Globe className="w-4 h-4" /> Book Online
                           </button>
                           <button
                             onClick={() => setActiveTab('whatsapp')}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'whatsapp'
-                                ? 'bg-white text-emerald-600 shadow-sm'
-                                : 'text-gray-500 hover:text-gray-700'
-                              }`}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: '7px', padding: '8px 16px',
+                              border: 'none', background: activeTab === 'whatsapp' ? '#fff' : 'none',
+                              borderRadius: '9px', fontSize: '.82rem', fontWeight: 600,
+                              color: activeTab === 'whatsapp' ? '#1e8a52' : '#6b8070',
+                              cursor: 'pointer', boxShadow: activeTab === 'whatsapp' ? '0 2px 12px rgba(30,138,82,.07)' : 'none'
+                            }}
                           >
-                            <MessageCircle className="w-4 h-4" />
-                            WhatsApp Order
+                            <MessageCircle className="w-4 h-4" /> WhatsApp
                           </button>
                         </div>
 
-                        <div className="flex-1"></div>
-
-                        {/* Action Button based on selected tab */}
                         {activeTab === 'website' ? (
                           <Link href={`/services/${selectedService.slug}/orders`}>
-                            <Button className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl gap-2">
-                              Book Now
-                              <ArrowRight className="w-4 h-4" />
-                            </Button>
+                            <button style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'linear-gradient(135deg, #2da065, #16703f)', color: '#fff', border: 'none', padding: '12px 24px', fontWeight: 700, fontSize: '.9rem', cursor: 'pointer', boxShadow: '0 4px 16px rgba(30,138,82,.3)' }}>
+                              Book Now <ArrowRight className="w-4 h-4" />
+                            </button>
                           </Link>
                         ) : (
-                          <Button
-                            onClick={handleWhatsAppOrder}
-                            className="bg-[#25D366] hover:bg-[#20b859] text-white px-6 py-2.5 rounded-xl gap-2"
-                          >
-                            <MessageCircle className="w-4 h-4" />
-                            Order on WhatsApp
-                          </Button>
+                          <button onClick={handleWhatsAppOrder} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#25D366', color: '#fff', border: 'none', padding: '12px 24px', fontWeight: 700, fontSize: '.9rem', cursor: 'pointer', boxShadow: '0 4px 16px rgba(37,211,102,.3)' }}>
+                            <MessageCircle className="w-4 h-4" /> Order on WhatsApp
+                          </button>
                         )}
                       </div>
 
-                      {/* WhatsApp Info Message */}
                       {activeTab === 'whatsapp' && (
-                        <div className="mt-4 p-3 bg-green-50 rounded-xl flex items-start gap-2">
-                          <Heart className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                          <p className="text-xs text-green-700">
-                            Order via WhatsApp and get personalized assistance. Our team will help you with pricing,
-                            scheduling, and any special requirements.
-                          </p>
-                        </div>
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          style={{ margin: '14px 28px 28px', padding: '12px 16px', background: '#f0fdf6', border: '1px solid #bbf7d0', borderRadius: '12px', display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '.82rem', color: '#166534', lineHeight: 1.55 }}
+                        >
+                          <Heart className="w-4 h-4 flex-shrink-0" style={{ color: '#16a34a', marginTop: '2px' }} />
+                          <p>Order via WhatsApp and get personalized help with pricing, scheduling, and any special requirements.</p>
+                        </motion.div>
                       )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Other services */}
+                {services.length > 1 && (
+                  <div style={{ marginTop: '28px' }}>
+                    <h3 style={{ fontSize: '.82rem', fontWeight: 700, color: '#6b8070', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '12px' }}>Explore Other Services</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+                      {services.filter(s => s._id !== selectedService?._id).slice(0, 3).map(service => (
+                        <button
+                          key={service._id}
+                          onClick={() => setSelectedService(service)}
+                          style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#fff', border: '1px solid #daeee3', padding: '12px 14px', cursor: 'pointer', textAlign: 'left' }}
+                        >
+                          <span style={{ width: '34px', height: '34px', borderRadius: '10px', background: '#f0faf4', color: '#1e8a52', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            {getCategoryIcon(service.category, 'w-4 h-4')}
+                          </span>
+                          <span style={{ flex: 1, minWidth: 0 }}>
+                            <span style={{ display: 'block', fontSize: '.82rem', fontWeight: 700, color: '#0f2d1c' }}>{service.name}</span>
+                            <span style={{ display: 'block', fontSize: '.72rem', color: '#6b8070', marginTop: '2px' }}>{getCategoryLabel(service.category)}</span>
+                          </span>
+                          <ChevronRight className="w-4 h-4" style={{ color: '#7dcea8', flexShrink: 0 }} />
+                        </button>
+                      ))}
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Other Services Quick View */}
-              {services.length > 1 && (
-                <div className="mt-8">
-                  <h3 className="text-sm font-medium text-gray-500 mb-4">Other Services</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {services.filter(s => s._id !== selectedService?._id).slice(0, 3).map((service) => (
-                      <button
-                        key={service._id}
-                        onClick={() => setSelectedService(service)}
-                        className="flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-100 hover:border-emerald-200 hover:shadow-md transition-all group text-left"
-                      >
-                        <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
-                          {getCategoryIcon(service.category, "w-4 h-4 text-gray-500 group-hover:text-emerald-600")}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">{service.name}</p>
-                          <p className="text-xs text-gray-400">{getCategoryLabel(service.category)}</p>
-                        </div>
-                        <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-emerald-500" />
-                      </button>
-                    ))}
                   </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Trust bar */}
+      <section style={{ background: '#fff', borderTop: '1px solid #daeee3', padding: '28px 0' }}>
+        <div className="max-w-7xl mx-auto px-6">
+          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '32px' }}>
+            {[
+              { icon: <Truck className="w-5 h-5" />, title: 'Free Pickup', sub: 'From your doorstep' },
+              { icon: <Clock className="w-5 h-5" />, title: '24hr Service', sub: 'Quick turnaround' },
+              { icon: <Shield className="w-5 h-5" />, title: '100% Safe', sub: 'Quality assured' },
+              { icon: <MessageCircle className="w-5 h-5" />, title: '24/7 Support', sub: 'WhatsApp & Call' },
+            ].map(t => (
+              <div key={t.title} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ width: '44px', height: '44px', borderRadius: '12px', background: '#f0faf4', color: '#1e8a52', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{t.icon}</span>
+                <div>
+                  <div style={{ fontSize: '.9rem', fontWeight: 700, color: '#0f2d1c' }}>{t.title}</div>
+                  <div style={{ fontSize: '.75rem', color: '#6b8070', marginTop: '2px' }}>{t.sub}</div>
                 </div>
-              )}
-            </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Trust Badges Bar */}
-      <section className="py-8 px-4 border-t border-gray-100 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-wrap justify-center gap-8 md:gap-12">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-emerald-50 rounded-full flex items-center justify-center">
-                <Truck className="w-4 h-4 text-emerald-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-900">Free Pickup</p>
-                <p className="text-xs text-gray-500">From your doorstep</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-emerald-50 rounded-full flex items-center justify-center">
-                <Clock className="w-4 h-4 text-emerald-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-900">24hr Service</p>
-                <p className="text-xs text-gray-500">Quick turnaround</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-emerald-50 rounded-full flex items-center justify-center">
-                <Shield className="w-4 h-4 text-emerald-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-900">100% Safe</p>
-                <p className="text-xs text-gray-500">Quality assured</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-emerald-50 rounded-full flex items-center justify-center">
-                <MessageCircle className="w-4 h-4 text-emerald-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-900">24/7 Support</p>
-                <p className="text-xs text-gray-500">WhatsApp & Call</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Floating WhatsApp Button */}
-      <a
-        href="https://wa.me/971501234567"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="fixed bottom-6 right-6 z-50 bg-[#25D366] text-white p-3 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110"
-      >
+      {/* Floating WhatsApp */}
+      <a href="https://wa.me/971501234567" target="_blank" rel="noopener noreferrer" style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 50, width: '52px', height: '52px', background: '#25D366', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(37,211,102,.45)' }}>
         <MessageCircle className="w-6 h-6" />
       </a>
 

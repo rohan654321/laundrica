@@ -56,7 +56,6 @@ export default function ServiceDetailPage() {
       setIsLoading(true);
       setError(null);
 
-      // Fetch service details
       const serviceData = await serviceAPI.getAllServices();
       let foundService = null;
 
@@ -73,7 +72,6 @@ export default function ServiceDetailPage() {
 
       setService(foundService);
 
-      // Fetch service items
       const itemsData = await serviceAPI.getServiceItems(foundService._id);
       if (itemsData.success && itemsData.items) {
         setItems(itemsData.items);
@@ -118,8 +116,6 @@ export default function ServiceDetailPage() {
       });
 
       toast.success(`Added ${quantity} × ${item.name} to cart!`);
-
-      // Reset quantity
       setQuantities(prev => {
         const { [item._id]: _, ...rest } = prev;
         return rest;
@@ -211,144 +207,153 @@ export default function ServiceDetailPage() {
     <main className="flex flex-col min-h-screen bg-gray-50">
       <Header />
 
-      {/* Hero Section */}
-      <section className="bg-gradient-to-r from-green-600 to-emerald-600 text-white py-16 px-4">
-        <div className="max-w-7xl mx-auto">
-          <Link href="/services">
-            <button className="inline-flex items-center gap-2 text-white/80 hover:text-white mb-6 transition-colors">
-              <ArrowLeft className="w-4 h-4" />
-              Back to Services
-            </button>
-          </Link>
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">{service.name}</h1>
-          <p className="text-xl text-white/90 max-w-2xl">{service.description}</p>
+      {/* Hero Banner Section - Same as About Page */}
+      <section>
+        <div
+          className="relative h-[200px] sm:h-[250px] md:h-[300px] lg:h-[350px] bg-cover bg-center bg-fixed flex items-center justify-center"
+          style={{ backgroundImage: "url('/images/curtainCleaning.jpg')" }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r 
+  from-[#0b3d2a]/85 
+  via-[#0b3d2a]/55 
+  to-transparent"
+          />
 
-          <div className="flex flex-wrap gap-4 mt-6">
-            {service.turnaround && (
-              <div className="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full">
-                <Clock className="w-4 h-4" />
-                <span className="text-sm">{service.turnaround}</span>
+          {/* BOTTOM SHADE */}
+          <div className="absolute inset-0 bg-gradient-to-t 
+  from-[#0b3d2a]/75 
+  via-transparent 
+  to-transparent"
+          />
+          <div className="relative z-30 text-center max-w-4xl mx-auto px-6">
+            <Link href="/services">
+              <button className="inline-flex items-center gap-2 text-white/80 hover:text-white mb-4 transition-colors">
+                <ArrowLeft className="w-4 h-4" />
+                Back to Services
+              </button>
+            </Link>
+            <h1 className="text-white text-xl sm:text-2xl md:text-3xl lg:text-4xl font-medium mb-4">
+              {service.name}
+            </h1>
+            <p className="text-white/80 text-sm sm:text-base max-w-2xl mx-auto">
+              {service.description}
+            </p>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 py-12 px-4">
+          <div className="max-w-7xl mx-auto">
+            {/* Category Filters */}
+            <div className="flex flex-wrap gap-3 mb-8">
+              {categories.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveCategory(cat.id)}
+                  className={`px-5 py-2 rounded-full font-medium transition-all ${activeCategory === cat.id
+                    ? 'bg-emerald-600 text-white shadow-lg'
+                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                    }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Items Grid */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredItems.map((item) => (
+                <div key={item._id} className="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all p-6 border border-gray-100">
+                  <div className="mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">{item.name}</h3>
+                    {item.description && (
+                      <p className="text-sm text-gray-500">{item.description}</p>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <span className="text-2xl font-bold text-emerald-600">AED {item.price}</span>
+                      <span className="text-sm text-gray-500 ml-1">/{item.unit}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center bg-gray-100 rounded-xl">
+                      <button
+                        className="w-10 h-10 flex items-center justify-center text-gray-600 hover:text-emerald-600 transition-colors disabled:opacity-50"
+                        onClick={() => updateQuantity(item._id, -1)}
+                        disabled={!quantities[item._id]}
+                      >
+                        <Minus className="w-4 h-4" />
+                      </button>
+                      <span className="w-12 text-center font-medium text-gray-900">
+                        {quantities[item._id] || 0}
+                      </span>
+                      <button
+                        className="w-10 h-10 flex items-center justify-center text-gray-600 hover:text-emerald-600 transition-colors"
+                        onClick={() => updateQuantity(item._id, 1)}
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <button
+                      className={`flex-1 h-10 rounded-xl font-medium transition-all ${quantities[item._id]
+                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        }`}
+                      onClick={() => handleAddToCart(item)}
+                      disabled={!quantities[item._id]}
+                    >
+                      Add to Cart
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {filteredItems.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-gray-500">No items available in this category.</p>
               </div>
             )}
-            <div className="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full">
-              <Truck className="w-4 h-4" />
-              <span className="text-sm">Free Pickup & Delivery</span>
+
+            {/* Floating Cart Summary */}
+            {getTotalItems() > 0 && (
+              <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
+                <div className="bg-white rounded-full shadow-xl px-6 py-3 flex items-center gap-6">
+                  <div className="flex items-center gap-2">
+                    <ShoppingCart className="w-5 h-5 text-emerald-600" />
+                    <span className="font-semibold">{getTotalItems()} items</span>
+                  </div>
+                  <div className="text-lg font-bold text-emerald-600">
+                    AED {getTotalPrice()}
+                  </div>
+                  <Link href="/cart">
+                    <Button className="bg-emerald-600 hover:bg-emerald-700 rounded-full px-6">
+                      View Cart
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            )}
+
+            {/* WhatsApp CTA */}
+            <div className="mt-12 p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl text-center">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Need help with your order?</h3>
+              <p className="text-gray-600 mb-4">Contact us on WhatsApp for quick assistance</p>
+              <button
+                onClick={handleWhatsAppInquiry}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-[#25D366] text-white rounded-xl hover:opacity-90 transition-all"
+              >
+                <MessageCircle className="w-5 h-5" />
+                Chat on WhatsApp
+              </button>
             </div>
           </div>
         </div>
       </section>
-
-      <div className="flex-1 py-12 px-4">
-        <div className="max-w-7xl mx-auto">
-          {/* Category Filters */}
-          <div className="flex flex-wrap gap-3 mb-8">
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setActiveCategory(cat.id)}
-                className={`px-5 py-2 rounded-full font-medium transition-all ${activeCategory === cat.id
-                    ? 'bg-emerald-600 text-white shadow-lg'
-                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
-                  }`}
-              >
-                {cat.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Items Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredItems.map((item) => (
-              <div key={item._id} className="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all p-6 border border-gray-100">
-                <div className="mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{item.name}</h3>
-                  {item.description && (
-                    <p className="text-sm text-gray-500">{item.description}</p>
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <span className="text-2xl font-bold text-emerald-600">AED {item.price}</span>
-                    <span className="text-sm text-gray-500 ml-1">/{item.unit}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center bg-gray-100 rounded-xl">
-                    <button
-                      className="w-10 h-10 flex items-center justify-center text-gray-600 hover:text-emerald-600 transition-colors disabled:opacity-50"
-                      onClick={() => updateQuantity(item._id, -1)}
-                      disabled={!quantities[item._id]}
-                    >
-                      <Minus className="w-4 h-4" />
-                    </button>
-                    <span className="w-12 text-center font-medium text-gray-900">
-                      {quantities[item._id] || 0}
-                    </span>
-                    <button
-                      className="w-10 h-10 flex items-center justify-center text-gray-600 hover:text-emerald-600 transition-colors"
-                      onClick={() => updateQuantity(item._id, 1)}
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  <button
-                    className={`flex-1 h-10 rounded-xl font-medium transition-all ${quantities[item._id]
-                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      }`}
-                    onClick={() => handleAddToCart(item)}
-                    disabled={!quantities[item._id]}
-                  >
-                    Add to Cart
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {filteredItems.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-gray-500">No items available in this category.</p>
-            </div>
-          )}
-
-          {/* Floating Cart Summary */}
-          {getTotalItems() > 0 && (
-            <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
-              <div className="bg-white rounded-full shadow-xl px-6 py-3 flex items-center gap-6">
-                <div className="flex items-center gap-2">
-                  <ShoppingCart className="w-5 h-5 text-emerald-600" />
-                  <span className="font-semibold">{getTotalItems()} items</span>
-                </div>
-                <div className="text-lg font-bold text-emerald-600">
-                  AED {getTotalPrice()}
-                </div>
-                <Link href="/cart">
-                  <Button className="bg-emerald-600 hover:bg-emerald-700 rounded-full px-6">
-                    View Cart
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          )}
-
-          {/* WhatsApp CTA */}
-          <div className="mt-12 p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl text-center">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Need help with your order?</h3>
-            <p className="text-gray-600 mb-4">Contact us on WhatsApp for quick assistance</p>
-            <button
-              onClick={handleWhatsAppInquiry}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-[#25D366] text-white rounded-xl hover:opacity-90 transition-all"
-            >
-              <MessageCircle className="w-5 h-5" />
-              Chat on WhatsApp
-            </button>
-          </div>
-        </div>
-      </div>
 
       <Footer />
     </main>
