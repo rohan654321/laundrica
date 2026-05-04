@@ -1,107 +1,99 @@
-import Link from 'next/link';
-import { Mail, Phone, MapPin } from 'lucide-react';
-import Image from 'next/image';
+// components/Footer.tsx
+'use client';
+
+import Link from "next/link";
+import Image from "next/image";
 
 export function Footer() {
+  const serviceLinks = [
+    { href: "/services/express-wash-press", label: "Wash & Press" },
+    { href: "/services/dry-cleaning", label: "Dry Cleaning" },
+    { href: "/services/wash-and-fold", label: "Wash & Fold" },
+    { href: "/services/steam-press", label: "Steam Press" },
+  ];
+
+  const specialtyLinks = [
+    { href: "/services/shoe-care", label: "Shoe Care" },
+    { href: "/services/carpet-care", label: "Carpet Care" },
+    { href: "/services/commercial-laundry", label: "Commercial Laundry" },
+    { href: "/services/wedding-dress", label: "Wedding Dress Care" },
+  ];
+
+  const companyLinks = [
+    { href: "/privacy", label: "Privacy Policy" },
+    { href: "/terms", label: "Terms of Service" },
+    { href: "/contact", label: "Contact Us" },
+    { href: "/about", label: "About Us" },
+  ];
+
   return (
-    <footer className="bg-primary text-primary-foreground mt-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-          {/* Brand */}
+    <footer className="bg-[#F6F8F7] mt-20 border-t border-gray-100">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+
+        {/* GRID */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
+
+          {/* LOGO */}
           <div>
-            <Link href="/" className="flex items-center mb-4">
-              <div className="relative w-32 h-12">
-                <Image
-                  src="/images/Loundrica.png"
-                  alt="Laundrica Logo"
-                  fill
-                  className="object-contain brightness-0 invert"
-                  priority
-                />
-              </div>
-            </Link>
-            <p className="text-sm opacity-90">
-              Professional laundry services for your home and business.
+            <div className="relative w-32 h-10 mb-4">
+              <Image
+                src="/images/Loundrica.png"
+                alt="Laundrica"
+                fill
+                className="object-contain"
+              />
+            </div>
+            <p className="text-sm text-gray-500 leading-relaxed">
+              Effortless purity for your wardrobe and home. Professional fabric care delivered to your door.
             </p>
           </div>
 
-          {/* Quick Links */}
+          {/* SERVICES */}
           <div>
-            <h3 className="font-semibold mb-4">Quick Links</h3>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link href="/services" className="hover:opacity-80 transition-opacity">
-                  Services
-                </Link>
-              </li>
-              <li>
-                <Link href="/about" className="hover:opacity-80 transition-opacity">
-                  About Us
-                </Link>
-              </li>
-              <li>
-                <Link href="/faq" className="hover:opacity-80 transition-opacity">
-                  FAQ
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="hover:opacity-80 transition-opacity">
-                  Contact
-                </Link>
-              </li>
+            <h3 className="text-sm font-semibold mb-4 text-gray-900">Services</h3>
+            <ul className="space-y-2">
+              {serviceLinks.map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className="text-sm text-gray-500 hover:text-emerald-900 transition-colors">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Services */}
+          {/* SPECIALTY */}
           <div>
-            <h3 className="font-semibold mb-4">Services</h3>
-            <ul className="space-y-2 text-sm">
-              <li>Express Wash</li>
-              <li>Dry Cleaning</li>
-              <li>Ironing Service</li>
-              <li>Stain Removal</li>
+            <h3 className="text-sm font-semibold mb-4 text-gray-900">Specialty</h3>
+            <ul className="space-y-2">
+              {specialtyLinks.map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className="text-sm text-gray-500 hover:text-emerald-900 transition-colors">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Contact */}
+          {/* COMPANY */}
           <div>
-            <h3 className="font-semibold mb-4">Contact Us</h3>
-            <ul className="space-y-3 text-sm">
-              <li className="flex items-center gap-2">
-                <Phone size={16} />
-                +1-800-LAUNDRICA
-              </li>
-              <li className="flex items-center gap-2">
-                <Mail size={16} />
-                support@laundrica.com
-              </li>
-              <li className="flex items-center gap-2">
-                <MapPin size={16} />
-                123 Main St, City, State
-              </li>
+            <h3 className="text-sm font-semibold mb-4 text-gray-900">Company</h3>
+            <ul className="space-y-2">
+              {companyLinks.map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className="text-sm text-gray-500 hover:text-emerald-900 transition-colors">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
         </div>
 
-        {/* Short Legal Line - Trusted laundry partners */}
-        <div className="border-t border-primary-foreground/20 pt-6 mb-4">
-          <p className="text-xs text-center opacity-80">
-            Trusted laundry partners. Quality checked & delivered by Laundrica
-          </p>
-        </div>
-
-        <div className="pt-4">
-          <div className="flex flex-col md:flex-row justify-between items-center text-xs opacity-70">
-            <p>&copy; 2024 Laundrica. All rights reserved.</p>
-            <div className="flex gap-6 mt-4 md:mt-0">
-              <Link href="/privacy" className="hover:opacity-80 transition-opacity">
-                Privacy Policy
-              </Link>
-              <Link href="/terms" className="hover:opacity-80 transition-opacity">
-                Terms of Service
-              </Link>
-            </div>
-          </div>
+        {/* BOTTOM */}
+        <div className="border-t border-gray-200 mt-10 pt-6 text-center text-xs text-gray-400">
+          © 2024 Laundrica Fabric Care. Effortless Purity.
         </div>
       </div>
     </footer>

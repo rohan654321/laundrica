@@ -1,212 +1,277 @@
+// app/contact/page.tsx
 'use client';
 
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
-import { Mail, Phone, MapPin, Clock, Globe, Instagram, Facebook, Twitter, ArrowRight } from 'lucide-react';
+import { Mail, Phone, MapPin, Clock, Globe, Instagram, Facebook, Twitter, ArrowRight, Sparkles, CheckCircle, MessageCircle, Send } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { motion, useInView } from 'framer-motion';
+import { useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 export default function ContactPage() {
+  const [email, setEmail] = useState('');
+  const [isSubscribing, setIsSubscribing] = useState(false);
+  const heroRef = useRef(null);
+  const isHeroInView = useInView(heroRef, { once: true });
+
+  const fadeInUp = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
+  };
+
+  const staggerContainer = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  };
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      toast.error('Please enter your email address');
+      return;
+    }
+    setIsSubscribing(true);
+    setTimeout(() => {
+      toast.success('Subscribed! Check your inbox for updates.');
+      setEmail('');
+      setIsSubscribing(false);
+    }, 1000);
+  };
+
   return (
-    <main className="flex flex-col min-h-screen">
+    <main className="flex flex-col min-h-screen bg-[#f9faf7]">
       <Header />
 
-      {/* Hero Banner Section - Same as About Page */}
-      <section>
-        <div
-          className="relative h-[200px] sm:h-[250px] md:h-[300px] lg:h-[350px] bg-cover bg-center bg-fixed flex items-center justify-center"
-          style={{ backgroundImage: "url('/images/curtainCleaning.jpg')" }}
-        >
-          {/* Gradient Overlay - Forest Green */}
-          <div className="absolute inset-0 bg-gradient-to-r 
-  from-[#0b3d2a]/85 
-  via-[#0b3d2a]/55 
-  to-transparent"
-          />
-
-          {/* BOTTOM SHADE */}
-          <div className="absolute inset-0 bg-gradient-to-t 
-  from-[#0b3d2a]/75 
-  via-transparent 
-  to-transparent"
-          />
-
-          {/* Centered Content */}
-          <div className="relative z-30 text-center max-w-4xl mx-auto px-6">
-            <h1 className="text-white text-xl sm:text-2xl md:text-3xl lg:text-4xl font-medium mb-4">
-              We'd love to <span className="text-yellow-300">hear from you</span>
+      {/* Premium Hero Banner */}
+      <section ref={heroRef} className="relative min-h-[400px] flex items-center overflow-hidden pt-10 pb-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={isHeroInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.7 }}
+            className="z-10"
+          >
+            <span className="inline-block px-4 py-1.5 bg-[#bcedd7] text-[#214f3f] rounded-full text-sm mb-6">Get in Touch</span>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#00261b] mb-6 leading-tight">
+              We'd Love to <span className="text-emerald-700">Hear From You</span>
             </h1>
-            <h2 className="text-white text-lg sm:text-xl md:text-2xl lg:text-3xl font-medium">
-              Reach out anytime, and our team will get back to you within <span className="text-yellow-300">24 hours</span>
-            </h2>
-          </div>
+            <p className="text-lg text-[#5c5f5e] mb-8 leading-relaxed">
+              Have questions about our services? Need a custom quote? Our team is here to help you 7 days a week.
+            </p>
+            <div className="flex flex-wrap gap-4 mb-10">
+              <a href="tel:+971509259667">
+                <button className="px-8 py-3.5 bg-[#00261b] text-white rounded-xl font-semibold hover:opacity-90 transition flex items-center gap-2">
+                  <Phone className="w-4 h-4" />
+                  Call Us Now
+                </button>
+              </a>
+              <a href="https://wa.me/971509259667" target="_blank" rel="noopener noreferrer">
+                <button className="px-8 py-3.5 bg-white border border-gray-200 text-[#00261b] rounded-xl font-semibold hover:bg-gray-50 transition flex items-center gap-2">
+                  <MessageCircle className="w-4 h-4 text-green-600" />
+                  WhatsApp Chat
+                </button>
+              </a>
+            </div>
+            <div className="space-y-5 pt-5 border-t border-gray-100">
+              <div>
+                <p className="text-xs uppercase tracking-wider text-gray-400 font-bold mb-2">Response Time</p>
+                <p className="text-sm font-medium text-[#00261b]/70">Our team will get back to you within 24 hours</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wider text-gray-400 font-bold mb-2">Service Area</p>
+                <p className="text-sm font-medium text-[#00261b] flex items-center gap-2 flex-wrap">
+                  Dubai • Marina • Downtown • JLT • Palm Jumeirah • Business Bay
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={isHeroInView ? { opacity: 1, scale: 1 } : {}}
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className="relative"
+          >
+            <div className="aspect-[4/5] rounded-3xl overflow-hidden shadow-xl bg-gradient-to-br from-[#bcedd7]/30 to-[#00261b]/10 flex items-center justify-center p-8">
+              <div className="text-center">
+                <div className="w-32 h-32 mx-auto bg-[#bcedd7] rounded-full flex items-center justify-center mb-6">
+                  <Mail className="w-16 h-16 text-[#00261b]" />
+                </div>
+                <h3 className="text-2xl font-bold text-[#00261b]">24/7 Support</h3>
+                <p className="text-[#5c5f5e] mt-2">support@laundrica.com</p>
+                <p className="text-[#5c5f5e]">+971 50 925 9667</p>
+              </div>
+            </div>
+            <div className="absolute -bottom-6 -right-6 bg-white p-5 rounded-2xl shadow-xl max-w-[200px]">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-emerald-600" />
+                <div>
+                  <p className="text-sm font-semibold text-[#00261b]">Free Pickup</p>
+                  <p className="text-xs text-gray-500">On all orders</p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
         </div>
+      </section>
 
-        {/* Main Content */}
-        <div className="flex-1 py-16 px-4 bg-background">
-          <div className="max-w-6xl mx-auto">
-            {/* Contact Cards */}
-            <div className="grid md:grid-cols-4 gap-6 mb-16">
-              {[
-                {
-                  icon: <Phone size={28} />,
-                  title: 'Phone',
-                  details: ['+971 50 925 9667', '+971 4 123 4567'],
-                  subtitle: 'Mon-Sun, 8AM - 10PM',
-                },
-                {
-                  icon: <Mail size={28} />,
-                  title: 'Email',
-                  details: ['support@laundrica.com', 'care@laundrica.com'],
-                  subtitle: '24/7 Support',
-                },
-                {
-                  icon: <MapPin size={28} />,
-                  title: 'Visit Us',
-                  details: ['Azizi Riviera 42', 'Meydan, Dubai'],
-                  subtitle: 'Get Directions ↓',
-                },
-                {
-                  icon: <Clock size={28} />,
-                  title: 'Business Hours',
-                  details: ['Monday - Friday: 8AM - 10PM', 'Saturday - Sunday: 9AM - 8PM'],
-                  subtitle: 'Open 7 Days a Week',
-                },
-              ].map((item, index) => (
-                <div
-                  key={index}
-                  className="bg-card border border-border rounded-xl p-6 text-center hover:shadow-lg transition-shadow duration-300"
+      {/* Contact Cards Section */}
+      <section className="py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
+            variants={staggerContainer}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+          >
+            {[
+              { icon: Phone, title: 'Phone', details: ['+971 50 925 9667', '+971 4 123 4567'], subtitle: 'Mon-Sun, 8AM - 10PM', color: 'bg-blue-50', iconColor: 'text-blue-600' },
+              { icon: Mail, title: 'Email', details: ['support@laundrica.com', 'care@laundrica.com'], subtitle: '24/7 Support', color: 'bg-emerald-50', iconColor: 'text-emerald-600' },
+              { icon: MapPin, title: 'Visit Us', details: ['Azizi Riviera 42', 'Meydan, Dubai'], subtitle: 'Get Directions →', color: 'bg-amber-50', iconColor: 'text-amber-600' },
+              { icon: Clock, title: 'Business Hours', details: ['Mon-Fri: 8AM - 10PM', 'Sat-Sun: 9AM - 8PM'], subtitle: 'Open 7 Days a Week', color: 'bg-purple-50', iconColor: 'text-purple-600' },
+            ].map((item, idx) => (
+              <motion.div
+                key={idx}
+                variants={fadeInUp}
+                className="bg-white rounded-2xl p-6 text-center shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-100"
+              >
+                <div className={`w-14 h-14 ${item.color} rounded-xl flex items-center justify-center mx-auto mb-4`}>
+                  <item.icon className={`w-7 h-7 ${item.iconColor}`} />
+                </div>
+                <h3 className="font-bold text-xl text-[#00261b] mb-3">{item.title}</h3>
+                {item.details.map((detail, i) => (
+                  <p key={i} className="text-gray-600 text-sm mb-1">{detail}</p>
+                ))}
+                <p className="text-xs text-gray-400 mt-3">{item.subtitle}</p>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Map and Social Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-12">
+            {/* Map */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+            >
+              <span className="inline-block px-4 py-1.5 bg-[#bcedd7] text-[#214f3f] rounded-full text-sm mb-4">Location</span>
+              <h2 className="text-3xl font-bold text-[#00261b] mb-4">Find Us Here</h2>
+              <p className="text-gray-600 mb-6 leading-relaxed">
+                Visit our flagship location in Azizi Riviera, Meydan. Free pickup & delivery available across Dubai.
+              </p>
+              <div className="rounded-2xl overflow-hidden shadow-xl border border-gray-100">
+                <iframe
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3610.123456789012!2d55.298765!3d25.198765!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e5f5e0c0c0c0c0c%3A0x0!2sAzizi%20Riviera%2042%2C%20Meydan%2C%20Dubai!5e0!3m2!1sen!2sae!4v1644262074056!5m2!1sen!2sae"
+                  width="100%"
+                  height="350"
+                  style={{ border: 0 }}
+                  allowFullScreen
+                  loading="lazy"
+                  className="w-full"
+                  title="Laundrica Location Map"
+                ></iframe>
+              </div>
+              <div className="mt-4">
+                <a
+                  href="https://maps.google.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-[#00261b] font-medium hover:text-emerald-700 transition-colors"
                 >
-                  <div className="text-[#1f4f2b] flex justify-center mb-4">{item.icon}</div>
-                  <h3 className="font-semibold text-lg mb-3">{item.title}</h3>
-                  {item.details.map((detail, i) => (
-                    <p key={i} className="text-foreground/70 text-sm mb-1">
-                      {detail}
-                    </p>
-                  ))}
-                  <p className="text-xs text-muted-foreground mt-3">{item.subtitle}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Map and Social Section */}
-            <div className="grid lg:grid-cols-2 gap-12">
-              {/* Map */}
-              <div>
-                <h2 className="text-2xl font-bold mb-4 text-[#1f4f2b]">Find Us Here</h2>
-                <p className="text-foreground/70 mb-4">
-                  Visit our flagship location in Azizi Riviera, Meydan. Free pickup & delivery available across Dubai.
-                </p>
-                <div className="rounded-xl overflow-hidden shadow-lg border border-border">
-                  <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3610.123456789012!2d55.298765!3d25.198765!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e5f5e0c0c0c0c0c%3A0x0!2sAzizi%20Riviera%2042%2C%20Meydan%2C%20Dubai!5e0!3m2!1sen!2sae!4v1644262074056!5m2!1sen!2sae"
-                    width="100%"
-                    height="350"
-                    style={{ border: 0 }}
-                    allowFullScreen
-                    loading="lazy"
-                    className="w-full"
-                    title="Laundrica Location Map"
-                  ></iframe>
-                </div>
-                <div className="mt-4 flex gap-3 justify-center md:justify-start">
-                  <a
-                    href="https://maps.google.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-[#1f4f2b] hover:underline font-medium"
-                  >
-                    Get Directions →
-                  </a>
-                </div>
+                  Get Directions
+                  <ArrowRight className="w-4 h-4" />
+                </a>
               </div>
+            </motion.div>
 
-              {/* Connect With Us */}
-              <div>
-                <h2 className="text-2xl font-bold mb-4 text-[#1f4f2b]">Connect With Us</h2>
-                <p className="text-foreground/70 mb-6">
-                  Follow us on social media for updates, promotions, and laundry tips. We'd love to connect with you!
-                </p>
+            {/* Connect With Us */}
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+            >
+              <span className="inline-block px-4 py-1.5 bg-[#bcedd7] text-[#214f3f] rounded-full text-sm mb-4">Social</span>
+              <h2 className="text-3xl font-bold text-[#00261b] mb-4">Connect With Us</h2>
+              <p className="text-gray-600 mb-8 leading-relaxed">
+                Follow us on social media for updates, promotions, and laundry tips. We'd love to connect with you!
+              </p>
 
-                {/* Social Links */}
-                <div className="grid grid-cols-2 gap-4 mb-8">
-                  {[
-                    { icon: <Instagram size={24} />, name: 'Instagram', handle: '@laundrica', color: 'hover:text-pink-600' },
-                    { icon: <Facebook size={24} />, name: 'Facebook', handle: '/laundrica', color: 'hover:text-blue-600' },
-                    { icon: <Twitter size={24} />, name: 'Twitter', handle: '@laundrica', color: 'hover:text-sky-500' },
-                    { icon: <Globe size={24} />, name: 'Website', handle: 'laundrica.com', color: 'hover:text-[#1f4f2b]' },
-                  ].map((social, index) => (
-                    <a
-                      key={index}
-                      href="#"
-                      className="flex items-center gap-3 p-4 border border-border rounded-lg hover:border-[#1f4f2b] hover:shadow-md transition-all group"
-                    >
-                      <div className={`text-muted-foreground group-hover:text-[#1f4f2b] transition-colors ${social.color}`}>
-                        {social.icon}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-sm">{social.name}</p>
-                        <p className="text-xs text-muted-foreground">{social.handle}</p>
-                      </div>
-                    </a>
-                  ))}
-                </div>
-
-                {/* Newsletter Signup */}
-                <div className="bg-muted/30 rounded-xl p-6 border border-border">
-                  <h3 className="font-semibold mb-2 text-[#1f4f2b]">Stay Updated</h3>
-                  <p className="text-sm text-foreground/70 mb-4">
-                    Subscribe to our newsletter for exclusive offers and laundry care tips.
-                  </p>
-                  <div className="flex gap-2">
-                    <input
-                      type="email"
-                      placeholder="Your email address"
-                      className="flex-1 px-4 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[#1f4f2b] text-sm"
-                    />
-                    <button className="px-4 py-2 bg-[#1f4f2b] text-white rounded-lg hover:bg-[#2a6e3a] transition-colors text-sm font-medium whitespace-nowrap">
-                      Subscribe
-                    </button>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-3">
-                    No spam, unsubscribe anytime.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* FAQ Section */}
-            <div className="mt-16 pt-8 border-t border-border">
-              <h2 className="text-2xl font-bold text-center mb-8 text-[#1f4f2b]">Frequently Asked Questions</h2>
-              <div className="grid md:grid-cols-2 gap-6">
+              {/* Social Links */}
+              <div className="grid grid-cols-2 gap-4 mb-8">
                 {[
-                  {
-                    q: 'How do I track my laundry order?',
-                    a: 'You can track your order through our mobile app or website dashboard using your order ID.',
-                  },
-                  {
-                    q: 'Do you offer same-day delivery?',
-                    a: 'Yes, orders placed before 10 AM are eligible for same-day delivery within our service area.',
-                  },
-                  {
-                    q: 'What payment methods do you accept?',
-                    a: 'We accept all major credit cards, PayPal, Apple Pay, and Google Pay.',
-                  },
-                  {
-                    q: 'Is there a minimum order requirement?',
-                    a: 'No minimum order required. Free pickup & delivery on all orders.',
-                  },
-                ].map((faq, index) => (
-                  <div key={index} className="p-4 rounded-lg hover:bg-muted/30 transition-colors">
-                    <h3 className="font-semibold mb-2 text-[#1f4f2b]">{faq.q}</h3>
-                    <p className="text-sm text-foreground/70">{faq.a}</p>
-                  </div>
+                  { icon: Instagram, name: 'Instagram', handle: '@laundrica', color: 'hover:text-pink-600', bgColor: 'bg-pink-50' },
+                  { icon: Facebook, name: 'Facebook', handle: '/laundrica', color: 'hover:text-blue-600', bgColor: 'bg-blue-50' },
+                  { icon: Twitter, name: 'Twitter', handle: '@laundrica', color: 'hover:text-sky-500', bgColor: 'bg-sky-50' },
+                  { icon: Globe, name: 'Website', handle: 'laundrica.com', color: 'hover:text-emerald-600', bgColor: 'bg-emerald-50' },
+                ].map((social, idx) => (
+                  <a
+                    key={idx}
+                    href="#"
+                    className="flex items-center gap-4 p-4 border border-gray-100 rounded-xl hover:shadow-lg transition-all group bg-white"
+                  >
+                    <div className={`w-12 h-12 ${social.bgColor} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                      <social.icon className={`w-6 h-6 text-gray-600 group-hover:${social.color} transition-colors`} />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-[#00261b]">{social.name}</p>
+                      <p className="text-xs text-gray-400">{social.handle}</p>
+                    </div>
+                  </a>
                 ))}
               </div>
-            </div>
+
+              {/* Newsletter Signup */}
+              <div className="bg-[#edeeeb] rounded-2xl p-6">
+                <div className="flex items-center gap-3 mb-3">
+                  <Send className="w-5 h-5 text-[#00261b]" />
+                  <h3 className="font-semibold text-lg text-[#00261b]">Stay Updated</h3>
+                </div>
+                <p className="text-sm text-gray-600 mb-4">
+                  Subscribe to our newsletter for exclusive offers and laundry care tips.
+                </p>
+                <form onSubmit={handleSubscribe} className="flex gap-3">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Your email address"
+                    className="flex-1 px-4 py-3 border border-gray-200 rounded-xl bg-white focus:outline-none focus:border-[#00261b] focus:ring-1 focus:ring-[#00261b] text-sm"
+                  />
+                  <Button
+                    type="submit"
+                    disabled={isSubscribing}
+                    className="bg-[#00261b] hover:bg-emerald-800 text-white px-5 rounded-xl"
+                  >
+                    {isSubscribing ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      'Subscribe'
+                    )}
+                  </Button>
+                </form>
+                <p className="text-xs text-gray-400 mt-3">
+                  No spam, unsubscribe anytime.
+                </p>
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>
+
+
 
       <Footer />
     </main>
