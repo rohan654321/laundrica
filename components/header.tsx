@@ -42,7 +42,7 @@ export function Header() {
 
   // Updated service links with your actual services and slugs
   const serviceLinks = [
-    { href: '/services/professional-laundry-services-in-dubai/orders', label: 'Laundry Services (Wash & Press)' },
+    { href: '/services/professional-laundry-services-in-dubai/orders', label: 'Wash & Press' },
     { href: '/services/dry-cleaning-services-in-dubai/orders', label: 'Dry Cleaning Services' },
     { href: '/services/shoe-and-bag-spa-services-in-dubai/orders', label: 'Shoe Cleaning & Spa' },
     { href: '/services/carpet-cleaning-services-in-dubai/orders', label: 'Carpet Cleaning' },
@@ -51,7 +51,7 @@ export function Header() {
   ];
 
   const bookOptions = [
-    { href: '/booking', label: 'Online Booking', icon: '🌐' },
+    { href: '/services', label: 'Online Booking', icon: '🌐' },
     { href: 'https://wa.me/971XXXXXXXXX', label: 'WhatsApp Booking', icon: '💬', external: true },
   ];
 
@@ -67,9 +67,9 @@ export function Header() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 lg:h-20">
             {/* Logo */}
-            <div className="flex-shrink-0">
-              <Link href="/" className="flex flex-col">
-                <div className="relative w-32 h-12">
+            <div className="flex-shrink-0 min-w-[90px]">
+              <Link href="/" className="flex">
+                <div className="relative w-24 h-10 sm:w-28 sm:h-11 lg:w-32 lg:h-12">
                   <Image
                     src="/images/Loundrica.png"
                     alt="Laundrica Logo"
@@ -244,7 +244,7 @@ export function Header() {
 
                 <div className="border-t border-gray-100 my-2"></div>
 
-                <Link href="/booking" onClick={() => setIsMenuOpen(false)}>
+                <Link href="/services" onClick={() => setIsMenuOpen(false)}>
                   <button className="w-full h-11 bg-emerald-900 text-white rounded-full font-semibold mb-2">
                     Online Booking
                   </button>

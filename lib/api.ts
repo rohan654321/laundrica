@@ -94,26 +94,44 @@ interface LocalCartItem {
   category: string;
   description?: string;
   image?: string;
+  serviceItems?: any[];
+  selectedColor?: string | null;
+  selectedSize?: string | null;
+  designImage?: string | null;
   metadata?: any;
 }
 
-// Helper functions for localStorage
+// Get localStorage cart key
+const getLocalCartKey = (sessionId: string) => `laundrica_cart_${sessionId}`;
+
+// Get cart from localStorage
 const getLocalCart = (sessionId: string): LocalCartItem[] => {
+  if (typeof window === 'undefined') return [];
   try {
-    const key = `laundrica_cart_${sessionId}`;
-    const saved = localStorage.getItem(key);
+    const saved = localStorage.getItem(getLocalCartKey(sessionId));
     return saved ? JSON.parse(saved) : [];
   } catch {
     return [];
   }
 };
 
+// Save cart to localStorage
 const saveLocalCart = (sessionId: string, items: LocalCartItem[]) => {
+  if (typeof window === 'undefined') return;
   try {
-    const key = `laundrica_cart_${sessionId}`;
-    localStorage.setItem(key, JSON.stringify(items));
+    localStorage.setItem(getLocalCartKey(sessionId), JSON.stringify(items));
   } catch (error) {
     console.error('Failed to save cart to localStorage:', error);
+  }
+};
+
+// Clear localStorage cart
+const clearLocalCart = (sessionId: string) => {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem(getLocalCartKey(sessionId));
+  } catch (error) {
+    console.error('Failed to clear localStorage cart:', error);
   }
 };
 
@@ -122,7 +140,9 @@ const isDuplicateKeyError = (error: any): boolean => {
   return error?.message?.includes('E11000') ||
     error?.message?.includes('duplicate') ||
     error?.status === 400 ||
-    error?.data?.code === 11000;
+    error?.status === 409 ||
+    error?.data?.code === 11000 ||
+    error?.message?.includes('validation');
 };
 
 export const cartAPI = {
@@ -134,24 +154,29 @@ export const cartAPI = {
 
     try {
       const response = await apiCall(`/cart/${sessionId}`, { method: 'GET' }, sessionId);
+
+      // If successful, sync to localStorage
+      if (response?.success && response?.cart?.items) {
+        saveLocalCart(sessionId, response.cart.items);
+      }
+
       return response;
     } catch (error: any) {
-      if (isDuplicateKeyError(error)) {
-        // Use localStorage fallback
-        const items = getLocalCart(sessionId);
-        return {
-          success: true,
-          cart: {
-            items: items.map(item => ({
-              ...item,
-              _id: item.id,
-              id: item.id
-            }))
-          },
-          fromLocalStorage: true
-        };
-      }
-      return { success: false, cart: { items: [] }, error: error.message };
+      console.log(`Backend cart fetch failed, using localStorage for session ${sessionId}`);
+
+      // Use localStorage fallback
+      const items = getLocalCart(sessionId);
+      return {
+        success: true,
+        cart: {
+          items: items.map((item: LocalCartItem) => ({
+            ...item,
+            _id: item.id,
+            id: item.id
+          }))
+        },
+        fromLocalStorage: true
+      };
     }
   },
 
@@ -166,39 +191,53 @@ export const cartAPI = {
         method: 'POST',
         body: JSON.stringify(item),
       }, sessionId);
+
+      // If successful, sync to localStorage
+      if (response?.success && response?.cart?.items) {
+        saveLocalCart(sessionId, response.cart.items);
+      }
+
       return response;
     } catch (error: any) {
-      if (isDuplicateKeyError(error)) {
-        // Use localStorage fallback
-        const items = getLocalCart(sessionId);
-        const existingIndex = items.findIndex(i => i.productId === item.productId);
+      console.log(`Backend add to cart failed, using localStorage for session ${sessionId}`);
 
-        if (existingIndex >= 0) {
-          items[existingIndex].quantity += item.quantity;
-        } else {
-          items.push({
-            id: `cart_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            productId: item.productId,
-            name: item.name,
-            price: item.price,
-            quantity: item.quantity,
-            category: item.category,
-            description: item.description,
-            image: item.image,
-            metadata: item.metadata,
-          });
-        }
+      // Use localStorage fallback
+      const items = getLocalCart(sessionId);
+      const existingIndex = items.findIndex(i => i.productId === item.productId);
 
-        saveLocalCart(sessionId, items);
-
-        // Also update the local cart state via event
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('cart-updated', { detail: { items } }));
-        }
-
-        return { success: true, cart: { items }, fromLocalStorage: true };
+      if (existingIndex >= 0) {
+        items[existingIndex].quantity += (item.quantity || 1);
+      } else {
+        const newItem: LocalCartItem = {
+          id: `cart_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          productId: item.productId,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity || 1,
+          category: item.category || 'general',
+          description: item.description || '',
+          image: item.image || '',
+          serviceItems: item.serviceItems || [],
+          selectedColor: item.selectedColor || null,
+          selectedSize: item.selectedSize || null,
+          designImage: item.designImage || null,
+          metadata: item.metadata || {},
+        };
+        items.push(newItem);
       }
-      return { success: false, error: error.message };
+
+      saveLocalCart(sessionId, items);
+
+      // Dispatch event for real-time updates
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('cart-updated', { detail: { items } }));
+      }
+
+      return {
+        success: true,
+        cart: { items },
+        fromLocalStorage: true
+      };
     }
   },
 
@@ -213,28 +252,35 @@ export const cartAPI = {
         method: 'PUT',
         body: JSON.stringify({ quantity }),
       }, sessionId);
+
+      if (response?.success && response?.cart?.items) {
+        saveLocalCart(sessionId, response.cart.items);
+      }
+
       return response;
     } catch (error: any) {
-      if (isDuplicateKeyError(error)) {
-        // Use localStorage fallback
-        const items = getLocalCart(sessionId);
-        const itemIndex = items.findIndex(i => i.id === itemId);
-        if (itemIndex >= 0) {
-          if (quantity <= 0) {
-            items.splice(itemIndex, 1);
-          } else {
-            items[itemIndex].quantity = quantity;
-          }
-          saveLocalCart(sessionId, items);
+      console.log(`Backend update failed, using localStorage for session ${sessionId}`);
 
-          if (typeof window !== 'undefined') {
-            window.dispatchEvent(new CustomEvent('cart-updated', { detail: { items } }));
-          }
+      // Use localStorage fallback
+      const items = getLocalCart(sessionId);
+      const itemIndex = items.findIndex(i => i.id === itemId);
 
-          return { success: true, cart: { items }, fromLocalStorage: true };
+      if (itemIndex >= 0) {
+        if (quantity <= 0) {
+          items.splice(itemIndex, 1);
+        } else {
+          items[itemIndex].quantity = quantity;
         }
+        saveLocalCart(sessionId, items);
+
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('cart-updated', { detail: { items } }));
+        }
+
+        return { success: true, cart: { items }, fromLocalStorage: true };
       }
-      return { success: false, error: error.message };
+
+      return { success: false, error: 'Item not found' };
     }
   },
 
@@ -248,21 +294,25 @@ export const cartAPI = {
       const response = await apiCall(`/cart/${sessionId}/item/${itemId}`, {
         method: 'DELETE',
       }, sessionId);
+
+      if (response?.success && response?.cart?.items) {
+        saveLocalCart(sessionId, response.cart.items);
+      }
+
       return response;
     } catch (error: any) {
-      if (isDuplicateKeyError(error)) {
-        // Use localStorage fallback
-        const items = getLocalCart(sessionId);
-        const filtered = items.filter(i => i.id !== itemId);
-        saveLocalCart(sessionId, filtered);
+      console.log(`Backend remove failed, using localStorage for session ${sessionId}`);
 
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('cart-updated', { detail: { items: filtered } }));
-        }
+      // Use localStorage fallback
+      const items = getLocalCart(sessionId);
+      const filtered = items.filter(i => i.id !== itemId);
+      saveLocalCart(sessionId, filtered);
 
-        return { success: true, cart: { items: filtered }, fromLocalStorage: true };
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('cart-updated', { detail: { items: filtered } }));
       }
-      return { success: false, error: error.message };
+
+      return { success: true, cart: { items: filtered }, fromLocalStorage: true };
     }
   },
 
@@ -276,19 +326,23 @@ export const cartAPI = {
       const response = await apiCall(`/cart/${sessionId}/clear`, {
         method: 'DELETE',
       }, sessionId);
+
+      if (response?.success) {
+        clearLocalCart(sessionId);
+      }
+
       return response;
     } catch (error: any) {
-      if (isDuplicateKeyError(error)) {
-        // Use localStorage fallback
-        saveLocalCart(sessionId, []);
+      console.log(`Backend clear failed, using localStorage for session ${sessionId}`);
 
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('cart-updated', { detail: { items: [] } }));
-        }
+      // Use localStorage fallback
+      clearLocalCart(sessionId);
 
-        return { success: true, cart: { items: [] }, fromLocalStorage: true };
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('cart-updated', { detail: { items: [] } }));
       }
-      return { success: false, error: error.message };
+
+      return { success: true, cart: { items: [] }, fromLocalStorage: true };
     }
   },
 
@@ -305,9 +359,9 @@ export const cartAPI = {
       }, sessionId);
       return response;
     } catch (error: any) {
-      // Allow fresh10 promo code even if backend fails
+      // Allow 'fresh10' promo code even if backend fails
       if (code.toLowerCase() === 'fresh10') {
-        return { success: true, discount: 10, message: '10% discount applied!' };
+        return { success: true, discount: 10, message: '10% discount applied!', fromLocalStorage: true };
       }
       return { success: false, error: error.message };
     }
@@ -325,7 +379,7 @@ export const cartAPI = {
       }, sessionId);
       return response;
     } catch (error) {
-      return { success: true };
+      return { success: true, fromLocalStorage: true };
     }
   },
 };

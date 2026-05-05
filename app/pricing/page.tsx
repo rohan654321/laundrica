@@ -72,7 +72,7 @@ export default function PricingPage() {
               Transparent pricing with no hidden fees.
             </p>
             <div className="flex flex-wrap gap-4 mb-10">
-              <Link href="/booking">
+              <Link href="/services">
                 <button className="px-8 py-3.5 bg-[#00261b] text-white rounded-xl font-semibold hover:opacity-90 transition">
                   Book Your Service
                 </button>
