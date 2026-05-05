@@ -10,8 +10,9 @@ import { useParams, useRouter } from 'next/navigation';
 import { useCart } from '@/context/cart-context';
 import { useSession } from '@/context/session-context';
 import { serviceAPI } from '@/lib/api';
-import { Minus, Plus, ShoppingCart, ArrowLeft, Check, Clock, Shield, Truck, Leaf, AlertCircle, Phone, MessageCircle, Trash2, MapPin, X } from 'lucide-react';
+import { Minus, Plus, ShoppingCart, ArrowLeft, Check, Clock, Shield, Truck, Leaf, AlertCircle, Phone, MessageCircle, Trash2, MapPin, X, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
+import { TbTruckDelivery, TbCoin, TbShieldCheck, TbClock, TbLeaf as TbLeafIcon } from 'react-icons/tb';
 
 // Define types
 type CategoryType = 'men' | 'women' | 'children' | 'household' | 'carpet' | 'shoes';
@@ -145,7 +146,6 @@ export default function ServiceOrderPage() {
   const [promoApplied, setPromoApplied] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [isClearingCart, setIsClearingCart] = useState(false);
-  const [updatingItemId, setUpdatingItemId] = useState<string | null>(null);
 
   const getAvailableCategories = useCallback((): Category[] => {
     if (!service) return [];
@@ -166,7 +166,6 @@ export default function ServiceOrderPage() {
     fetchServiceAndItems();
   }, [slug]);
 
-  // ✅ Save current slug to localStorage whenever it changes
   useEffect(() => {
     if (slug) {
       localStorage.setItem('lastVisitedServiceSlug', slug);
@@ -267,7 +266,6 @@ export default function ServiceOrderPage() {
     return localServices[slug] || null;
   };
 
-  // Helper to get cart item by matching productId or metadata
   const getCartItemByOriginalId = (originalItemId: string) => {
     if (!Array.isArray(cartItems)) return null;
     return cartItems.find((item: any) => {
@@ -288,44 +286,32 @@ export default function ServiceOrderPage() {
       return;
     }
 
-    setUpdatingItemId(item._id);
-    const currentCartItem = getCartItemByOriginalId(item._id);
-    const currentQty = currentCartItem?.quantity || 0;
-    const newQty = currentQty + 1;
+    const cartItem = {
+      productId: `${service?._id}-${item._id}`,
+      name: item.name,
+      price: item.price,
+      quantity: 1,
+      category: activeCategory,
+      description: item.description,
+      image: service?.image || service?.icon || '',
+      serviceItems: [],
+      slug,
+      metadata: {
+        originalItemId: item._id,
+        serviceName: service?.name,
+        unit: item.unit,
+        serviceId: service?._id
+      }
+    };
 
     try {
-      if (currentCartItem && currentCartItem.id) {
-        await updateQuantity(currentCartItem.id, newQty);
-        setSuccessMessage(`${item.name} quantity updated`);
-      } else {
-        const cartItem = {
-          productId: `${service?._id}-${item._id}`,
-          name: item.name,
-          price: item.price,
-          quantity: newQty,
-          category: activeCategory,
-          description: item.description,
-          image: service?.image || service?.icon || '',
-          serviceItems: [],
-          slug,
-          metadata: {
-            originalItemId: item._id,
-            serviceName: service?.name,
-            unit: item.unit,
-            serviceId: service?._id
-          }
-        };
-        await addToCart(cartItem);
-        setSuccessMessage(`${item.name} added to cart`);
-      }
-      await refreshCart();
+      await addToCart(cartItem);
+      setSuccessMessage(`${item.name} added to cart`);
       setShowSuccessToast(true);
       setTimeout(() => setShowSuccessToast(false), 1500);
     } catch (err) {
-      console.error('Error updating cart:', err);
-      toast.error('Failed to update cart');
-    } finally {
-      setUpdatingItemId(null);
+      console.error('Error adding to cart:', err);
+      toast.error('Failed to add to cart');
     }
   };
 
@@ -338,7 +324,6 @@ export default function ServiceOrderPage() {
     const currentCartItem = getCartItemByOriginalId(item._id);
     if (!currentCartItem || !currentCartItem.id) return;
 
-    setUpdatingItemId(item._id);
     const currentQty = currentCartItem.quantity;
     const newQty = currentQty - 1;
 
@@ -350,14 +335,11 @@ export default function ServiceOrderPage() {
         await updateQuantity(currentCartItem.id, newQty);
         setSuccessMessage(`${item.name} quantity updated`);
       }
-      await refreshCart();
       setShowSuccessToast(true);
       setTimeout(() => setShowSuccessToast(false), 1500);
     } catch (err) {
       console.error('Error updating cart:', err);
       toast.error('Failed to update cart');
-    } finally {
-      setUpdatingItemId(null);
     }
   };
 
@@ -370,18 +352,14 @@ export default function ServiceOrderPage() {
     const currentCartItem = getCartItemByOriginalId(item._id);
     if (!currentCartItem || !currentCartItem.id) return;
 
-    setUpdatingItemId(item._id);
     try {
       await removeFromCart(currentCartItem.id);
       setSuccessMessage(`${item.name} removed from cart`);
-      await refreshCart();
       setShowSuccessToast(true);
       setTimeout(() => setShowSuccessToast(false), 1500);
     } catch (err) {
       console.error('Error removing from cart:', err);
       toast.error('Failed to remove from cart');
-    } finally {
-      setUpdatingItemId(null);
     }
   };
 
@@ -442,21 +420,18 @@ export default function ServiceOrderPage() {
 
     setIsClearingCart(true);
     try {
-      const itemsToRemove = [...cartItems];
-      for (const item of itemsToRemove) {
-        if (item && item.id) {
-          await removeFromCart(item.id);
-        }
-      }
-      await refreshCart();
+      await clearCartFunction();
       toast.success('Cart cleared');
     } catch (err) {
       console.error('Error clearing cart:', err);
-      toast.error('Failed to clear cart completely');
+      toast.error('Failed to clear cart');
     } finally {
       setIsClearingCart(false);
     }
   };
+
+  // Get clearCart from useCart
+  const { clearCart: clearCartFunction } = useCart();
 
   const currentCategory = availableCategories.find(c => c.id === activeCategory);
   const isContactCategory = currentCategory?.contactForPricing || false;
@@ -466,27 +441,27 @@ export default function ServiceOrderPage() {
   const getHeroImage = () => {
     if (service?.image) return service.image;
     const imageMap: Record<string, string> = {
-      'laundry': '/images/laundry.jpg',
-      'dry-cleaning': '/images/dryCleaning.jpg',
-      'carpet-cleaning': '/images/carpetCleaning.jpg',
-      'shoe-cleaning': '/images/shoeCleaning.jpg',
-      'curtain-cleaning': '/images/curtainCleaning.jpg',
-      'commercial': '/images/commercialCleaning.jpg',
+      'laundry': 'https://lh3.googleusercontent.com/aida-public/AB6AXuBaHDEQVLbQfnwFR9_VyvfLd-ko007XGQDbe8hwTsWY87HzOxSF5OEi1VIUhphuEPzTyIEYGuar_lQbl5IcLFr6Dnz7X7Z7pctJxklYiZfa-c9MxeiY35ivv9-1g0LOse4jxv133UHtIinIC088t7NfjZ_PC9rleHHBGmlsZ69ybT_UKrJ4utQTtvinL1UeEgulkfcg2nUWiJ2DIJYYhlitbNGfkogR5s0XfbMFFqM3gQtqlpbRweKf5r0np3KX1dvRGk_0eUCe4tVi',
+      'dry-cleaning': 'https://lh3.googleusercontent.com/aida-public/AB6AXuCDSmGE2TtzW6YVlJMSyDumNuxjDafzBKzMdR4qG3eqVcTjAah0uNIQZPkLuWeHPHol4b4KvmlsPFC_KN3p7tWQBQ6QwwY9XUZtHuIIRZFMG-vCYoyJ0_b_XudUiAoeNPHtFhFaLpyFciaiUZmTUIz8SpnuLdtIr0RiWN6TrQRdNdIb0l8hb8_Ixsen9jOJTPqkeWMIP7psQVAw1npMZJXsAkH52LwBCa_R3N1DEIzyDhvtApslLYMdiQNPrDDyWg663DoZ--vmdfsf',
+      'carpet-cleaning': 'https://lh3.googleusercontent.com/aida-public/AB6AXuBYBa0ieuDAivzAotxiNgiAMrmoECVA1ks4ROokbZsxh4liVfcx2Pb1lWpKSTRPV_45qGjQ0Uz4y79LBIxx6-KAkjcB6d4ka18xLSn8rBWrMXOKDebhuHiJiVUHUQOHIrPw0gb9R-UhGAhEK4uSooNZqU8EGJcCfFU4w3FqWoQ3Es_QriCLgMwCPCs60G7Zq0D4tTMDRhhQyOdhSCKVVbS_NlQaDPLPYUrmT_ANvY58guyVIOe4e96pPzXXCNpM-MHeLGbGmHXJJy2N',
+      'shoe-cleaning': 'https://lh3.googleusercontent.com/aida-public/AB6AXuAyptsqgZUbgwL6Bq4bEsstny-6nDqBiqN5cBGYnfUgzSDXYcQRlm_pDhIj6-7C68tcWLpUVUoyuqYl-KtPTYiEtKvAJKV-rN_GAYoaYWEJWdkhtUtLShsLIqrzAO6qwGzS6zO7N7uSjdF1P9-5EztAjqUgYK-p6ctAHvjW1HY9dOh0XDdiAVOm2igRfKnzzKg7pled4rUzMo9aRGOi5PSI77IxhAP5ks-Hikp_CL0RfODVncfmgpsv7pnnGfj_ibEbUbaBjB1zew3f',
+      'curtain-cleaning': 'https://lh3.googleusercontent.com/aida-public/AB6AXuDP4Fl1mcL71ms-0aDco1bos4KJFJEZx5OQnJIOBWlWluJMOTU3XhoRrxAQvDa2yackx6UDbMN2aeY0HX3vJrKxXZZvOxDngQlZRCw6IC4qNlNInPtj13VA8r8kN-3-D0Jxrt44nDI5JAqB96hap1m-Sa8t_3oq6LroL8Ag9vqpd38eVyGtjT49EfXZUUUEmpo9H8CJRr1964I_IjjhCECEuvi3KYyJIWnmLx6Um420B0z6GG4nyB3DmF5ORn7DB6p1qP9FsFWioqH3',
+      'commercial': 'https://lh3.googleusercontent.com/aida-public/AB6AXuA45R7mYBYS5a_-9pcT1PdHvi75OrnW6SgurkHhCX-fJ_ymGD8x0ZZuqiCo5Rh908iElZhzYe3KP3UjAx1wUQ4w_Gkwp_0eqEpz_6SyRfDVW2dl0ja2MyCknffKUydongro0YT2wxCiDPDXKNyOovJkMUoqOJr4ZA-NfMZLhrLsPSzz1PycN1W0-fHxB0FkSehzYFH-4oAoWgJiJMcL_xJ9Sn_AkpjsLYsdhmJFybGq8Ju4kHUF-wp0f_OGW_HJf2FKgFPDwm8vZA6D',
     };
     return imageMap[service?.category || 'laundry'] || '/images/laundry.jpg';
   };
 
   if (isLoading) {
     return (
-      <main className="flex flex-col min-h-screen bg-white">
+      <main className="flex flex-col min-h-screen bg-[#f9faf7]">
         <Header />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="relative w-16 h-16 mx-auto mb-4">
-              <div className="absolute inset-0 border-2 border-emerald-100"></div>
-              <div className="absolute inset-0 border-2 border-t-emerald-600 animate-spin"></div>
+              <div className="absolute inset-0 border-2 border-[#bcedd7] rounded-full"></div>
+              <div className="absolute inset-0 border-2 border-t-[#00261b] rounded-full animate-spin"></div>
             </div>
-            <p className="text-gray-600">Loading service details...</p>
+            <p className="text-[#5c5f5e]">Loading service details...</p>
           </div>
         </div>
         <Footer />
@@ -496,17 +471,17 @@ export default function ServiceOrderPage() {
 
   if (error || !service) {
     return (
-      <main className="flex flex-col min-h-screen bg-white">
+      <main className="flex flex-col min-h-screen bg-[#f9faf7]">
         <Header />
         <div className="flex-1 flex items-center justify-center py-20">
           <div className="text-center max-w-md mx-auto px-4">
-            <div className="w-16 h-16 bg-red-50 flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-red-50 flex items-center justify-center mx-auto mb-4 rounded-full">
               <AlertCircle className="w-8 h-8 text-red-500" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Service Not Found</h1>
-            <p className="text-gray-600 mb-6">{error || 'The service you are looking for does not exist.'}</p>
+            <h1 className="text-2xl font-bold text-[#00261b] mb-2">Service Not Found</h1>
+            <p className="text-[#5c5f5e] mb-6">{error || 'The service you are looking for does not exist.'}</p>
             <Link href="/services">
-              <Button className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2">
+              <Button className="bg-[#00261b] hover:bg-emerald-800 text-white px-6 py-2 rounded-xl">
                 <ArrowLeft className="mr-2 w-4 h-4" />
                 Back to Services
               </Button>
@@ -519,7 +494,7 @@ export default function ServiceOrderPage() {
   }
 
   return (
-    <main className="flex flex-col min-h-screen bg-white">
+    <main className="flex flex-col min-h-screen bg-[#f9faf7]">
       <Header />
 
       <AnimatePresence>
@@ -528,7 +503,7 @@ export default function ServiceOrderPage() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed top-20 right-4 z-50 bg-emerald-600 text-white px-4 py-2 shadow-lg flex items-center gap-2 text-sm"
+            className="fixed top-20 right-4 z-50 bg-[#00261b] text-white px-4 py-2 shadow-lg rounded-xl flex items-center gap-2 text-sm"
           >
             <Check className="w-4 h-4" />
             {successMessage}
@@ -549,23 +524,23 @@ export default function ServiceOrderPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white max-w-md w-full p-6 shadow-xl"
+              className="bg-white max-w-md w-full p-6 shadow-xl rounded-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold text-gray-900">Contact for Pricing</h3>
+                <h3 className="text-xl font-bold text-[#00261b]">Contact for Pricing</h3>
                 <button onClick={() => setShowContactModal(false)} className="text-gray-400 hover:text-gray-600">
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <p className="text-gray-600 mb-6">
+              <p className="text-[#5c5f5e] mb-6">
                 For {contactItem.name}, pricing varies based on size, material, and specific requirements.
                 Please contact us directly for a personalized quote.
               </p>
               <div className="space-y-3">
                 <Button
                   onClick={() => handleWhatsAppContact(contactItem)}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 flex items-center justify-center gap-2"
+                  className="w-full bg-[#25D366] hover:bg-[#20b859] text-white py-2 flex items-center justify-center gap-2 rounded-xl"
                 >
                   <MessageCircle className="w-4 h-4" />
                   Contact via WhatsApp
@@ -573,7 +548,7 @@ export default function ServiceOrderPage() {
                 <Button
                   onClick={handleCallContact}
                   variant="outline"
-                  className="w-full border border-emerald-600 text-emerald-600 hover:bg-emerald-50 py-2 flex items-center justify-center gap-2"
+                  className="w-full border border-[#00261b] text-[#00261b] hover:bg-[#bcedd7] py-2 flex items-center justify-center gap-2 rounded-xl"
                 >
                   <Phone className="w-4 h-4" />
                   Call for Quote
@@ -584,13 +559,13 @@ export default function ServiceOrderPage() {
         )}
       </AnimatePresence>
 
-      {/* Hero Section */}
-      <div className="relative bg-emerald-900">
-        <div className="absolute inset-0">
+      {/* Hero Section - Matching home page style */}
+      <div className="relative bg-[#00261b] min-h-[400px] flex items-center">
+        <div className="absolute inset-0 opacity-20">
           <img
             src={getHeroImage()}
             alt={service.name}
-            className="w-full h-full object-cover opacity-30"
+            className="w-full h-full object-cover"
           />
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
@@ -607,7 +582,7 @@ export default function ServiceOrderPage() {
             {service.tagline || service.description}
           </p>
           {service.turnaround && (
-            <div className="flex items-center gap-2 text-white/70">
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full text-white/90">
               <Clock className="w-4 h-4" />
               <span>Turnaround: {service.turnaround}</span>
             </div>
@@ -626,15 +601,15 @@ export default function ServiceOrderPage() {
                   <button
                     key={category.id}
                     onClick={() => setActiveCategory(category.id)}
-                    className={`px-5 py-2 font-medium transition-all ${activeCategory === category.id
-                      ? 'text-emerald-600 border-b-2 border-emerald-600'
-                      : 'text-gray-500 hover:text-gray-700'
+                    className={`px-5 py-2 font-medium transition-all rounded-t-lg ${activeCategory === category.id
+                        ? 'text-[#00261b] border-b-2 border-[#00261b] bg-[#bcedd7]/20'
+                        : 'text-[#5c5f5e] hover:text-[#00261b]'
                       }`}
                   >
                     <span className="mr-2">{category.icon}</span>
                     {category.label}
                     {category.contactForPricing && (
-                      <span className="ml-2 text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5">
+                      <span className="ml-2 text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">
                         Contact
                       </span>
                     )}
@@ -646,28 +621,27 @@ export default function ServiceOrderPage() {
             <div className="grid md:grid-cols-2 gap-4">
               {currentItems.map((item) => {
                 const cartQty = getCartQuantity(item._id);
-                const isUpdating = updatingItemId === item._id;
                 return (
                   <div
                     key={item._id}
-                    className="border border-gray-200 hover:border-emerald-200 transition-colors"
+                    className="bg-white rounded-xl border border-gray-100 hover:border-[#bcedd7] hover:shadow-md transition-all duration-300"
                   >
                     <div className="p-5">
                       <div className="mb-3">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-1">{item.name}</h3>
-                        <p className="text-sm text-gray-500">{item.description}</p>
+                        <h3 className="text-lg font-semibold text-[#00261b] mb-1">{item.name}</h3>
+                        <p className="text-sm text-[#5c5f5e]">{item.description}</p>
                       </div>
 
                       <div className="flex items-center justify-between mt-4">
                         <div>
                           {item.contactForPricing || isContactCategory ? (
                             <div className="flex items-center gap-2">
-                              <span className="text-emerald-600 font-medium">Contact for Price</span>
+                              <span className="text-[#00261b] font-medium">Contact for Price</span>
                             </div>
                           ) : (
                             <div>
-                              <span className="text-xl font-bold text-gray-900">AED {item.price}</span>
-                              <span className="text-sm text-gray-500 ml-1">/{item.unit}</span>
+                              <span className="text-xl font-bold text-[#00261b]">AED {item.price}</span>
+                              <span className="text-sm text-[#5c5f5e] ml-1">/{item.unit}</span>
                             </div>
                           )}
                         </div>
@@ -678,31 +652,26 @@ export default function ServiceOrderPage() {
                               setContactItem(item);
                               setShowContactModal(true);
                             }}
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-1.5 text-sm"
+                            className="bg-[#00261b] hover:bg-emerald-800 text-white px-4 py-1.5 text-sm rounded-lg"
                           >
                             Contact
                           </Button>
                         ) : (
                           <div className="flex items-center gap-2">
-                            <div className="flex items-center border border-gray-200">
+                            <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
                               <button
-                                className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-emerald-600 disabled:opacity-50"
+                                className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-[#00261b] transition-colors disabled:opacity-50"
                                 onClick={() => handleDecrement(item)}
-                                disabled={cartQty === 0 || isUpdating}
+                                disabled={cartQty === 0}
                               >
                                 <Minus className="w-3.5 h-3.5" />
                               </button>
-                              <span className="w-10 text-center text-gray-900">
-                                {isUpdating ? (
-                                  <div className="w-3 h-3 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto" />
-                                ) : (
-                                  cartQty
-                                )}
+                              <span className="w-10 text-center text-[#00261b] font-medium">
+                                {cartQty}
                               </span>
                               <button
-                                className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-emerald-600"
+                                className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-[#00261b] transition-colors"
                                 onClick={() => handleIncrement(item)}
-                                disabled={isUpdating}
                               >
                                 <Plus className="w-3.5 h-3.5" />
                               </button>
@@ -710,8 +679,7 @@ export default function ServiceOrderPage() {
                             {cartQty > 0 && (
                               <button
                                 onClick={() => handleRemoveItem(item)}
-                                className="text-gray-400 hover:text-red-500"
-                                disabled={isUpdating}
+                                className="text-gray-400 hover:text-red-500 transition-colors"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
@@ -726,220 +694,215 @@ export default function ServiceOrderPage() {
             </div>
 
             {currentItems.length === 0 && (
-              <div className="border border-gray-200 p-12 text-center">
+              <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
                 <AlertCircle className="w-10 h-10 text-gray-400 mx-auto mb-3" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-1">No Items Available</h3>
-                <p className="text-gray-500">Please check another category.</p>
+                <h3 className="text-lg font-semibold text-[#00261b] mb-1">No Items Available</h3>
+                <p className="text-[#5c5f5e]">Please check another category.</p>
               </div>
             )}
           </div>
 
-          {/* Order Summary */}
+          {/* Order Summary - Matching home page card style */}
           <div className="lg:col-span-1">
-            <div className="sticky top-24 border border-gray-200 bg-white">
-              <div className="bg-emerald-600 p-4 text-white">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <ShoppingCart className="w-5 h-5" />
-                    <h3 className="font-semibold">Your Cart</h3>
-                    <span className="text-sm text-emerald-100">({cartItemsCount})</span>
-                  </div>
-                  {cartItemsCount > 0 && (
-                    <button
-                      onClick={clearCart}
-                      disabled={isClearingCart}
-                      className="text-xs text-emerald-100 hover:text-white transition-colors disabled:opacity-50"
-                    >
-                      {isClearingCart ? 'Clearing...' : 'Clear all'}
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              <div className="p-4">
-                <div className="max-h-80 overflow-y-auto mb-4">
-                  {cartItemsCount === 0 ? (
-                    <div className="text-center py-8">
-                      <ShoppingCart className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-                      <p className="text-gray-500 text-sm">Your cart is empty</p>
+            <div className="sticky top-24">
+              <div className="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100">
+                <div className="bg-[#00261b] p-5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <ShoppingCart className="w-5 h-5 text-white" />
+                      <h3 className="font-semibold text-white">Your Cart</h3>
+                      <span className="text-sm text-[#bcedd7]">({cartItemsCount})</span>
                     </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {cartItems.map((item: any) => {
-                        const originalItem = currentItems.find(i => i._id === item.metadata?.originalItemId);
-                        const isUpdating = updatingItemId === originalItem?._id;
-                        return (
-                          <div key={item.id} className="flex items-start justify-between border-b border-gray-100 pb-3">
-                            <div className="flex-1">
-                              <p className="text-sm font-medium text-gray-900">{item.name}</p>
-                              <p className="text-xs text-gray-500">AED {item.price} each</p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <div className="flex items-center border border-gray-200">
+                    {cartItemsCount > 0 && (
+                      <button
+                        onClick={clearCart}
+                        disabled={isClearingCart}
+                        className="text-xs text-[#bcedd7] hover:text-white transition-colors disabled:opacity-50"
+                      >
+                        {isClearingCart ? 'Clearing...' : 'Clear all'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="p-5">
+                  <div className="max-h-80 overflow-y-auto mb-4">
+                    {cartItemsCount === 0 ? (
+                      <div className="text-center py-8">
+                        <ShoppingCart className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                        <p className="text-[#5c5f5e] text-sm">Your cart is empty</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {cartItems.map((item: any) => {
+                          const originalItem = currentItems.find(i => i._id === item.metadata?.originalItemId);
+                          return (
+                            <div key={item.id} className="flex items-start justify-between border-b border-gray-100 pb-3">
+                              <div className="flex-1">
+                                <p className="text-sm font-medium text-[#00261b]">{item.name}</p>
+                                <p className="text-xs text-[#5c5f5e]">AED {item.price} each</p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
+                                  <button
+                                    className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-[#00261b] transition-colors disabled:opacity-50"
+                                    onClick={() => {
+                                      if (originalItem) {
+                                        handleDecrement(originalItem);
+                                      }
+                                    }}
+                                    disabled={!originalItem}
+                                  >
+                                    <Minus className="w-3 h-3" />
+                                  </button>
+                                  <span className="w-8 text-center text-sm text-[#00261b]">
+                                    {item.quantity}
+                                  </span>
+                                  <button
+                                    className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-[#00261b] transition-colors"
+                                    onClick={() => {
+                                      if (originalItem) {
+                                        handleIncrement(originalItem);
+                                      }
+                                    }}
+                                  >
+                                    <Plus className="w-3 h-3" />
+                                  </button>
+                                </div>
                                 <button
-                                  className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-emerald-600 disabled:opacity-50"
                                   onClick={() => {
                                     if (originalItem) {
-                                      handleDecrement(originalItem);
+                                      handleRemoveItem(originalItem);
+                                    } else if (item.id) {
+                                      removeFromCart(item.id);
                                     }
                                   }}
-                                  disabled={isUpdating || !originalItem}
+                                  className="text-gray-400 hover:text-red-500 transition-colors"
                                 >
-                                  <Minus className="w-3 h-3" />
-                                </button>
-                                <span className="w-8 text-center text-sm">
-                                  {isUpdating ? (
-                                    <div className="w-3 h-3 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto" />
-                                  ) : (
-                                    item.quantity
-                                  )}
-                                </span>
-                                <button
-                                  className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-emerald-600 disabled:opacity-50"
-                                  onClick={() => {
-                                    if (originalItem) {
-                                      handleIncrement(originalItem);
-                                    }
-                                  }}
-                                  disabled={isUpdating || !originalItem}
-                                >
-                                  <Plus className="w-3 h-3" />
+                                  <Trash2 className="w-3.5 h-3.5" />
                                 </button>
                               </div>
-                              <button
-                                onClick={() => {
-                                  if (originalItem) {
-                                    handleRemoveItem(originalItem);
-                                  } else if (item.id) {
-                                    removeFromCart(item.id);
-                                  }
-                                }}
-                                className="text-gray-400 hover:text-red-500 disabled:opacity-50"
-                                disabled={isUpdating}
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
                             </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-
-                {cartItemsCount > 0 && (
-                  <>
-                    <div className="mb-4">
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={promoCode}
-                          onChange={(e) => setPromoCode(e.target.value)}
-                          placeholder="Promo code"
-                          className="flex-1 px-3 py-1.5 text-sm border border-gray-200 focus:outline-none focus:border-emerald-400"
-                          disabled={promoApplied}
-                        />
-                        <Button
-                          onClick={handleApplyPromo}
-                          disabled={promoApplied}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 text-sm"
-                        >
-                          Apply
-                        </Button>
-                      </div>
-                      {promoApplied && (
-                        <p className="text-xs text-emerald-600 mt-1">✓ 10% discount applied</p>
-                      )}
-                    </div>
-
-                    <div className="space-y-2 mb-4 pt-2 border-t border-gray-100">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Subtotal</span>
-                        <span className="font-medium text-gray-900">AED {subtotal.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Delivery Fee</span>
-                        <span className="font-medium text-gray-900">
-                          {deliveryFee === 0 ? 'FREE' : `AED ${deliveryFee}`}
-                        </span>
-                      </div>
-                      {promoApplied && (
-                        <div className="flex justify-between text-sm text-emerald-600">
-                          <span>Discount (10%)</span>
-                          <span>-AED {discount.toFixed(2)}</span>
-                        </div>
-                      )}
-                      <div className="pt-2 border-t border-gray-200">
-                        <div className="flex justify-between">
-                          <span className="font-semibold text-gray-900">Total</span>
-                          <span className="text-xl font-bold text-emerald-600">AED {total.toFixed(2)}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {subtotal < 100 && (
-                      <div className="mb-4 p-3 bg-emerald-50">
-                        <p className="text-xs text-emerald-700 mb-2">
-                          Add AED {(100 - subtotal).toFixed(2)} more for free delivery
-                        </p>
-                        <div className="w-full h-1 bg-emerald-100">
-                          <div
-                            className="h-full bg-emerald-600 transition-all"
-                            style={{ width: `${Math.min((subtotal / 100) * 100, 100)}%` }}
-                          />
-                        </div>
+                          );
+                        })}
                       </div>
                     )}
-
-                    <Button
-                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 font-medium"
-                      onClick={handleProceedToCheckout}
-                      disabled={isCheckingOut}
-                    >
-                      {isCheckingOut ? (
-                        <div className="flex items-center justify-center gap-2">
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent animate-spin" />
-                          Processing...
-                        </div>
-                      ) : (
-                        'Proceed to Checkout'
-                      )}
-                    </Button>
-
-                    <div className="grid grid-cols-4 gap-2 mt-4">
-                      {[
-                        { icon: Shield, label: 'Secure' },
-                        { icon: Truck, label: 'Free*' },
-                        { icon: Clock, label: '24-48h' },
-                        { icon: Leaf, label: 'Eco' },
-                      ].map((badge, idx) => (
-                        <div key={idx} className="text-center py-2 bg-emerald-50">
-                          <badge.icon className="w-4 h-4 mx-auto mb-0.5 text-emerald-600" />
-                          <p className="text-[10px] text-gray-600">{badge.label}</p>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="mt-3 p-2 bg-emerald-50 flex items-start gap-2">
-                      <MapPin className="w-3.5 h-3.5 text-emerald-600 mt-0.5" />
-                      <p className="text-[11px] text-gray-600">
-                        Free delivery on orders AED 100+. Estimated 24-48 hours.
-                      </p>
-                    </div>
-                  </>
-                )}
-
-                <div className={`mt-4 p-3 bg-emerald-50 flex items-center justify-between ${cartItemsCount === 0 ? 'mt-0' : ''}`}>
-                  <div className="flex items-center gap-2">
-                    <MessageCircle className="w-4 h-4 text-emerald-600" />
-                    <span className="text-xs text-emerald-800">Need help?</span>
                   </div>
-                  <button
-                    onClick={() => window.open('https://wa.me/971501234567', '_blank')}
-                    className="text-xs text-emerald-600 font-medium hover:underline"
-                  >
-                    Chat with us
-                  </button>
+
+                  {cartItemsCount > 0 && (
+                    <>
+                      <div className="mb-4">
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={promoCode}
+                            onChange={(e) => setPromoCode(e.target.value)}
+                            placeholder="Promo code"
+                            className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#00261b] focus:ring-1 focus:ring-[#00261b]"
+                            disabled={promoApplied}
+                          />
+                          <Button
+                            onClick={handleApplyPromo}
+                            disabled={promoApplied}
+                            className="bg-[#00261b] hover:bg-emerald-800 text-white px-4 py-2 text-sm rounded-lg"
+                          >
+                            Apply
+                          </Button>
+                        </div>
+                        {promoApplied && (
+                          <p className="text-xs text-emerald-600 mt-1">✓ 10% discount applied</p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2 mb-4 pt-2 border-t border-gray-100">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-[#5c5f5e]">Subtotal</span>
+                          <span className="font-medium text-[#00261b]">AED {subtotal.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-[#5c5f5e]">Delivery Fee</span>
+                          <span className="font-medium text-[#00261b]">
+                            {deliveryFee === 0 ? 'FREE' : `AED ${deliveryFee}`}
+                          </span>
+                        </div>
+                        {promoApplied && (
+                          <div className="flex justify-between text-sm text-emerald-600">
+                            <span>Discount (10%)</span>
+                            <span>-AED {discount.toFixed(2)}</span>
+                          </div>
+                        )}
+                        <div className="pt-2 border-t border-gray-200">
+                          <div className="flex justify-between">
+                            <span className="font-semibold text-[#00261b]">Total</span>
+                            <span className="text-xl font-bold text-[#00261b]">AED {total.toFixed(2)}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {subtotal < 100 && (
+                        <div className="mb-4 p-3 bg-[#bcedd7]/20 rounded-lg">
+                          <p className="text-xs text-[#00261b] mb-2">
+                            Add AED {(100 - subtotal).toFixed(2)} more for free delivery
+                          </p>
+                          <div className="w-full h-1 bg-[#bcedd7] rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-[#00261b] rounded-full transition-all"
+                              style={{ width: `${Math.min((subtotal / 100) * 100, 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      <Button
+                        className="w-full bg-[#00261b] hover:bg-emerald-800 text-white py-3 font-medium rounded-xl transition-all duration-300 hover:shadow-lg"
+                        onClick={handleProceedToCheckout}
+                        disabled={isCheckingOut}
+                      >
+                        {isCheckingOut ? (
+                          <div className="flex items-center justify-center gap-2">
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            Processing...
+                          </div>
+                        ) : (
+                          'Proceed to Checkout'
+                        )}
+                      </Button>
+
+                      <div className="grid grid-cols-4 gap-2 mt-4">
+                        {[
+                          { icon: Shield, label: 'Secure' },
+                          { icon: Truck, label: 'Free*' },
+                          { icon: Clock, label: '24-48h' },
+                          { icon: Leaf, label: 'Eco' },
+                        ].map((badge, idx) => (
+                          <div key={idx} className="text-center py-2 bg-[#bcedd7]/20 rounded-lg">
+                            <badge.icon className="w-4 h-4 mx-auto mb-0.5 text-[#00261b]" />
+                            <p className="text-[10px] text-[#5c5f5e]">{badge.label}</p>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="mt-3 p-2 bg-[#bcedd7]/20 rounded-lg flex items-start gap-2">
+                        <MapPin className="w-3.5 h-3.5 text-[#00261b] mt-0.5" />
+                        <p className="text-[11px] text-[#5c5f5e]">
+                          Free delivery on orders AED 100+. Estimated 24-48 hours.
+                        </p>
+                      </div>
+                    </>
+                  )}
+
+                  <div className={`mt-4 p-3 bg-[#bcedd7]/20 rounded-lg flex items-center justify-between ${cartItemsCount === 0 ? 'mt-0' : ''}`}>
+                    <div className="flex items-center gap-2">
+                      <MessageCircle className="w-4 h-4 text-[#00261b]" />
+                      <span className="text-xs text-[#00261b]">Need help?</span>
+                    </div>
+                    <button
+                      onClick={() => window.open('https://wa.me/971501234567', '_blank')}
+                      className="text-xs text-[#00261b] font-medium hover:underline"
+                    >
+                      Chat with us
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

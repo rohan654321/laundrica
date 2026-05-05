@@ -29,6 +29,8 @@ import {
   ThumbsUp
 } from 'lucide-react';
 import Image from 'next/image';
+import { FaWhatsapp } from 'react-icons/fa';
+
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
 
@@ -71,7 +73,7 @@ export default function AboutPage() {
               From delicate silks to everyday essentials, every garment is handled with precision and respect.
             </p>
             <div className="flex flex-wrap gap-4 mb-10">
-              <Link href="/booking">
+              <Link href="/services">
                 <button className="px-8 py-3.5 bg-[#00261b] text-white rounded-xl font-semibold hover:opacity-90 transition">
                   Book Your Service
                 </button>
@@ -242,7 +244,7 @@ export default function AboutPage() {
               Laundrica has been the trusted name in garment care. We are committed to returning every piece in immaculate condition.
               In the rare instance of loss or damage, we provide reimbursement up to the full value of the item.
             </p>
-            <Link href="/booking">
+            <Link href="/services">
               <button className="px-8 py-3.5 bg-white text-[#00261b] rounded-xl font-semibold hover:bg-[#bcedd7] transition-colors inline-flex items-center gap-2">
                 Get Service Now
                 <ArrowRight className="h-4 w-4" />
@@ -341,14 +343,15 @@ export default function AboutPage() {
                 Experience the invisible luxury of professional fabric care. Fast, reliable, and just a click away.
               </p>
               <div className="flex flex-wrap justify-center gap-4">
-                <Link href="/booking">
+                <Link href="/services">
                   <button className="px-8 py-3.5 bg-white text-[#00261b] rounded-xl font-semibold hover:bg-[#bcedd7] transition-colors">
                     Book Your Service
                   </button>
                 </Link>
                 <a href="https://wa.me/971509259667" target="_blank" rel="noopener noreferrer">
                   <button className="px-8 py-3.5 border border-white/30 bg-white/5 backdrop-blur-md text-white rounded-xl font-semibold hover:bg-white/10 transition-colors flex items-center gap-2">
-                    <span className="material-symbols-outlined">chat</span>
+                    {/* <span className="material-symbols-outlined">chat</span> */}
+                    <FaWhatsapp className="w-5 h-5 text-green-500" />
                     WhatsApp Booking
                   </button>
                 </a>
