@@ -42,12 +42,12 @@ export function Header() {
 
   // Updated service links with your actual services and slugs
   const serviceLinks = [
-    { href: '/services/professional-laundry-services-in-dubai/orders', label: 'Wash & Press' },
-    { href: '/services/dry-cleaning-services-in-dubai/orders', label: 'Dry Cleaning Services' },
-    { href: '/services/shoe-and-bag-spa-services-in-dubai/orders', label: 'Shoe Cleaning & Spa' },
-    { href: '/services/carpet-cleaning-services-in-dubai/orders', label: 'Carpet Cleaning' },
-    { href: '/services/curtain-cleaning-services-in-dubai/orders', label: 'Curtain Cleaning' },
-    { href: '/services/commercial-laundry-services-in-dubai/orders', label: 'Commercial Laundry' },
+    { href: '/services/wash-and-press-services-in-dubai/orders', label: 'Wash & Press' },
+    { href: '/services/dry-cleaning-services-in-dubai/orders', label: 'Dry Cleaning' },
+    { href: '/services/wash-and-fold-services-in-dubai/orders', label: 'Wash & Fold' },
+    { href: '/services/steam-press-services-in-dubai/orders', label: 'Steam Press' },
+    { href: '/services/shoe-care-services-in-dubai/orders', label: 'Shoe Care' },
+    { href: '/services/carpet-care-services-in-dubai/orders', label: 'Carpet Care' },
   ];
 
   const bookOptions = [
