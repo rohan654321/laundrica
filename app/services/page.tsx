@@ -29,12 +29,12 @@ interface Service {
 
 // Service images mapping
 const SERVICE_IMAGES: Record<string, string> = {
-  'laundry': '/images/laundry-service.jpg',
-  'dry-cleaning': '/images/dry-cleaning.jpg',
-  'carpet-cleaning': '/images/carpet-cleaning.jpg',
-  'shoe-cleaning': '/images/shoe-cleaning.jpg',
-  'curtain-cleaning': '/images/curtain-cleaning.jpg',
-  'commercial': '/images/commercial-laundry.jpg',
+  'laundry': 'https://lh3.googleusercontent.com/aida-public/AB6AXuBaHDEQVLbQfnwFR9_VyvfLd-ko007XGQDbe8hwTsWY87HzOxSF5OEi1VIUhphuEPzTyIEYGuar_lQbl5IcLFr6Dnz7X7Z7pctJxklYiZfa-c9MxeiY35ivv9-1g0LOse4jxv133UHtIinIC088t7NfjZ_PC9rleHHBGmlsZ69ybT_UKrJ4utQTtvinL1UeEgulkfcg2nUWiJ2DIJYYhlitbNGfkogR5s0XfbMFFqM3gQtqlpbRweKf5r0np3KX1dvRGk_0eUCe4tVi',
+  'dry-cleaning': 'https://lh3.googleusercontent.com/aida-public/AB6AXuCDSmGE2TtzW6YVlJMSyDumNuxjDafzBKzMdR4qG3eqVcTjAah0uNIQZPkLuWeHPHol4b4KvmlsPFC_KN3p7tWQBQ6QwwY9XUZtHuIIRZFMG-vCYoyJ0_b_XudUiAoeNPHtFhFaLpyFciaiUZmTUIz8SpnuLdtIr0RiWN6TrQRdNdIb0l8hb8_Ixsen9jOJTPqkeWMIP7psQVAw1npMZJXsAkH52LwBCa_R3N1DEIzyDhvtApslLYMdiQNPrDDyWg663DoZ--vmdfsf',
+  'carpet-cleaning': 'https://lh3.googleusercontent.com/aida-public/AB6AXuAyptsqgZUbgwL6Bq4bEsstny-6nDqBiqN5cBGYnfUgzSDXYcQRlm_pDhIj6-7C68tcWLpUVUoyuqYl-KtPTYiEtKvAJKV-rN_GAYoaYWEJWdkhtUtLShsLIqrzAO6qwGzS6zO7N7uSjdF1P9-5EztAjqUgYK-p6ctAHvjW1HY9dOh0XDdiAVOm2igRfKnzzKg7pled4rUzMo9aRGOi5PSI77IxhAP5ks-Hikp_CL0RfODVncfmgpsv7pnnGfj_ibEbUbaBjB1zew3f',
+  'shoe-cleaning': 'https://lh3.googleusercontent.com/aida-public/AB6AXuBYBa0ieuDAivzAotxiNgiAMrmoECVA1ks4ROokbZsxh4liVfcx2Pb1lWpKSTRPV_45qGjQ0Uz4y79LBIxx6-KAkjcB6d4ka18xLSn8rBWrMXOKDebhuHiJiVUHUQOHIrPw0gb9R-UhGAhEK4uSooNZqU8EGJcCfFU4w3FqWoQ3Es_QriCLgMwCPCs60G7Zq0D4tTMDRhhQyOdhSCKVVbS_NlQaDPLPYUrmT_ANvY58guyVIOe4e96pPzXXCNpM-MHeLGbGmHXJJy2N',
+  'curtain-cleaning': 'https://lh3.googleusercontent.com/aida-public/AB6AXuDP4Fl1mcL71ms-0aDco1bos4KJFJEZx5OQnJIOBWlWluJMOTU3XhoRrxAQvDa2yackx6UDbMN2aeY0HX3vJrKxXZZvOxDngQlZRCw6IC4qNlNInPtj13VA8r8kN-3-D0Jxrt44nDI5JAqB96hap1m-Sa8t_3oq6LroL8Ag9vqpd38eVyGtjT49EfXZUUUEmpo9H8CJRr1964I_IjjhCECEuvi3KYyJIWnmLx6Um420B0z6GG4nyB3DmF5ORn7DB6p1qP9FsFWioqH3',
+  'commercial': 'https://lh3.googleusercontent.com/aida-public/AB6AXuA45R7mYBYS5a_-9pcT1PdHvi75OrnW6SgurkHhCX-fJ_ymGD8x0ZZuqiCo5Rh908iElZhzYe3KP3UjAx1wUQ4w_Gkwp_0eqEpz_6SyRfDVW2dl0ja2MyCknffKUydongro0YT2wxCiDPDXKNyOovJkMUoqOJr4ZA-NfMZLhrLsPSzz1PycN1W0-fHxB0FkSehzYFH-4oAoWgJiJMcL_xJ9Sn_AkpjsLYsdhmJFybGq8Ju4kHUF-wp0f_OGW_HJf2FKgFPDwm8vZA6D',
 };
 
 export default function ServicesPage() {
@@ -218,8 +218,7 @@ export default function ServicesPage() {
       {/* CTA Section */}
       <section className="py-16"><div className="max-w-5xl mx-auto px-4"><div className="bg-[#00261b] rounded-3xl p-12 text-center relative overflow-hidden"><div className="absolute inset-0 opacity-10"><div className="absolute top-0 left-0 w-64 h-64 bg-[#bcedd7] rounded-full blur-[100px]"></div><div className="absolute bottom-0 right-0 w-64 h-64 bg-emerald-400 rounded-full blur-[100px]"></div></div><div className="relative z-10"><Droplets className="w-12 h-12 text-[#bcedd7] mx-auto mb-6" /><h2 className="text-2xl sm:text-3xl text-white font-bold mb-4">Not sure which service to choose?</h2><p className="text-[#79a894] mb-8">Our experts are here to help you find the perfect care solution.</p><div className="flex flex-wrap justify-center gap-4"><a href="https://wa.me/971509259667" target="_blank" className="bg-[#25D366] text-white px-8 py-3 rounded-xl font-semibold flex items-center gap-2"><MessageCircle className="w-4 h-4" /> WhatsApp Us</a><Link href="/contact"><button className="border border-white/30 bg-white/5 text-white px-8 py-3 rounded-xl font-semibold hover:bg-white/10 transition">Contact Support</button></Link></div></div></div></div></section>
 
-      {/* Floating WhatsApp */}
-      <a href="https://wa.me/971509259667" target="_blank" rel="noopener noreferrer" className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-[#25D366] rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform"><MessageCircle className="w-7 h-7 text-white" /></a>
+      
       <Footer />
     </main>
   );
