@@ -12,9 +12,17 @@ import { useSession } from '@/context/session-context';
 import { serviceAPI } from '@/lib/api';
 import { Minus, Plus, ShoppingCart, ArrowLeft, Check, Clock, Shield, Truck, Leaf, AlertCircle, Phone, MessageCircle, Trash2, MapPin, X, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
-import { TbTruckDelivery, TbCoin, TbShieldCheck, TbClock, TbLeaf as TbLeafIcon } from 'react-icons/tb';
 
-// Define types
+// Service images mapping
+const SERVICE_IMAGES: Record<string, string> = {
+  'laundry': '/images/laundry-service.jpg',
+  'dry-cleaning': '/images/dry-cleaning.jpg',
+  'carpet-cleaning': '/images/carpet-cleaning.jpg',
+  'shoe-cleaning': '/images/shoe-cleaning.jpg',
+  'curtain-cleaning': '/images/curtain-cleaning.jpg',
+  'commercial': '/images/commercial-laundry.jpg',
+};
+
 type CategoryType = 'men' | 'women' | 'children' | 'household' | 'carpet' | 'shoes';
 
 interface Category {
@@ -51,7 +59,6 @@ interface Service {
   isActive: boolean;
 }
 
-// Define which categories belong to which service type
 const SERVICE_CATEGORY_MAP: Record<string, CategoryType[]> = {
   'laundry': ['men', 'women', 'children', 'household'],
   'dry-cleaning': ['men', 'women', 'children', 'household'],
@@ -61,7 +68,6 @@ const SERVICE_CATEGORY_MAP: Record<string, CategoryType[]> = {
   'commercial': ['men', 'women', 'household'],
 };
 
-// Default categories with their details
 const ALL_CATEGORIES: Record<CategoryType, Category> = {
   men: { id: 'men', label: 'Men', icon: '👔', description: 'Shirts, pants, suits, and more' },
   women: { id: 'women', label: 'Women', icon: '👗', description: 'Dresses, blouses, skirts, and more' },
@@ -71,7 +77,6 @@ const ALL_CATEGORIES: Record<CategoryType, Category> = {
   shoes: { id: 'shoes', label: 'Shoe Cleaning', icon: '👟', description: 'Premium shoe cleaning and restoration', contactForPricing: true },
 };
 
-// Default items for each category
 const DEFAULT_ITEMS: Record<CategoryType, ServiceItem[]> = {
   men: [
     { _id: 'men-shirts', name: 'T-shirts / Polo Shirts', price: 8, unit: 'piece', description: 'Professional pressing and folding', category: 'men' },
@@ -130,7 +135,7 @@ export default function ServiceOrderPage() {
   const params = useParams();
   const router = useRouter();
   const slug = params.slug as string;
-  const { addToCart, cartItems = [], updateQuantity, removeFromCart, refreshCart } = useCart();
+  const { addToCart, cartItems = [], updateQuantity, removeFromCart, clearCart } = useCart();
   const { sessionId } = useSession();
 
   const [service, setService] = useState<Service | null>(null);
@@ -164,12 +169,6 @@ export default function ServiceOrderPage() {
 
   useEffect(() => {
     fetchServiceAndItems();
-  }, [slug]);
-
-  useEffect(() => {
-    if (slug) {
-      localStorage.setItem('lastVisitedServiceSlug', slug);
-    }
   }, [slug]);
 
   const fetchServiceAndItems = async () => {
@@ -266,6 +265,11 @@ export default function ServiceOrderPage() {
     return localServices[slug] || null;
   };
 
+  const getServiceImage = () => {
+    if (service?.image) return service.image;
+    return SERVICE_IMAGES[service?.category || 'laundry'] || '/images/laundry-service.jpg';
+  };
+
   const getCartItemByOriginalId = (originalItemId: string) => {
     if (!Array.isArray(cartItems)) return null;
     return cartItems.find((item: any) => {
@@ -293,7 +297,7 @@ export default function ServiceOrderPage() {
       quantity: 1,
       category: activeCategory,
       description: item.description,
-      image: service?.image || service?.icon || '',
+      image: getServiceImage(),
       serviceItems: [],
       slug,
       metadata: {
@@ -364,7 +368,7 @@ export default function ServiceOrderPage() {
   };
 
   const handleWhatsAppContact = (item: ServiceItem) => {
-    const phoneNumber = "971501234567";
+    const phoneNumber = "971509259667";
     const message = encodeURIComponent(
       `Hello, I'm interested in pricing for ${service?.name} - ${item.name}. Please share the pricing details.`
     );
@@ -373,7 +377,7 @@ export default function ServiceOrderPage() {
   };
 
   const handleCallContact = () => {
-    window.location.href = `tel:+971501234567`;
+    window.location.href = `tel:+971509259667`;
     setShowContactModal(false);
   };
 
@@ -410,7 +414,7 @@ export default function ServiceOrderPage() {
     }, 1000);
   };
 
-  const clearCart = async () => {
+  const handleClearCart = async () => {
     if (!sessionId) {
       toast.error('Session not initialized');
       return;
@@ -420,7 +424,7 @@ export default function ServiceOrderPage() {
 
     setIsClearingCart(true);
     try {
-      await clearCartFunction();
+      await clearCart();
       toast.success('Cart cleared');
     } catch (err) {
       console.error('Error clearing cart:', err);
@@ -430,26 +434,10 @@ export default function ServiceOrderPage() {
     }
   };
 
-  // Get clearCart from useCart
-  const { clearCart: clearCartFunction } = useCart();
-
   const currentCategory = availableCategories.find(c => c.id === activeCategory);
   const isContactCategory = currentCategory?.contactForPricing || false;
   const currentItems = getCurrentItems();
   const cartItemsCount = Array.isArray(cartItems) ? cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0) : 0;
-
-  const getHeroImage = () => {
-    if (service?.image) return service.image;
-    const imageMap: Record<string, string> = {
-      'laundry': 'https://lh3.googleusercontent.com/aida-public/AB6AXuBaHDEQVLbQfnwFR9_VyvfLd-ko007XGQDbe8hwTsWY87HzOxSF5OEi1VIUhphuEPzTyIEYGuar_lQbl5IcLFr6Dnz7X7Z7pctJxklYiZfa-c9MxeiY35ivv9-1g0LOse4jxv133UHtIinIC088t7NfjZ_PC9rleHHBGmlsZ69ybT_UKrJ4utQTtvinL1UeEgulkfcg2nUWiJ2DIJYYhlitbNGfkogR5s0XfbMFFqM3gQtqlpbRweKf5r0np3KX1dvRGk_0eUCe4tVi',
-      'dry-cleaning': 'https://lh3.googleusercontent.com/aida-public/AB6AXuCDSmGE2TtzW6YVlJMSyDumNuxjDafzBKzMdR4qG3eqVcTjAah0uNIQZPkLuWeHPHol4b4KvmlsPFC_KN3p7tWQBQ6QwwY9XUZtHuIIRZFMG-vCYoyJ0_b_XudUiAoeNPHtFhFaLpyFciaiUZmTUIz8SpnuLdtIr0RiWN6TrQRdNdIb0l8hb8_Ixsen9jOJTPqkeWMIP7psQVAw1npMZJXsAkH52LwBCa_R3N1DEIzyDhvtApslLYMdiQNPrDDyWg663DoZ--vmdfsf',
-      'carpet-cleaning': 'https://lh3.googleusercontent.com/aida-public/AB6AXuBYBa0ieuDAivzAotxiNgiAMrmoECVA1ks4ROokbZsxh4liVfcx2Pb1lWpKSTRPV_45qGjQ0Uz4y79LBIxx6-KAkjcB6d4ka18xLSn8rBWrMXOKDebhuHiJiVUHUQOHIrPw0gb9R-UhGAhEK4uSooNZqU8EGJcCfFU4w3FqWoQ3Es_QriCLgMwCPCs60G7Zq0D4tTMDRhhQyOdhSCKVVbS_NlQaDPLPYUrmT_ANvY58guyVIOe4e96pPzXXCNpM-MHeLGbGmHXJJy2N',
-      'shoe-cleaning': 'https://lh3.googleusercontent.com/aida-public/AB6AXuAyptsqgZUbgwL6Bq4bEsstny-6nDqBiqN5cBGYnfUgzSDXYcQRlm_pDhIj6-7C68tcWLpUVUoyuqYl-KtPTYiEtKvAJKV-rN_GAYoaYWEJWdkhtUtLShsLIqrzAO6qwGzS6zO7N7uSjdF1P9-5EztAjqUgYK-p6ctAHvjW1HY9dOh0XDdiAVOm2igRfKnzzKg7pled4rUzMo9aRGOi5PSI77IxhAP5ks-Hikp_CL0RfODVncfmgpsv7pnnGfj_ibEbUbaBjB1zew3f',
-      'curtain-cleaning': 'https://lh3.googleusercontent.com/aida-public/AB6AXuDP4Fl1mcL71ms-0aDco1bos4KJFJEZx5OQnJIOBWlWluJMOTU3XhoRrxAQvDa2yackx6UDbMN2aeY0HX3vJrKxXZZvOxDngQlZRCw6IC4qNlNInPtj13VA8r8kN-3-D0Jxrt44nDI5JAqB96hap1m-Sa8t_3oq6LroL8Ag9vqpd38eVyGtjT49EfXZUUUEmpo9H8CJRr1964I_IjjhCECEuvi3KYyJIWnmLx6Um420B0z6GG4nyB3DmF5ORn7DB6p1qP9FsFWioqH3',
-      'commercial': 'https://lh3.googleusercontent.com/aida-public/AB6AXuA45R7mYBYS5a_-9pcT1PdHvi75OrnW6SgurkHhCX-fJ_ymGD8x0ZZuqiCo5Rh908iElZhzYe3KP3UjAx1wUQ4w_Gkwp_0eqEpz_6SyRfDVW2dl0ja2MyCknffKUydongro0YT2wxCiDPDXKNyOovJkMUoqOJr4ZA-NfMZLhrLsPSzz1PycN1W0-fHxB0FkSehzYFH-4oAoWgJiJMcL_xJ9Sn_AkpjsLYsdhmJFybGq8Ju4kHUF-wp0f_OGW_HJf2FKgFPDwm8vZA6D',
-    };
-    return imageMap[service?.category || 'laundry'] || '/images/laundry.jpg';
-  };
 
   if (isLoading) {
     return (
@@ -559,11 +547,11 @@ export default function ServiceOrderPage() {
         )}
       </AnimatePresence>
 
-      {/* Hero Section - Matching home page style */}
+      {/* Hero Section - Using service image properly */}
       <div className="relative bg-[#00261b] min-h-[400px] flex items-center">
         <div className="absolute inset-0 opacity-20">
           <img
-            src={getHeroImage()}
+            src={getServiceImage()}
             alt={service.name}
             className="w-full h-full object-cover"
           />
@@ -602,8 +590,8 @@ export default function ServiceOrderPage() {
                     key={category.id}
                     onClick={() => setActiveCategory(category.id)}
                     className={`px-5 py-2 font-medium transition-all rounded-t-lg ${activeCategory === category.id
-                        ? 'text-[#00261b] border-b-2 border-[#00261b] bg-[#bcedd7]/20'
-                        : 'text-[#5c5f5e] hover:text-[#00261b]'
+                      ? 'text-[#00261b] border-b-2 border-[#00261b] bg-[#bcedd7]/20'
+                      : 'text-[#5c5f5e] hover:text-[#00261b]'
                       }`}
                   >
                     <span className="mr-2">{category.icon}</span>
@@ -702,7 +690,7 @@ export default function ServiceOrderPage() {
             )}
           </div>
 
-          {/* Order Summary - Matching home page card style */}
+          {/* Order Summary */}
           <div className="lg:col-span-1">
             <div className="sticky top-24">
               <div className="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100">
@@ -715,7 +703,7 @@ export default function ServiceOrderPage() {
                     </div>
                     {cartItemsCount > 0 && (
                       <button
-                        onClick={clearCart}
+                        onClick={handleClearCart}
                         disabled={isClearingCart}
                         className="text-xs text-[#bcedd7] hover:text-white transition-colors disabled:opacity-50"
                       >
@@ -897,7 +885,7 @@ export default function ServiceOrderPage() {
                       <span className="text-xs text-[#00261b]">Need help?</span>
                     </div>
                     <button
-                      onClick={() => window.open('https://wa.me/971501234567', '_blank')}
+                      onClick={() => window.open('https://wa.me/971509259667', '_blank')}
                       className="text-xs text-[#00261b] font-medium hover:underline"
                     >
                       Chat with us

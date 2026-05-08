@@ -69,9 +69,9 @@ function TrustStrip() {
 // How It Works Component with hover effects
 function HowItWorks() {
   const steps = [
-    { icon: TbWalk, title: 'Pickup', description: 'Schedule a time that fits your lifestyle. Our concierge arrives at your location for a contactless, secure garment collection.' },
-    { icon: TbDeviceImac, title: 'Care Handling', description: 'Each garment is treated based on its DNA. Professional handle for delicate fibers, silk, and high-performance wear.' },
-    { icon: TbBox, title: 'Delivery', description: 'Your wardrobe essentials return fresh, steamed, and ready to use. Packaged sustainably and delivered to your doorstep.' },
+    { icon: TbWalk, title: 'Pickup', description: 'Schedule a pickup at a time that suits you. Your garments, carpets, and shoes are securely collected from your doorstep for a smooth and hassle-free experience.' },
+    { icon: TbDeviceImac, title: 'Care Processing', description: 'Every item is carefully processed using professional cleaning, dry cleaning, ironing, carpet care, and shoe care methods suited to its material and condition.' },
+    { icon: TbBox, title: 'Delivery', description: 'Your items are returned fresh, hygienic, and perfectly finished—carefully packed and delivered back to your doorstep, ready to wear and use.' },
   ];
 
   const sectionRef = useRef(null);
@@ -86,8 +86,8 @@ function HowItWorks() {
           transition={{ duration: 0.6 }}
           className="mb-16  text-center flex flex-col items-center"
         >
-          <h2 className="text-3xl sm:text-4xl font-bold text-[#00261b] mb-4">How it Works</h2>
-          <p className="text-[#5c5f5e] max-w-md">Seamless fabric care from your doorstep back to your wardrobe.</p>
+          <h2 className="text-3xl sm:text-4xl font-bold text-[#00261b] mb-4">HOW IT WORKS</h2>
+          <p className="text-[#5c5f5e] max-w-md">Seamless garment and fabric care with convenient pickup and delivery across Dubai.</p>
         </motion.div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {steps.map((step, idx) => (
@@ -122,42 +122,42 @@ function ServicesGrid() {
     {
       name: 'Wash & Press',
       icon: TbShirt,
-      description: 'Everyday professional wear handled with precision heat and eco-safe detergents.',
+      description: 'Professional washing and pressing for everyday wear and essentials, finished with care for a fresh and polished look.',
       image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBaHDEQVLbQfnwFR9_VyvfLd-ko007XGQDbe8hwTsWY87HzOxSF5OEi1VIUhphuEPzTyIEYGuar_lQbl5IcLFr6Dnz7X7Z7pctJxklYiZfa-c9MxeiY35ivv9-1g0LOse4jxv133UHtIinIC088t7NfjZ_PC9rleHHBGmlsZ69ybT_UKrJ4utQTtvinL1UeEgulkfcg2nUWiJ2DIJYYhlitbNGfkogR5s0XfbMFFqM3gQtqlpbRweKf5r0np3KX1dvRGk_0eUCe4tVi',
       slug: 'wash-and-press-services-in-dubai'
     },
     {
       name: 'Dry Cleaning',
       icon: TbDroplet,
-      description: 'Gentle non-solvent cleaning for your most delicate silks, wools, and tailored suits.',
+      description: 'Premium dry cleaning solutions for delicate fabrics, formal wear, suits, dresses, and specialty garments requiring extra care.',
       image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCDSmGE2TtzW6YVlJMSyDumNuxjDafzBKzMdR4qG3eqVcTjAah0uNIQZPkLuWeHPHol4b4KvmlsPFC_KN3p7tWQBQ6QwwY9XUZtHuIIRZFMG-vCYoyJ0_b_XudUiAoeNPHtFhFaLpyFciaiUZmTUIz8SpnuLdtIr0RiWN6TrQRdNdIb0l8hb8_Ixsen9jOJTPqkeWMIP7psQVAw1npMZJXsAkH52LwBCa_R3N1DEIzyDhvtApslLYMdiQNPrDDyWg663DoZ--vmdfsf',
       slug: 'dry-cleaning-services-in-dubai'
     },
     {
       name: 'Wash & Fold',
       icon: TbFold,
-      description: 'Perfectly folded bulk laundry, saving you hours every week. Ready for the drawer.',
+      description: 'Convenient everyday laundry care, neatly folded and returned fresh, clean, and ready for your wardrobe.',
       image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAyptsqgZUbgwL6Bq4bEsstny-6nDqBiqN5cBGYnfUgzSDXYcQRlm_pDhIj6-7C68tcWLpUVUoyuqYl-KtPTYiEtKvAJKV-rN_GAYoaYWEJWdkhtUtLShsLIqrzAO6qwGzS6zO7N7uSjdF1P9-5EztAjqUgYK-p6ctAHvjW1HY9dOh0XDdiAVOm2igRfKnzzKg7pled4rUzMo9aRGOi5PSI77IxhAP5ks-Hikp_CL0RfODVncfmgpsv7pnnGfj_ibEbUbaBjB1zew3f',
       slug: 'wash-and-fold-services-in-dubai'
     },
     {
-      name: 'Steam Press',
-      icon: TbIroningSteam, // You may need to import a suitable icon (e.g., TbIron, TbTemperature)
-      description: 'Vertical steaming and heavy pressing for items that need that extra crisp finish.',
+      name: 'Steam Ironing',
+      icon: TbIroningSteam,
+      description: 'Professional steam ironing and pressing for garments that require a crisp, smooth, and refined finish.',
       image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBYBa0ieuDAivzAotxiNgiAMrmoECVA1ks4ROokbZsxh4liVfcx2Pb1lWpKSTRPV_45qGjQ0Uz4y79LBIxx6-KAkjcB6d4ka18xLSn8rBWrMXOKDebhuHiJiVUHUQOHIrPw0gb9R-UhGAhEK4uSooNZqU8EGJcCfFU4w3FqWoQ3Es_QriCLgMwCPCs60G7Zq0D4tTMDRhhQyOdhSCKVVbS_NlQaDPLPYUrmT_ANvY58guyVIOe4e96pPzXXCNpM-MHeLGbGmHXJJy2N',
       slug: 'steam-press-services-in-dubai'
     },
     {
       name: 'Shoe Care',
       icon: TbShoe,
-      description: 'Deep cleaning and rejuvenation for leather, suede, and designer footwear.',
+      description: 'Specialized cleaning and care solutions for sneakers, leather shoes, suede, and premium footwear.',
       image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDP4Fl1mcL71ms-0aDco1bos4KJFJEZx5OQnJIOBWlWluJMOTU3XhoRrxAQvDa2yackx6UDbMN2aeY0HX3vJrKxXZZvOxDngQlZRCw6IC4qNlNInPtj13VA8r8kN-3-D0Jxrt44nDI5JAqB96hap1m-Sa8t_3oq6LroL8Ag9vqpd38eVyGtjT49EfXZUUUEmpo9H8CJRr1964I_IjjhCECEuvi3KYyJIWnmLx6Um420B0z6GG4nyB3DmF5ORn7DB6p1qP9FsFWioqH3',
       slug: 'shoe-care-services-in-dubai'
     },
     {
       name: 'Carpet Care',
       icon: TbLayoutGrid,
-      description: 'Industrial-grade extraction cleaning for rugs and carpets to remove deep-seated allergens.',
+      description: 'Professional carpet and rug care designed to help maintain freshness, cleanliness, and fabric quality for your home essentials.',
       image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA45R7mYBYS5a_-9pcT1PdHvi75OrnW6SgurkHhCX-fJ_ymGD8x0ZZuqiCo5Rh908iElZhzYe3KP3UjAx1wUQ4w_Gkwp_0eqEpz_6SyRfDVW2dl0ja2MyCknffKUydongro0YT2wxCiDPDXKNyOovJkMUoqOJr4ZA-NfMZLhrLsPSzz1PycN1W0-fHxB0FkSehzYFH-4oAoWgJiJMcL_xJ9Sn_AkpjsLYsdhmJFybGq8Ju4kHUF-wp0f_OGW_HJf2FKgFPDwm8vZA6D',
       slug: 'carpet-care-services-in-dubai'
     },
@@ -175,8 +175,8 @@ function ServicesGrid() {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <h2 className="text-3xl sm:text-4xl font-bold text-[#00261b] mb-4">Our Specialized Services</h2>
-          <p className="text-[#5c5f5e] max-w-lg mx-auto">Comprehensive care for everything from your daily essentials to your home's foundation.</p>
+          <h2 className="text-3xl sm:text-4xl font-bold text-[#00261b] mb-4">PREMIUM CARE SERVICES</h2>
+          <p className="text-[#5c5f5e] max-w-lg mx-auto">Comprehensive garment, fabric, shoe, and carpet care with convenient pickup and delivery across Dubai.</p>
         </motion.div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {services.map((service, idx) => (
@@ -234,10 +234,10 @@ function CommercialSection() {
   const isInView = useInView(sectionRef, { once: true, amount: 0.2 });
 
   const features = [
-    { icon: TbBuilding, title: 'Hotels & Spas', desc: 'Crisp linens and plush towels.' },
-    { icon: TbBuildingStore, title: 'Restaurants', desc: 'Spotless table linens and uniforms.' },
-    { icon: TbCalendarEvent, title: 'Events', desc: 'Rapid turnaround for galas.' },
-    { icon: TbBriefcase, title: 'Offices', desc: 'Staff uniform programs.' },
+    { icon: TbBuilding, title: 'Hotels & Spas', desc: 'Fresh linens, towels, and guest essentials maintained to premium hospitality standards.' },
+    { icon: TbBuildingStore, title: 'Restaurants', desc: 'Professional care for table linens, uniforms, and hospitality fabrics.' },
+    { icon: TbCalendarEvent, title: 'Events & Catering', desc: 'Reliable fabric and garment care support for events and special occasions.' },
+    { icon: TbBriefcase, title: 'Corporate & Offices', desc: 'Convenient uniform and fabric care solutions for workplaces and teams.' },
   ];
 
   return (
@@ -248,8 +248,8 @@ function CommercialSection() {
           animate={isInView ? { opacity: 1, x: 0 } : {}}
           transition={{ duration: 0.6 }}
         >
-          <h2 className="text-3xl sm:text-4xl font-bold mb-6 leading-tight">Elevating Hospitality Standards</h2>
-          <p className="text-[#79a894] text-lg mb-8 leading-relaxed">Laundrica provides scalable, high-volume laundry solutions for Dubai's premier businesses. From boutique hotels to bustling corporate offices, we ensure your brand's textile quality never wavers.</p>
+          <h2 className="text-3xl sm:text-4xl font-bold mb-6 leading-tight">COMMERCIAL CARE SOLUTIONS</h2>
+          <p className="text-[#79a894] text-lg mb-8 leading-relaxed">Scalable garment and fabric care solutions for businesses across Dubai. Laundrica supports hospitality, corporate, and commercial requirements with reliable pickup, delivery, and professionally managed care services designed to maintain consistent quality and presentation.</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10">
             {features.map((feature, idx) => (
               <motion.div
@@ -298,12 +298,12 @@ function CommercialSection() {
 // Why Laundrica Section with hover effects
 function WhyLaundrica() {
   const benefits = [
-    { text: 'Fabric-appropriate handling', desc: 'Every item is sorted by fiber type and color to prevent degradation.' },
-    { text: 'Consistent quality checks', desc: 'Three-stage inspection process before any item is cleared for delivery.' },
-    { text: 'Reliable turnaround time', desc: 'Real-time tracking and delivery windows that we actually stick to.' },
-    { text: 'Easy pickup & delivery', desc: 'Simple app-based scheduling with zero hidden logistics fees.' },
-    { text: 'Everyday usability', desc: 'Premium care priced for regular use, not just special occasions.' },
-    { text: 'Business scalability', desc: 'Support infrastructure built to grow with your personal or business needs.' },
+    { text: 'Fabric-appropriate handling', desc: 'Every item is carefully sorted based on fabric type and color to ensure safe and consistent care.' },
+    { text: 'Consistent quality checks', desc: 'Each order goes through multiple inspection steps before being prepared for delivery.' },
+    { text: 'Reliable turnaround time', desc: 'Structured pickup and delivery schedules designed for consistency and convenience.' },
+    { text: 'Easy pickup & delivery', desc: 'Simple scheduling with doorstep collection and delivery across Dubai.' },
+    { text: 'Everyday usability', desc: 'Premium care designed for regular use with accessible and transparent pricing.' },
+    { text: 'Scalable service support', desc: 'Built to handle individual, family, and business requirements with ease across Dubai.' },
   ];
 
   const sectionRef = useRef(null);
@@ -319,8 +319,8 @@ function WhyLaundrica() {
             transition={{ duration: 0.6 }}
             className="lg:w-1/3"
           >
-            <h2 className="text-3xl sm:text-4xl font-bold text-[#00261b] mb-6">The Laundrica Standard</h2>
-            <p className="text-[#5c5f5e] leading-relaxed">Why leading residences in Downtown and Marina trust our care.</p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-[#00261b] mb-6">THE LAUNDRICA STANDARD</h2>
+            <p className="text-[#5c5f5e] leading-relaxed">Why customers across Dubai trust our care.</p>
           </motion.div>
           <motion.div
             initial={{ opacity: 0, x: 30 }}
@@ -374,9 +374,11 @@ function AboutSection() {
             />
           </motion.div>
           <div className="lg:w-1/2">
-            <h2 className="text-3xl sm:text-4xl font-bold text-[#00261b] mb-6 group-hover:text-emerald-700 transition-colors">Redefining Fabric Care in Dubai</h2>
-            <p className="text-lg text-[#5c5f5e] mb-6 leading-relaxed">Born from the need for a truly seamless fabric care experience in Dubai's fast-paced environment, Laundrica combines traditional craftsmanship with modern logistics. We believe that caring for your clothes is an act of preserving your personal identity.</p>
-            <p className="text-base text-[#5c5f5e] leading-relaxed">Our facility in Al Quoz is equipped with the latest in European laundry technology, operated by technicians who understand the soul of textiles. We don't just wash clothes; we restore them.</p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-[#00261b] mb-6 group-hover:text-emerald-700 transition-colors">ABOUT LAUNDRICA</h2>
+            <p className="text-lg text-[#5c5f5e] mb-6 leading-relaxed">Premium Laundry Service in Dubai | Pickup & Delivery</p>
+            <p className="text-base text-[#5c5f5e] leading-relaxed">Laundrica is a premium laundry service in Dubai offering convenient laundry pickup and delivery across the city for washing, dry cleaning, wash & fold, ironing, carpet care, and shoe cleaning. We provide reliable laundry pickup and delivery in Dubai designed for modern lifestyles, ensuring every garment and fabric item is handled with care and returned fresh, clean, and ready to use.</p>
+            <p className="text-base text-[#5c5f5e] leading-relaxed mt-4">We specialize in laundry service Dubai and laundry pickup and delivery Dubai solutions that combine convenience, affordability, and premium garment care for individuals, families, and businesses across the UAE.</p>
+            <p className="text-base text-[#5c5f5e] leading-relaxed mt-4">From everyday wash and fold laundry in Dubai to professional dry cleaning, steam ironing, carpet cleaning, and shoe care services, Laundrica delivers consistent quality and a seamless laundry pickup experience across Dubai.</p>
           </div>
         </motion.div>
       </div>
@@ -461,8 +463,8 @@ function CTASection() {
             />
           </div>
           <div className="relative z-10">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl text-white font-bold mb-6 group-hover:scale-105 transition-transform duration-500">Book Your Service Today</h2>
-            <p className="text-[#79a894] text-lg mb-10 max-w-xl mx-auto group-hover:text-white/80 transition-colors">Experience the invisible luxury of professional fabric care. Fast, reliable, and just a click away.</p>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl text-white font-bold mb-6 group-hover:scale-105 transition-transform duration-500">BOOK YOUR SERVICE TODAY</h2>
+            <p className="text-[#79a894] text-lg mb-10 max-w-xl mx-auto group-hover:text-white/80 transition-colors">Experience effortless fabric care with premium laundry and dry cleaning pickup & delivery across Dubai. Fast, reliable, and designed for everyday convenience—schedule your pickup in just a few clicks and enjoy fresh, perfectly finished garments delivered to your doorstep.</p>
             <div className="flex flex-wrap justify-center gap-4">
               <Link href="/services">
                 <motion.button
@@ -511,8 +513,8 @@ function HeroSection() {
           >
             Premium Care in Dubai
           </motion.span>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#00261b] mb-6 leading-tight">Fabric Care, Effortlessly Delivered</h1>
-          <p className="text-lg text-[#5c5f5e] mb-8 max-w-lg">Luxury freshness within reach. We handle your most delicate garments with precision, ensuring they return to you in pristine condition.</p>
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#00261b] mb-6 leading-tight">Premium Laundry & Dry Cleaning Pickup & Delivery in Dubai</h1>
+          <p className="text-lg text-[#5c5f5e] mb-8 max-w-lg">Luxury freshness within reach. Premium garment and fabric care at affordable prices with professional washing, dry cleaning, stain removal, ironing, carpet care, and shoe care services. Every item is handled with expert care and attention, ensuring it is returned fresh, hygienic, and perfectly finished—delivered straight to your doorstep anywhere in Dubai.</p>
           <div className="flex flex-wrap gap-4 mb-10">
             <Link href="/services">
               <motion.button
@@ -537,12 +539,12 @@ function HeroSection() {
           <div className="space-y-5 pt-5 border-t border-gray-100">
             <div>
               <p className="text-xs uppercase tracking-wider text-gray-400 font-bold mb-2">Our Services</p>
-              <p className="text-sm font-medium text-[#00261b]/70">Wash & Press • Dry Cleaning • Wash & Fold • Steam Press • Shoe Care • Carpet Care</p>
+              <p className="text-sm font-medium text-[#00261b]/70">Wash & Press • Dry Cleaning • Wash & Fold • Steam Ironing • Shoe Care • Carpet Care</p>
             </div>
             <div>
               <p className="text-xs uppercase tracking-wider text-gray-400 font-bold mb-2">The Process</p>
               <p className="text-sm font-medium text-[#00261b] flex items-center gap-2 flex-wrap">
-                Pickup <TbArrowRight className="text-xs" /> Care Handling <TbArrowRight className="text-xs" /> Quality Check <TbArrowRight className="text-xs" /> Delivery
+                Pickup <TbArrowRight className="text-xs" /> Care Processing <TbArrowRight className="text-xs" /> Quality Check <TbArrowRight className="text-xs" /> Delivery
               </p>
             </div>
           </div>

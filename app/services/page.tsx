@@ -24,7 +24,18 @@ interface Service {
   isActive: boolean;
   isFeatured: boolean;
   sortOrder: number;
+  image?: string;
 }
+
+// Service images mapping
+const SERVICE_IMAGES: Record<string, string> = {
+  'laundry': '/images/laundry-service.jpg',
+  'dry-cleaning': '/images/dry-cleaning.jpg',
+  'carpet-cleaning': '/images/carpet-cleaning.jpg',
+  'shoe-cleaning': '/images/shoe-cleaning.jpg',
+  'curtain-cleaning': '/images/curtain-cleaning.jpg',
+  'commercial': '/images/commercial-laundry.jpg',
+};
 
 export default function ServicesPage() {
   const [services, setServices] = useState<Service[]>([]);
@@ -74,6 +85,13 @@ export default function ServicesPage() {
       'curtain-cleaning': 'Curtains', 'commercial': 'Commercial',
     };
     return labelMap[category] || category;
+  };
+
+  const getServiceImage = (service: Service) => {
+    // Use service's own image if available
+    if (service.image) return service.image;
+    // Otherwise use mapped image based on category
+    return SERVICE_IMAGES[service.category] || '/images/laundry-service.jpg';
   };
 
   const handleWhatsAppOrder = () => {
@@ -157,8 +175,8 @@ export default function ServicesPage() {
             <AnimatePresence mode="wait">
               {selectedService && (
                 <motion.div key={selectedService._id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.3 }} className="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100">
-                  {/* Service Header - Premium Gradient */}
-                  <div className="relative h-48 bg-cover bg-center" style={{ backgroundImage: `url('/images/${selectedService.category}.jpg')` }}>
+                  {/* Service Header - Using service's own image */}
+                  <div className="relative h-48 bg-cover bg-center" style={{ backgroundImage: `url('${getServiceImage(selectedService)}')` }}>
                     <div className="absolute inset-0 bg-gradient-to-r from-[#00261b]/90 to-[#00261b]/40" />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#00261b]/60 to-transparent" />
                     <div className="relative z-10 p-6 h-full flex flex-col justify-end">
