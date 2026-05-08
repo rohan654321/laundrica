@@ -7,12 +7,14 @@ import { useCart } from '@/context/cart-context';
 import { ShoppingCart, Menu, X, Sparkles, ChevronDown } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { usePathname } from 'next/navigation';
 
 export function Header() {
   const { cartItems } = useCart();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const pathname = usePathname();
 
   const servicesDropdownRef = useRef<HTMLDivElement>(null);
   const bookDropdownRef = useRef<HTMLDivElement>(null);
@@ -40,6 +42,43 @@ export function Header() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [openDropdown]);
 
+  // Smooth scroll function
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      const headerOffset = 80; // Height of sticky header
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  // Handle navigation with smooth scrolling for homepage links
+  const handleNavClick = (href: string, sectionId?: string) => {
+    setIsMenuOpen(false);
+    setOpenDropdown(null);
+
+    if (pathname === '/') {
+      // If on homepage, scroll to section or navigate
+      if (sectionId) {
+        scrollToSection(sectionId);
+      } else {
+        window.location.href = href;
+      }
+    } else {
+      // If on another page, navigate to homepage with section hash
+      if (sectionId) {
+        window.location.href = `/#${sectionId}`;
+      } else {
+        window.location.href = href;
+      }
+    }
+  };
+
   // Updated service links with your actual services and slugs
   const serviceLinks = [
     { href: '/services/wash-and-press-services-in-dubai/orders', label: 'Wash & Press' },
@@ -56,9 +95,9 @@ export function Header() {
   ];
 
   const navLinks = [
-    { href: '/pricing', label: 'Pricing' },
-    { href: '/about', label: 'About Us' },
-    { href: '/contact', label: 'Contact' },
+    { href: '/pricing', label: 'Pricing', sectionId: null },
+    { href: '/about', label: 'About Us', sectionId: 'about' },
+    { href: '/contact', label: 'Contact', sectionId: null },
   ];
 
   return (
@@ -118,13 +157,23 @@ export function Header() {
                 </AnimatePresence>
               </div>
               {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="relative px-1 py-2 text-gray-600 hover:text-emerald-900 font-medium transition-colors duration-300 text-sm tracking-tight"
-                >
-                  {link.label}
-                </Link>
+                link.sectionId ? (
+                  <button
+                    key={link.href}
+                    onClick={() => handleNavClick(link.href, link.sectionId!)}
+                    className="relative px-1 py-2 text-gray-600 hover:text-emerald-900 font-medium transition-colors duration-300 text-sm tracking-tight cursor-pointer"
+                  >
+                    {link.label}
+                  </button>
+                ) : (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="relative px-1 py-2 text-gray-600 hover:text-emerald-900 font-medium transition-colors duration-300 text-sm tracking-tight"
+                  >
+                    {link.label}
+                  </Link>
+                )
               ))}
             </nav>
 
@@ -215,14 +264,24 @@ export function Header() {
             >
               <div className="p-4 flex flex-col gap-2">
                 {navLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className="px-4 py-3 text-gray-700 hover:text-emerald-900 hover:bg-emerald-50 font-medium transition-all rounded-lg"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {link.label}
-                  </Link>
+                  link.sectionId ? (
+                    <button
+                      key={link.href}
+                      onClick={() => handleNavClick(link.href, link.sectionId!)}
+                      className="px-4 py-3 text-gray-700 hover:text-emerald-900 hover:bg-emerald-50 font-medium transition-all rounded-lg text-left"
+                    >
+                      {link.label}
+                    </button>
+                  ) : (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      className="px-4 py-3 text-gray-700 hover:text-emerald-900 hover:bg-emerald-50 font-medium transition-all rounded-lg"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {link.label}
+                    </Link>
+                  )
                 ))}
 
                 {/* Mobile Services Section */}
