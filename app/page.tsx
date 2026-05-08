@@ -137,21 +137,21 @@ function ServicesGrid() {
       name: 'Wash & Fold',
       icon: TbFold,
       description: 'Convenient everyday laundry care, neatly folded and returned fresh, clean, and ready for your wardrobe.',
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAyptsqgZUbgwL6Bq4bEsstny-6nDqBiqN5cBGYnfUgzSDXYcQRlm_pDhIj6-7C68tcWLpUVUoyuqYl-KtPTYiEtKvAJKV-rN_GAYoaYWEJWdkhtUtLShsLIqrzAO6qwGzS6zO7N7uSjdF1P9-5EztAjqUgYK-p6ctAHvjW1HY9dOh0XDdiAVOm2igRfKnzzKg7pled4rUzMo9aRGOi5PSI77IxhAP5ks-Hikp_CL0RfODVncfmgpsv7pnnGfj_ibEbUbaBjB1zew3f',
-      slug: 'wash-and-fold-services-in-dubai'
+      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDP4Fl1mcL71ms-0aDco1bos4KJFJEZx5OQnJIOBWlWluJMOTU3XhoRrxAQvDa2yackx6UDbMN2aeY0HX3vJrKxXZZvOxDngQlZRCw6IC4qNlNInPtj13VA8r8kN-3-D0Jxrt44nDI5JAqB96hap1m-Sa8t_3oq6LroL8Ag9vqpd38eVyGtjT49EfXZUUUEmpo9H8CJRr1964I_IjjhCECEuvi3KYyJIWnmLx6Um420B0z6GG4nyB3DmF5ORn7DB6p1qP9FsFWioqH3',      slug: 'wash-and-fold-services-in-dubai'
     },
     {
       name: 'Steam Ironing',
       icon: TbIroningSteam,
       description: 'Professional steam ironing and pressing for garments that require a crisp, smooth, and refined finish.',
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBYBa0ieuDAivzAotxiNgiAMrmoECVA1ks4ROokbZsxh4liVfcx2Pb1lWpKSTRPV_45qGjQ0Uz4y79LBIxx6-KAkjcB6d4ka18xLSn8rBWrMXOKDebhuHiJiVUHUQOHIrPw0gb9R-UhGAhEK4uSooNZqU8EGJcCfFU4w3FqWoQ3Es_QriCLgMwCPCs60G7Zq0D4tTMDRhhQyOdhSCKVVbS_NlQaDPLPYUrmT_ANvY58guyVIOe4e96pPzXXCNpM-MHeLGbGmHXJJy2N',
+      image: 'https://static.vecteezy.com/system/resources/thumbnails/075/548/139/small/closeup-electric-steam-iron-pressing-blue-shirt-with-powerful-vapor-mist-photo.jpeg',
       slug: 'steam-press-services-in-dubai'
     },
     {
       name: 'Shoe Care',
       icon: TbShoe,
       description: 'Specialized cleaning and care solutions for sneakers, leather shoes, suede, and premium footwear.',
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDP4Fl1mcL71ms-0aDco1bos4KJFJEZx5OQnJIOBWlWluJMOTU3XhoRrxAQvDa2yackx6UDbMN2aeY0HX3vJrKxXZZvOxDngQlZRCw6IC4qNlNInPtj13VA8r8kN-3-D0Jxrt44nDI5JAqB96hap1m-Sa8t_3oq6LroL8Ag9vqpd38eVyGtjT49EfXZUUUEmpo9H8CJRr1964I_IjjhCECEuvi3KYyJIWnmLx6Um420B0z6GG4nyB3DmF5ORn7DB6p1qP9FsFWioqH3',
+      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAyptsqgZUbgwL6Bq4bEsstny-6nDqBiqN5cBGYnfUgzSDXYcQRlm_pDhIj6-7C68tcWLpUVUoyuqYl-KtPTYiEtKvAJKV-rN_GAYoaYWEJWdkhtUtLShsLIqrzAO6qwGzS6zO7N7uSjdF1P9-5EztAjqUgYK-p6ctAHvjW1HY9dOh0XDdiAVOm2igRfKnzzKg7pled4rUzMo9aRGOi5PSI77IxhAP5ks-Hikp_CL0RfODVncfmgpsv7pnnGfj_ibEbUbaBjB1zew3f',
+
       slug: 'shoe-care-services-in-dubai'
     },
     {
