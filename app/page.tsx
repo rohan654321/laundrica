@@ -1,4 +1,3 @@
-// app/page.tsx
 'use client';
 
 import { motion, useInView } from 'framer-motion';
