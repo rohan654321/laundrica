@@ -158,7 +158,7 @@ function ServicesGrid() {
       name: 'Carpet Care',
       icon: TbLayoutGrid,
       description: 'Professional carpet and rug care designed to help maintain freshness, cleanliness, and fabric quality for your home essentials.',
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA45R7mYBYS5a_-9pcT1PdHvi75OrnW6SgurkHhCX-fJ_ymGD8x0ZZuqiCo5Rh908iElZhzYe3KP3UjAx1wUQ4w_Gkwp_0eqEpz_6SyRfDVW2dl0ja2MyCknffKUydongro0YT2wxCiDPDXKNyOovJkMUoqOJr4ZA-NfMZLhrLsPSzz1PycN1W0-fHxB0FkSehzYFH-4oAoWgJiJMcL_xJ9Sn_AkpjsLYsdhmJFybGq8Ju4kHUF-wp0f_OGW_HJf2FKgFPDwm8vZA6D',
+      image: '/images/carpet.png',
       slug: 'carpet-care-services-in-dubai'
     },
   ];
