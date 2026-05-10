@@ -374,16 +374,39 @@ function AboutSection() {
             />
           </motion.div>
           <div className="lg:w-1/2">
-            <h2 className="text-3xl sm:text-4xl font-bold text-[#00261b] mb-6 group-hover:text-emerald-700 transition-colors">ABOUT LAUNDRICA</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold text-[#00261b] mb-6">ABOUT LAUNDRICA</h2>
             <p className="text-lg text-[#5c5f5e] mb-6 leading-relaxed">Premium Laundry Service in Dubai | Pickup & Delivery</p>
             <p className="text-base text-[#5c5f5e] leading-relaxed">Laundrica is a premium laundry service in Dubai offering convenient laundry pickup and delivery across the city for washing, dry cleaning, wash & fold, ironing, carpet care, and shoe cleaning. We provide reliable laundry pickup and delivery in Dubai designed for modern lifestyles, ensuring every garment and fabric item is handled with care and returned fresh, clean, and ready to use.</p>
             <p className="text-base text-[#5c5f5e] leading-relaxed mt-4">We specialize in laundry service Dubai and laundry pickup and delivery Dubai solutions that combine convenience, affordability, and premium garment care for individuals, families, and businesses across the UAE.</p>
             <p className="text-base text-[#5c5f5e] leading-relaxed mt-4">From everyday wash and fold laundry in Dubai to professional dry cleaning, steam ironing, carpet cleaning, and shoe care services, Laundrica delivers consistent quality and a seamless laundry pickup experience across Dubai.</p>
+
+            {/* Buttons moved inside the content column */}
+            <div className="flex flex-wrap gap-4 mt-10">
+              <Link href="/services">
+                <motion.button
+                  className="px-6 sm:px-8 py-3.5 bg-[#00261b] text-white rounded-xl font-semibold hover:opacity-90 transition cursor-pointer"
+                  whileHover={{ scale: 1.05, y: -3 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Online Booking
+                </motion.button>
+              </Link>
+              <a href="https://wa.me/971XXXXXXXXX" target="_blank" rel="noopener noreferrer">
+                <motion.button
+                  className="px-6 sm:px-8 py-3.5 bg-white border border-gray-200 text-[#00261b] rounded-xl font-semibold hover:bg-gray-50 transition flex items-center gap-2 cursor-pointer"
+                  whileHover={{ scale: 1.05, y: -3 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <FaWhatsapp className="text-emerald-600 text-xl" />
+                  WhatsApp Booking
+                </motion.button>
+              </a>
+            </div>
           </div>
         </motion.div>
       </div>
     </section>
-  );
+  )
 }
 
 // Testimonials Section with hover effects
