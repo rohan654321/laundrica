@@ -6,24 +6,24 @@ import Image from "next/image";
 
 export function Footer() {
   const serviceLinks = [
-    { href: "/services/express-wash-press", label: "Wash & Press" },
-    { href: "/services/dry-cleaning", label: "Dry Cleaning" },
-    { href: "/services/wash-and-fold", label: "Wash & Fold" },
-    { href: "/services/steam-press", label: "Steam Press" },
+    { href: "/services/wash-and-press-services-in-dubai/orders", label: "Wash & Press" },
+    { href: "/services/dry-cleaning-services-in-dubai/orders", label: "Dry Cleaning" },
+    { href: "/services/wash-and-fold-services-in-dubai/orders", label: "Wash & Fold" },
+    { href: "/services/steam-press-services-in-dubai/orders", label: "Steam Press" },
   ];
 
   const specialtyLinks = [
-    { href: "/services/shoe-care", label: "Shoe Care" },
-    { href: "/services/carpet-care", label: "Carpet Care" },
-    { href: "/services/commercial-laundry", label: "Commercial Laundry" },
-    { href: "/services/wedding-dress", label: "Wedding Dress Care" },
+    { href: "/services/shoe-care-services-in-dubai/orders", label: "Shoe Care" },
+    { href: "/services/carpet-care-services-in-dubai/orders", label: "Carpet Care" },
+    // { href: "/services/commercial-laundry", label: "Commercial Laundry" },
+    // { href: "/services/wedding-dress", label: "Wedding Dress Care" },
   ];
 
   const companyLinks = [
     { href: "/privacy", label: "Privacy Policy" },
     { href: "/terms", label: "Terms of Service" },
     { href: "/contact", label: "Contact Us" },
-    { href: "/about", label: "About Us" },
+    { href: "/#about", label: "About Us" },
   ];
 
   return (

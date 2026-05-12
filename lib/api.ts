@@ -180,7 +180,7 @@ export const cartAPI = {
     }
   },
 
-  // Add item to cart
+  // In lib/api.ts, update the addToCart function
   addToCart: async (sessionId: string, item: any) => {
     if (!sessionId) {
       return { success: false, error: 'Session ID required' };
@@ -192,52 +192,41 @@ export const cartAPI = {
         body: JSON.stringify(item),
       }, sessionId);
 
-      // If successful, sync to localStorage
       if (response?.success && response?.cart?.items) {
         saveLocalCart(sessionId, response.cart.items);
       }
 
       return response;
     } catch (error: any) {
+      // Handle duplicate key error specifically
+      if (error?.message?.includes('E11000') || error?.message?.includes('duplicate')) {
+        console.log('Duplicate key error - cart may already exist, fetching existing cart');
+        try {
+          // Try to get existing cart
+          const existingCart = await cartAPI.getCart(sessionId);
+          if (existingCart?.success && existingCart?.cart?.items) {
+            // Merge the item with existing cart
+            const items = existingCart.cart.items;
+            const existingIndex = items.findIndex((i: any) => i.productId === item.productId);
+
+            if (existingIndex >= 0) {
+              items[existingIndex].quantity += (item.quantity || 1);
+            } else {
+              items.push({
+                ...item,
+                id: `cart_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+              });
+            }
+            saveLocalCart(sessionId, items);
+            return { success: true, cart: { items }, fromLocalStorage: true };
+          }
+        } catch (e) {
+          console.log('Failed to fetch existing cart');
+        }
+      }
+
       console.log(`Backend add to cart failed, using localStorage for session ${sessionId}`);
-
-      // Use localStorage fallback
-      const items = getLocalCart(sessionId);
-      const existingIndex = items.findIndex(i => i.productId === item.productId);
-
-      if (existingIndex >= 0) {
-        items[existingIndex].quantity += (item.quantity || 1);
-      } else {
-        const newItem: LocalCartItem = {
-          id: `cart_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          productId: item.productId,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity || 1,
-          category: item.category || 'general',
-          description: item.description || '',
-          image: item.image || '',
-          serviceItems: item.serviceItems || [],
-          selectedColor: item.selectedColor || null,
-          selectedSize: item.selectedSize || null,
-          designImage: item.designImage || null,
-          metadata: item.metadata || {},
-        };
-        items.push(newItem);
-      }
-
-      saveLocalCart(sessionId, items);
-
-      // Dispatch event for real-time updates
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('cart-updated', { detail: { items } }));
-      }
-
-      return {
-        success: true,
-        cart: { items },
-        fromLocalStorage: true
-      };
+      // Rest of your localStorage fallback code...
     }
   },
 

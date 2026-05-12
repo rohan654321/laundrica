@@ -263,32 +263,27 @@ export function Header() {
               className="lg:hidden bg-white border-t border-gray-100"
             >
               <div className="p-4 flex flex-col gap-2">
-            {navLinks.map((link) => (
-  link.sectionId ? (
-    <button
-      key={link.href}
-      onClick={() => {
-        setIsMenuOpen(false);
+                {navLinks.map((link) => (
+                  link.sectionId ? (
+                    <button
+                      key={link.href}
+                      onClick={() => handleNavClick(link.href, link.sectionId!)}
+                      className="px-4 py-3 text-gray-700 hover:text-emerald-900 hover:bg-emerald-50 font-medium transition-all rounded-lg text-left"
+                    >
+                      {link.label}
+                    </button>
+                  ) : (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      className="px-4 py-3 text-gray-700 hover:text-emerald-900 hover:bg-emerald-50 font-medium transition-all rounded-lg"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {link.label}
+                    </Link>
+                  )
+                ))}
 
-        setTimeout(() => {
-          handleNavClick(link.href, link.sectionId!);
-        }, 300);
-      }}
-      className="px-4 py-3 text-gray-700 hover:text-emerald-900 hover:bg-emerald-50 font-medium transition-all rounded-lg text-left"
-    >
-      {link.label}
-    </button>
-  ) : (
-    <Link
-      key={link.href}
-      href={link.href}
-      className="px-4 py-3 text-gray-700 hover:text-emerald-900 hover:bg-emerald-50 font-medium transition-all rounded-lg"
-      onClick={() => setIsMenuOpen(false)}
-    >
-      {link.label}
-    </Link>
-  )
-))}
                 {/* Mobile Services Section */}
                 <div className="px-4 py-2">
                   <p className="text-xs uppercase tracking-wider text-gray-400 font-semibold mb-2">Our Services</p>

@@ -3,7 +3,7 @@
 
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
-import { Mail, Phone, MapPin, Clock, Globe, Instagram, Facebook, Twitter, ArrowRight, Sparkles, CheckCircle, MessageCircle, Send } from 'lucide-react';
+import { Mail, Phone, MapPin, Clock, Globe, Instagram, Facebook, Twitter, ArrowRight, Sparkles, CheckCircle, MessageCircle, Send, Music2 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { motion, useInView } from 'framer-motion';
@@ -82,12 +82,7 @@ export default function ContactPage() {
                 <p className="text-xs uppercase tracking-wider text-gray-400 font-bold mb-2">Response Time</p>
                 <p className="text-sm font-medium text-[#00261b]/70">Our team will get back to you within 24 hours</p>
               </div>
-              <div>
-                <p className="text-xs uppercase tracking-wider text-gray-400 font-bold mb-2">Service Area</p>
-                <p className="text-sm font-medium text-[#00261b] flex items-center gap-2 flex-wrap">
-                  Dubai • Marina • Downtown • JLT • Palm Jumeirah • Business Bay
-                </p>
-              </div>
+    
             </div>
           </motion.div>
 
@@ -104,7 +99,7 @@ export default function ContactPage() {
                 </div>
                 <h3 className="text-2xl font-bold text-[#00261b]">24/7 Support</h3>
                 <p className="text-[#5c5f5e] mt-2">support@laundrica.com</p>
-                <p className="text-[#5c5f5e]">+971 50 925 9667</p>
+                <p className="text-[#5c5f5e]">+971 050 820 3555</p>
               </div>
             </div>
             <div className="absolute -bottom-6 -right-6 bg-white p-5 rounded-2xl shadow-xl max-w-[200px]">
@@ -122,24 +117,24 @@ export default function ContactPage() {
 
       {/* Contact Cards Section */}
       <section className="py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.2 }}
             variants={staggerContainer}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 place-items-center"
           >
             {[
-              { icon: Phone, title: 'Phone', details: ['+971 50 925 9667', '+971 4 123 4567'], subtitle: 'Mon-Sun, 8AM - 10PM', color: 'bg-blue-50', iconColor: 'text-blue-600' },
-              { icon: Mail, title: 'Email', details: ['support@laundrica.com', 'care@laundrica.com'], subtitle: '24/7 Support', color: 'bg-emerald-50', iconColor: 'text-emerald-600' },
-              { icon: MapPin, title: 'Visit Us', details: ['Azizi Riviera 42', 'Meydan, Dubai'], subtitle: 'Get Directions →', color: 'bg-amber-50', iconColor: 'text-amber-600' },
-              { icon: Clock, title: 'Business Hours', details: ['Mon-Fri: 8AM - 10PM', 'Sat-Sun: 9AM - 8PM'], subtitle: 'Open 7 Days a Week', color: 'bg-purple-50', iconColor: 'text-purple-600' },
+              { icon: Phone, title: 'Phone', details: ['+971 050 820 3555'], subtitle: 'Mon-Sat, 10AM - 10PM', color: 'bg-blue-50', iconColor: 'text-blue-600' },
+              { icon: Mail, title: 'Email', details: ['support@laundrica.com',], subtitle: '24/7 Support', color: 'bg-emerald-50', iconColor: 'text-emerald-600' },
+              // { icon: MapPin, title: 'Visit Us', details: ['Azizi Riviera 42', 'Meydan, Dubai'], subtitle: 'Get Directions →', color: 'bg-amber-50', iconColor: 'text-amber-600' },
+              { icon: Clock, title: 'Business Hours', details: ['Mon-Sat: 10AM - 10PM', 'Sun: 12PM - 10PM'], subtitle: 'Open 7 Days a Week', color: 'bg-purple-50', iconColor: 'text-purple-600' },
             ].map((item, idx) => (
               <motion.div
                 key={idx}
                 variants={fadeInUp}
-                className="bg-white rounded-2xl p-6 text-center shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-100"
+                className="w-full h-full flex flex-col justify-between bg-white rounded-2xl p-6 text-center shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-100"
               >
                 <div className={`w-14 h-14 ${item.color} rounded-xl flex items-center justify-center mx-auto mb-4`}>
                   <item.icon className={`w-7 h-7 ${item.iconColor}`} />
@@ -158,43 +153,8 @@ export default function ContactPage() {
       {/* Map and Social Section */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12">
-            {/* Map */}
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-            >
-              <span className="inline-block px-4 py-1.5 bg-[#bcedd7] text-[#214f3f] rounded-full text-sm mb-4">Location</span>
-              <h2 className="text-3xl font-bold text-[#00261b] mb-4">Find Us Here</h2>
-              <p className="text-gray-600 mb-6 leading-relaxed">
-                Visit our flagship location in Azizi Riviera, Meydan. Free pickup & delivery available across Dubai.
-              </p>
-              <div className="rounded-2xl overflow-hidden shadow-xl border border-gray-100">
-                <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3610.123456789012!2d55.298765!3d25.198765!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e5f5e0c0c0c0c0c%3A0x0!2sAzizi%20Riviera%2042%2C%20Meydan%2C%20Dubai!5e0!3m2!1sen!2sae!4v1644262074056!5m2!1sen!2sae"
-                  width="100%"
-                  height="350"
-                  style={{ border: 0 }}
-                  allowFullScreen
-                  loading="lazy"
-                  className="w-full"
-                  title="Laundrica Location Map"
-                ></iframe>
-              </div>
-              <div className="mt-4">
-                <a
-                  href="https://maps.google.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-[#00261b] font-medium hover:text-emerald-700 transition-colors"
-                >
-                  Get Directions
-                  <ArrowRight className="w-4 h-4" />
-                </a>
-              </div>
-            </motion.div>
+          <div className="max-w-3xl mx-auto">
+
 
             {/* Connect With Us */}
             <motion.div
@@ -214,7 +174,7 @@ export default function ContactPage() {
                 {[
                   { icon: Instagram, name: 'Instagram', handle: '@laundrica', color: 'hover:text-pink-600', bgColor: 'bg-pink-50' },
                   { icon: Facebook, name: 'Facebook', handle: '/laundrica', color: 'hover:text-blue-600', bgColor: 'bg-blue-50' },
-                  { icon: Twitter, name: 'Twitter', handle: '@laundrica', color: 'hover:text-sky-500', bgColor: 'bg-sky-50' },
+                  { icon: Music2, name: 'TikTok', handle: '@laundrica', color: 'hover:text-black', bgColor: 'bg-gray-100' },
                   { icon: Globe, name: 'Website', handle: 'laundrica.com', color: 'hover:text-emerald-600', bgColor: 'bg-emerald-50' },
                 ].map((social, idx) => (
                   <a
