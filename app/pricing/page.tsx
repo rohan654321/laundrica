@@ -109,10 +109,10 @@ export default function PricingPage() {
               <div className="text-center">
                 <div className="w-32 h-32 mx-auto bg-[#bcedd7] rounded-full flex items-center justify-center mb-6">
                   <Image
-                    src="/images/laundry.jpg"
+                    src="/images/wash&fold.png"
                     alt="Laundry"
                     fill
-                    className="object-cover rounded-xl"
+                    className="object-container rounded-xl"
                   />
                 </div>
                 <h3 className="text-2xl font-bold text-[#00261b]">Starting from</h3>
