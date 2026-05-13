@@ -36,7 +36,7 @@ const SERVICE_IMAGES: Record<string, string> = {
   'shoe-cleaning': 'https://lh3.googleusercontent.com/aida-public/AB6AXuAyptsqgZUbgwL6Bq4bEsstny-6nDqBiqN5cBGYnfUgzSDXYcQRlm_pDhIj6-7C68tcWLpUVUoyuqYl-KtPTYiEtKvAJKV-rN_GAYoaYWEJWdkhtUtLShsLIqrzAO6qwGzS6zO7N7uSjdF1P9-5EztAjqUgYK-p6ctAHvjW1HY9dOh0XDdiAVOm2igRfKnzzKg7pled4rUzMo9aRGOi5PSI77IxhAP5ks-Hikp_CL0RfODVncfmgpsv7pnnGfj_ibEbUbaBjB1zew3f',
   'carpet-cleaning': '/images/carpet.png',
   'curtain-cleaning': 'https://lh3.googleusercontent.com/aida-public/AB6AXuA45R7mYBYS5a_-9pcT1PdHvi75OrnW6SgurkHhCX-fJ_ymGD8x0ZZuqiCo5Rh908iElZhzYe3KP3UjAx1wUQ4w_Gkwp_0eqEpz_6SyRfDVW2dl0ja2MyCknffKUydongro0YT2wxCiDPDXKNyOovJkMUoqOJr4ZA-NfMZLhrLsPSzz1PycN1W0-fHxB0FkSehzYFH-4oAoWgJiJMcL_xJ9Sn_AkpjsLYsdhmJFybGq8Ju4kHUF-wp0f_OGW_HJf2FKgFPDwm8vZA6D', // Using carpet image as fallback
-  'commercial': 'https://lh3.googleusercontent.com/aida-public/AB6AXuBaHDEQVLbQfnwFR9_VyvfLd-ko007XGQDbe8hwTsWY87HzOxSF5OEi1VIUhphuEPzTyIEYGuar_lQ5blIcLFr6Dnz7X7Z7pctJxklYiZfa-c9MxeiY35ivv9-1g0LOse4jxv133UHtIinIC088t7NfjZ_PC9rleHHBGmlsZ69ybT_UKrJ4utQTtvinL1UeEgulkfcg2nUWiJ2DIJYYhlitbNGfkogR5s0XfbMFFqM3gQtqlpbRweKf5r0np3KX1dvRGk_0eUCe4tVi', // Using laundry image as fallback
+  'commercial': 'https://lh3.googleusercontent.com/aida-public/AB6AXuBaHDEQVLbQfnwFR9_VyvfLd-ko007XGQDbe8hwTsWY87HzOxSF5OEi1VIUhphuEPzTyIEYGuar_lQbl5IcLFr6Dnz7X7Z7pctJxklYiZfa-c9MxeiY35ivv9-1g0LOse4jxv133UHtIinIC088t7NfjZ_PC9rleHHBGmlsZ69ybT_UKrJ4utQTtvinL1UeEgulkfcg2nUWiJ2DIJYYhlitbNGfkogR5s0XfbMFFqM3gQtqlpbRweKf5r0np3KX1dvRGk_0eUCe4tVi', // Using laundry image as fallback
 };
 
 export default function ServicesPage() {
@@ -151,12 +151,7 @@ export default function ServicesPage() {
               Choose from our premium laundry, dry cleaning, and specialty care services.
               Free pickup & delivery across Dubai.
             </p>
-            <div className="flex flex-wrap justify-center gap-3">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-gray-100"><Truck className="w-4 h-4 text-emerald-600" /><span className="text-sm">Free Pickup</span></div>
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-gray-100"><Clock className="w-4 h-4 text-emerald-600" /><span className="text-sm">24-48hr</span></div>
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-gray-100"><Leaf className="w-4 h-4 text-emerald-600" /><span className="text-sm">Eco-Friendly</span></div>
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-gray-100"><Shield className="w-4 h-4 text-emerald-600" /><span className="text-sm">100% Safe</span></div>
-            </div>
+    
           </motion.div>
         </div>
       </section>
@@ -213,37 +208,25 @@ export default function ServicesPage() {
                   </div>
 
                   <div className="p-6">
-                    <p className="text-gray-600 leading-relaxed mb-6">{selectedService.description || 'Professional cleaning service with premium quality and gentle care.'}</p>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                      <div className="bg-[#f9faf7] rounded-xl p-3 text-center"><Truck className="w-5 h-5 text-[#00261b] mx-auto mb-1" /><p className="text-xs text-gray-400">Pickup</p><p className="text-sm font-semibold text-[#00261b]">Free Doorstep</p></div>
-                      <div className="bg-[#f9faf7] rounded-xl p-3 text-center"><Clock className="w-5 h-5 text-[#00261b] mx-auto mb-1" /><p className="text-xs text-gray-400">Turnaround</p><p className="text-sm font-semibold text-[#00261b]">{selectedService.turnaround || '24-48 hrs'}</p></div>
-                      <div className="bg-[#f9faf7] rounded-xl p-3 text-center"><Leaf className="w-5 h-5 text-[#00261b] mx-auto mb-1" /><p className="text-xs text-gray-400">Products</p><p className="text-sm font-semibold text-[#00261b]">Eco-Friendly</p></div>
-                      <div className="bg-[#f9faf7] rounded-xl p-3 text-center"><Shield className="w-5 h-5 text-[#00261b] mx-auto mb-1" /><p className="text-xs text-gray-400">Quality</p><p className="text-sm font-semibold text-[#00261b]">100% Guaranteed</p></div>
-                    </div>
-
+                    {/* BOOKING BUTTONS - MOVED TO TOP */}
                     <div className="mb-6">
-                      <h3 className="font-semibold text-[#00261b] mb-3">Why choose this service?</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        {['Professional cleaning techniques', 'Premium eco-friendly products', 'Stain removal specialists', 'Quality checked before return', 'Free pickup & delivery', '24/7 customer support'].map((b, i) => (
-                          <div key={i} className="flex items-center gap-2 text-sm text-gray-600">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                            <span>{b}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="border-t border-gray-100 pt-6">
                       <div className="flex flex-wrap gap-3 mb-4">
                         <div className="bg-[#f9faf7] rounded-xl p-1 flex">
-                          <button onClick={() => setActiveTab('website')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'website' ? 'bg-white text-[#00261b] shadow-sm' : 'text-gray-500'}`}>
+                          <button
+                            onClick={() => setActiveTab('website')}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'website' ? 'bg-white text-[#00261b] shadow-sm' : 'text-gray-500'}`}
+                          >
                             <span className="text-lg">🌐</span> Book Online
                           </button>
-                          <button onClick={() => setActiveTab('whatsapp')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'whatsapp' ? 'bg-white text-[#00261b] shadow-sm' : 'text-gray-500'}`}>
+                          <button
+                            onClick={() => setActiveTab('whatsapp')}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'whatsapp' ? 'bg-white text-[#00261b] shadow-sm' : 'text-gray-500'}`}
+                          >
                             <MessageCircle className="w-4 h-4" /> WhatsApp
                           </button>
                         </div>
                       </div>
+
                       {activeTab === 'website' ? (
                         <Link href={`/services/${selectedService.slug}/orders`}>
                           <button className="w-full md:w-auto bg-[#00261b] text-white px-8 py-3 rounded-xl font-semibold hover:bg-emerald-800 transition-all flex items-center justify-center gap-2">
@@ -255,6 +238,7 @@ export default function ServicesPage() {
                           <MessageCircle className="w-4 h-4" /> Order on WhatsApp
                         </button>
                       )}
+
                       {activeTab === 'whatsapp' && (
                         <div className="mt-4 p-3 bg-emerald-50 rounded-xl flex items-start gap-2">
                           <Heart className="w-4 h-4 text-emerald-600" />
@@ -262,30 +246,35 @@ export default function ServicesPage() {
                         </div>
                       )}
                     </div>
+
+                    {/* SERVICE DESCRIPTION */}
+                    <p className="text-gray-600 leading-relaxed mb-6">{selectedService.description || 'Professional cleaning service with premium quality and gentle care.'}</p>
+
+                    {/* FEATURE GRID */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                      <div className="bg-[#f9faf7] rounded-xl p-3 text-center"><Truck className="w-5 h-5 text-[#00261b] mx-auto mb-1" /><p className="text-xs text-gray-400">Pickup</p><p className="text-sm font-semibold text-[#00261b]">Free Doorstep</p></div>
+                      <div className="bg-[#f9faf7] rounded-xl p-3 text-center"><Clock className="w-5 h-5 text-[#00261b] mx-auto mb-1" /><p className="text-xs text-gray-400">Turnaround</p><p className="text-sm font-semibold text-[#00261b]">{selectedService.turnaround || '24-48 hrs'}</p></div>
+                      <div className="bg-[#f9faf7] rounded-xl p-3 text-center"><Leaf className="w-5 h-5 text-[#00261b] mx-auto mb-1" /><p className="text-xs text-gray-400">Products</p><p className="text-sm font-semibold text-[#00261b]">Eco-Friendly</p></div>
+                      <div className="bg-[#f9faf7] rounded-xl p-3 text-center"><Shield className="w-5 h-5 text-[#00261b] mx-auto mb-1" /><p className="text-xs text-gray-400">Quality</p><p className="text-sm font-semibold text-[#00261b]">100% Guaranteed</p></div>
+                    </div>
+
+                    {/* WHY CHOOSE THIS SERVICE */}
+                    <div className="mb-6">
+                      <h3 className="font-semibold text-[#00261b] mb-3">Why choose this service?</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {['Professional cleaning techniques', 'Premium eco-friendly products', 'Stain removal specialists', 'Quality checked before return', 'Free pickup & delivery', '24/7 customer support'].map((b, i) => (
+                          <div key={i} className="flex items-center gap-2 text-sm text-gray-600">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                            <span>{b}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
 
-            {services.length > 1 && (
-              <div className="mt-8">
-                <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Other Services You Might Like</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {services.filter(s => s._id !== selectedService?._id).slice(0, 4).map((service) => (
-                    <button key={service._id} onClick={() => setSelectedService(service)} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-100 hover:shadow-md transition-all text-left group">
-                      <div className="w-10 h-10 bg-[#bcedd7] rounded-xl flex items-center justify-center">
-                        {getCategoryIcon(service.category, 'w-4 h-4')}
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium text-[#00261b] text-sm group-hover:text-emerald-700">{service.name}</p>
-                        <p className="text-xs text-gray-400">{getCategoryLabel(service.category)}</p>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-emerald-600" />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
