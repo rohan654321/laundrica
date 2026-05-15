@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { useCart } from '@/context/cart-context';
 import { useSession } from '@/context/session-context';
 import { orderAPI } from '@/lib/api';
-import { ArrowLeft, Check, AlertCircle, Truck, Clock, Shield, MessageCircle, Phone, Mail, User, Home, Calendar, CreditCard, Sparkles } from 'lucide-react';
+import { ArrowLeft, Check, AlertCircle, Truck, Clock, Shield, MessageCircle, Phone, Mail, User, Home, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface CheckoutFormData {
@@ -21,8 +21,6 @@ interface CheckoutFormData {
   address: string;
   city: string;
   notes: string;
-  pickupDate: string;
-  pickupTime: string;
 }
 
 export default function CheckoutPage() {
@@ -34,6 +32,31 @@ export default function CheckoutPage() {
   const [orderResult, setOrderResult] = useState<any>(null);
   const [error, setError] = useState('');
 
+  // Toggle switches for carpet and shoes - store in localStorage
+  const [carpetToggle, setCarpetToggle] = useState(false);
+  const [shoesToggle, setShoesToggle] = useState(false);
+
+  // Load toggle states from localStorage on mount
+  useEffect(() => {
+    const savedCarpet = localStorage.getItem('carpetContactToggle');
+    const savedShoes = localStorage.getItem('shoesContactToggle');
+    if (savedCarpet) setCarpetToggle(savedCarpet === 'true');
+    if (savedShoes) setShoesToggle(savedShoes === 'true');
+  }, []);
+
+  // Save toggle states to localStorage
+  const handleCarpetToggle = (value: boolean) => {
+    setCarpetToggle(value);
+    localStorage.setItem('carpetContactToggle', String(value));
+    toast.success(value ? 'Carpet: Contact required for pricing' : 'Carpet: Items can be added directly');
+  };
+
+  const handleShoesToggle = (value: boolean) => {
+    setShoesToggle(value);
+    localStorage.setItem('shoesContactToggle', String(value));
+    toast.success(value ? 'Shoes: Contact required for pricing' : 'Shoes: Items can be added directly');
+  };
+
   const [formData, setFormData] = useState<CheckoutFormData>({
     firstName: '',
     lastName: '',
@@ -42,14 +65,10 @@ export default function CheckoutPage() {
     address: '',
     city: 'Dubai',
     notes: '',
-    pickupDate: '',
-    pickupTime: '',
   });
 
   const totalPrice = getTotalPrice();
-  const deliveryFee = totalPrice > 100 ? 0 : 15;
-  const tax = totalPrice * 0.05;
-  const finalTotal = totalPrice + deliveryFee + tax;
+  const finalTotal = totalPrice;
 
   useEffect(() => {
     if ((!cartItems || cartItems.length === 0) && !orderPlaced) {
@@ -119,6 +138,8 @@ export default function CheckoutPage() {
           selectedColor: item.selectedColor || null,
           selectedSize: item.selectedSize || null,
           designImage: item.designImage || null,
+          serviceName: item.metadata?.serviceName || '',
+          category: item.category || '',
         });
       }
     });
@@ -146,9 +167,6 @@ export default function CheckoutPage() {
       if (!formData.address) {
         throw new Error('Please enter your delivery address');
       }
-      if (!formData.pickupDate || !formData.pickupTime) {
-        throw new Error('Please select pickup date and time');
-      }
 
       if (!cartItems || cartItems.length === 0) {
         throw new Error('Your cart is empty');
@@ -160,8 +178,8 @@ export default function CheckoutPage() {
         sessionId,
         items: transformedItems,
         subtotal: totalPrice,
-        deliveryFee: deliveryFee,
-        tax: tax,
+        deliveryFee: 0,
+        tax: 0,
         discount: 0,
         total: finalTotal,
         status: 'pending',
@@ -198,28 +216,6 @@ export default function CheckoutPage() {
     }
   };
 
-  const getTimeSlots = () => {
-    const slots = [];
-    for (let i = 9; i <= 18; i++) {
-      const period = i < 12 ? 'AM' : 'PM';
-      const hour = i > 12 ? i - 12 : i;
-      slots.push(`${hour}:00 ${period}`);
-      slots.push(`${hour}:30 ${period}`);
-    }
-    return slots;
-  };
-
-  const getAvailableDates = () => {
-    const dates = [];
-    const today = new Date();
-    for (let i = 1; i <= 7; i++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() + i);
-      dates.push(date.toISOString().split('T')[0]);
-    }
-    return dates;
-  };
-
   const cartItemsCount = cartItems?.reduce((sum, item) => sum + (item?.quantity || 0), 0) || 0;
 
   if (orderPlaced && orderResult) {
@@ -246,14 +242,9 @@ export default function CheckoutPage() {
                   <p className="text-xl font-bold text-[#00261b] font-mono">{orderNumber}</p>
                 </div>
 
-                <div className="mb-4">
+                <div>
                   <p className="text-sm text-[#5c5f5e] mb-1">Total Amount</p>
                   <p className="text-2xl font-bold text-[#00261b]">AED {(order.total || finalTotal).toFixed(2)}</p>
-                </div>
-
-                <div>
-                  <p className="text-sm text-[#5c5f5e] mb-1">Pickup Date</p>
-                  <p className="text-[#00261b]">{formData.pickupDate} at {formData.pickupTime}</p>
                 </div>
               </div>
 
@@ -304,7 +295,7 @@ export default function CheckoutPage() {
             </button>
           </Link>
           <h1 className="text-3xl md:text-4xl font-bold mb-2">Checkout</h1>
-          <p className="text-white/80">Complete your order to schedule pickup</p>
+          <p className="text-white/80">Complete your order to proceed</p>
         </div>
       </section>
 
@@ -413,53 +404,6 @@ export default function CheckoutPage() {
                   placeholder="Dubai"
                 />
               </div>
-            </div>
-
-            {/* Pickup Schedule */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-              <h2 className="text-xl font-bold mb-6 text-[#00261b] flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-[#00261b]" />
-                Schedule Pickup
-              </h2>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-[#00261b] mb-2">Pickup Date *</label>
-                  <select
-                    name="pickupDate"
-                    value={formData.pickupDate}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00261b] focus:border-[#00261b] bg-white"
-                  >
-                    <option value="">Select a date</option>
-                    {getAvailableDates().map((date) => {
-                      const dateObj = new Date(date);
-                      return (
-                        <option key={date} value={date}>
-                          {dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-                        </option>
-                      );
-                    })}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-[#00261b] mb-2">Pickup Time *</label>
-                  <select
-                    name="pickupTime"
-                    value={formData.pickupTime}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00261b] focus:border-[#00261b] bg-white"
-                  >
-                    <option value="">Select a time slot</option>
-                    {getTimeSlots().map((slot) => (
-                      <option key={slot} value={slot}>{slot}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
 
               <div className="mt-4">
                 <label className="block text-sm font-medium text-[#00261b] mb-2">Special Instructions (Optional)</label>
@@ -499,7 +443,7 @@ export default function CheckoutPage() {
             </div>
           </form>
 
-          {/* Order Summary */}
+          {/* Order Summary - WITH TOGGLE BUTTONS */}
           <div className="lg:col-span-1">
             <div className="sticky top-24">
               <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
@@ -512,12 +456,54 @@ export default function CheckoutPage() {
                 </div>
 
                 <div className="p-6">
+                  {/* TOGGLE BUTTONS FOR CARPET AND SHOES */}
+                  <div className="mb-4 space-y-3 pb-4 border-b border-gray-200">
+                    <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-xl">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">🧹</span>
+                        <div>
+                          <p className="text-sm font-medium text-[#00261b]">Carpet Items</p>
+                          <p className="text-xs text-gray-500">Require contact for pricing</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleCarpetToggle(!carpetToggle)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${carpetToggle ? 'bg-[#00261b]' : 'bg-gray-300'}`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${carpetToggle ? 'translate-x-6' : 'translate-x-1'}`}
+                        />
+                      </button>
+                    </div>
+
+                    <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-xl">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">👟</span>
+                        <div>
+                          <p className="text-sm font-medium text-[#00261b]">Shoe Items</p>
+                          <p className="text-xs text-gray-500">Require contact for pricing</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleShoesToggle(!shoesToggle)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${shoesToggle ? 'bg-[#00261b]' : 'bg-gray-300'}`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${shoesToggle ? 'translate-x-6' : 'translate-x-1'}`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+
                   <div className="space-y-3 mb-6 pb-6 border-b border-gray-200 max-h-80 overflow-y-auto">
                     {cartItems.map((item, index) => (
                       <div key={index} className="flex justify-between text-sm">
                         <div className="flex-1">
                           <span className="text-[#00261b]">{item.name || 'Unknown Item'}</span>
                           <span className="text-gray-400 ml-2">x{item.quantity || 0}</span>
+                          {item.metadata?.serviceName && (
+                            <p className="text-xs text-gray-400 mt-0.5">{item.metadata.serviceName}</p>
+                          )}
                         </div>
                         <span className="font-medium text-[#00261b]">AED {((item.price || 0) * (item.quantity || 0)).toFixed(2)}</span>
                       </div>
@@ -528,14 +514,6 @@ export default function CheckoutPage() {
                     <div className="flex justify-between text-[#5c5f5e]">
                       <span>Subtotal</span>
                       <span>AED {totalPrice.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-[#5c5f5e]">
-                      <span>Delivery Fee</span>
-                      <span>{deliveryFee === 0 ? 'FREE' : `AED ${deliveryFee.toFixed(2)}`}</span>
-                    </div>
-                    <div className="flex justify-between text-[#5c5f5e]">
-                      <span>Tax (5% VAT)</span>
-                      <span>AED {tax.toFixed(2)}</span>
                     </div>
                   </div>
 
@@ -550,8 +528,8 @@ export default function CheckoutPage() {
                       <span>Secure checkout</span>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-[#5c5f5e]">
-                      <Clock className="w-3 h-3" />
-                      <span>Free pickup & delivery</span>
+                      <Truck className="w-3 h-3" />
+                      <span>Free delivery</span>
                     </div>
                   </div>
 

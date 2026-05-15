@@ -10,19 +10,19 @@ import { useParams, useRouter } from 'next/navigation';
 import { useCart } from '@/context/cart-context';
 import { useSession } from '@/context/session-context';
 import { serviceAPI } from '@/lib/api';
-import { Minus, Plus, ShoppingCart, ArrowLeft, Check, Clock, Shield, Truck, Leaf, AlertCircle, Phone, MessageCircle, Trash2, MapPin, X, Sparkles } from 'lucide-react';
+import { Minus, Plus, ShoppingCart, ArrowLeft, Check, Clock, Shield, Truck, Leaf, AlertCircle, Phone, MessageCircle, Trash2, MapPin, X, Sparkles, ShoppingBag } from 'lucide-react';
 import { toast } from 'sonner';
 
 // Service images mapping
 const SERVICE_IMAGES: Record<string, string> = {
-  'laundry': 'https://lh3.googleusercontent.com/aida-public/AB6AXuBaHDEQVLbQfnwFR9_VyvfLd-ko007XGQDbe8hwTsWY87HzOxSF5OEi1VIUhphuEPzTyIEYGuar_lQbl5IcLFr6Dnz7X7Z7pctJxklYiZfa-c9MxeiY35ivv9-1g0LOse4jxv133UHtIinIC088t7NfjZ_PC9rleHHBGmlsZ69ybT_UKrJ4utQTtvinL1UeEgulkfcg2nUWiJ2DIJYYhlitbNGfkogR5s0XfbMFFqM3gQtqlpbRweKf5r0np3KX1dvRGk_0eUCe4tVi',
+  'laundry': 'https://lh3.googleusercontent.com/aida-public/AB6AXuBaHDEQVLbQfnwFR9_VyvfLd-ko007XGQDbe8hwTsWY87HzOxSF5OEi1VIUhphuEPzTyIEYGuar_lQ5blIcLFr6Dnz7X7Z7pctJxklYiZfa-c9MxeiY35ivv9-1g0LOse4jxv133UHtIinIC088t7NfjZ_PC9rleHHBGmlsZ69ybT_UKrJ4utQTtvinL1UeEgulkfcg2nUWiJ2DIJYYhlitbNGfkogR5s0XfbMFFqM3gQtqlpbRweKf5r0np3KX1dvRGk_0eUCe4tVi',
   'dry-cleaning': 'https://lh3.googleusercontent.com/aida-public/AB6AXuCDSmGE2TtzW6YVlJMSyDumNuxjDafzBKzMdR4qG3eqVcTjAah0uNIQZPkLuWeHPHol4b4KvmlsPFC_KN3p7tWQBQ6QwwY9XUZtHuIIRZFMG-vCYoyJ0_b_XudUiAoeNPHtFhFaLpyFciaiUZmTUIz8SpnuLdtIr0RiWN6TrQRdNdIb0l8hb8_Ixsen9jOJTPqkeWMIP7psQVAw1npMZJXsAkH52LwBCa_R3N1DEIzyDhvtApslLYMdiQNPrDDyWg663DoZ--vmdfsf',
   'wash-and-fold': 'https://lh3.googleusercontent.com/aida-public/AB6AXuDP4Fl1mcL71ms-0aDco1bos4KJFJEZx5OQnJIOBWlWluJMOTU3XhoRrxAQvDa2yackx6UDbMN2aeY0HX3vJrKxXZZvOxDngQlZRCw6IC4qNlNInPtj13VA8r8kN-3-D0Jxrt44nDI5JAqB96hap1m-Sa8t_3oq6LroL8Ag9vqpd38eVyGtjT49EfXZUUUEmpo9H8CJRr1964I_IjjhCECEuvi3KYyJIWnmLx6Um420B0z6GG4nyB3DmF5ORn7DB6p1qP9FsFWioqH3',
   'steam-ironing': 'https://static.vecteezy.com/system/resources/thumbnails/075/548/139/small/closeup-electric-steam-iron-pressing-blue-shirt-with-powerful-vapor-mist-photo.jpeg',
   'shoe-cleaning': 'https://lh3.googleusercontent.com/aida-public/AB6AXuAyptsqgZUbgwL6Bq4bEsstny-6nDqBiqN5cBGYnfUgzSDXYcQRlm_pDhIj6-7C68tcWLpUVUoyuqYl-KtPTYiEtKvAJKV-rN_GAYoaYWEJWdkhtUtLShsLIqrzAO6qwGzS6zO7N7uSjdF1P9-5EztAjqUgYK-p6ctAHvjW1HY9dOh0XDdiAVOm2igRfKnzzKg7pled4rUzMo9aRGOi5PSI77IxhAP5ks-Hikp_CL0RfODVncfmgpsv7pnnGfj_ibEbUbaBjB1zew3f',
   'carpet-cleaning': '/images/carpet.png',
-  'curtain-cleaning': 'https://lh3.googleusercontent.com/aida-public/AB6AXuA45R7mYBYS5a_-9pcT1PdHvi75OrnW6SgurkHhCX-fJ_ymGD8x0ZZuqiCo5Rh908iElZhzYe3KP3UjAx1wUQ4w_Gkwp_0eqEpz_6SyRfDVW2dl0ja2MyCknffKUydongro0YT2wxCiDPDXKNyOovJkMUoqOJr4ZA-NfMZLhrLsPSzz1PycN1W0-fHxB0FkSehzYFH-4oAoWgJiJMcL_xJ9Sn_AkpjsLYsdhmJFybGq8Ju4kHUF-wp0f_OGW_HJf2FKgFPDwm8vZA6D', // Using carpet image as fallback
-  'commercial': 'https://lh3.googleusercontent.com/aida-public/AB6AXuBaHDEQVLbQfnwFR9_VyvfLd-ko007XGQDbe8hwTsWY87HzOxSF5OEi1VIUhphuEPzTyIEYGuar_lQ5blIcLFr6Dnz7X7Z7pctJxklYiZfa-c9MxeiY35ivv9-1g0LOse4jxv133UHtIinIC088t7NfjZ_PC9rleHHBGmlsZ69ybT_UKrJ4utQTtvinL1UeEgulkfcg2nUWiJ2DIJYYhlitbNGfkogR5s0XfbMFFqM3gQtqlpbRweKf5r0np3KX1dvRGk_0eUCe4tVi', // Using laundry image as fallback
+  'curtain-cleaning': 'https://lh3.googleusercontent.com/aida-public/AB6AXuA45R7mYBYS5a_-9pcT1PdHvi75OrnW6SgurkHhCX-fJ_ymGD8x0ZZuqiCo5Rh908iElZhzYe3KP3UjAx1wUQ4w_Gkwp_0eqEpz_6SyRfDVW2dl0ja2MyCknffKUydongro0YT2wxCiDPDXKNyOovJkMUoqOJr4ZA-NfMZLhrLsPSzz1PycN1W0-fHxB0FkSehzYFH-4oAoWgJiJMcL_xJ9Sn_AkpjsLYsdhmJFybGq8Ju4kHUF-wp0f_OGW_HJf2FKgFPDwm8vZA6D',
+  'commercial': 'https://lh3.googleusercontent.com/aida-public/AB6AXuBaHDEQVLbQfnwFR9_VyvfLd-ko007XGQDbe8hwTsWY87HzOxSF5OEi1VIUhphuEPzTyIEYGuar_lQ5blIcLFr6Dnz7X7Z7pctJxklYiZfa-c9MxeiY35ivv9-1g0LOse4jxv133UHtIinIC088t7NfjZ_PC9rleHHBGmlsZ69ybT_UKrJ4utQTtvinL1UeEgulkfcg2nUWiJ2DIJYYhlitbNGfkogR5s0XfbMFFqM3gQtqlpbRweKf5r0np3KX1dvRGk_0eUCe4tVi',
 };
 
 type CategoryType = 'men' | 'women' | 'children' | 'household' | 'carpet' | 'shoes';
@@ -149,10 +149,33 @@ export default function ServiceOrderPage() {
   const [contactItem, setContactItem] = useState<ServiceItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [promoCode, setPromoCode] = useState('');
-  const [promoApplied, setPromoApplied] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [isClearingCart, setIsClearingCart] = useState(false);
+
+  // Toggle switches for carpet and shoes - store in localStorage
+  const [carpetToggle, setCarpetToggle] = useState(false);
+  const [shoesToggle, setShoesToggle] = useState(false);
+
+  // Load toggle states from localStorage on mount
+  useEffect(() => {
+    const savedCarpet = localStorage.getItem('carpetContactToggle');
+    const savedShoes = localStorage.getItem('shoesContactToggle');
+    if (savedCarpet) setCarpetToggle(savedCarpet === 'true');
+    if (savedShoes) setShoesToggle(savedShoes === 'true');
+  }, []);
+
+  // Save toggle states to localStorage
+  const handleCarpetToggle = (value: boolean) => {
+    setCarpetToggle(value);
+    localStorage.setItem('carpetContactToggle', String(value));
+    toast.success(value ? 'Carpet: Contact required for pricing' : 'Carpet: Items can be added directly');
+  };
+
+  const handleShoesToggle = (value: boolean) => {
+    setShoesToggle(value);
+    localStorage.setItem('shoesContactToggle', String(value));
+    toast.success(value ? 'Shoes: Contact required for pricing' : 'Shoes: Items can be added directly');
+  };
 
   const getAvailableCategories = useCallback((): Category[] => {
     if (!service) return [];
@@ -286,9 +309,24 @@ export default function ServiceOrderPage() {
     return cartItem?.quantity || 0;
   };
 
+  const shouldShowContactForItem = (item: ServiceItem): boolean => {
+    if (item.contactForPricing) return true;
+    // Check if the item's category matches the toggle state
+    if (item.category === 'carpet' && carpetToggle) return true;
+    if (item.category === 'shoes' && shoesToggle) return true;
+    return false;
+  };
+
   const handleIncrement = async (item: ServiceItem) => {
     if (!sessionId) {
       toast.error('Session not initialized');
+      return;
+    }
+
+    // Check if item requires contact based on toggle
+    if (shouldShowContactForItem(item)) {
+      setContactItem(item);
+      setShowContactModal(true);
       return;
     }
 
@@ -306,7 +344,8 @@ export default function ServiceOrderPage() {
         originalItemId: item._id,
         serviceName: service?.name,
         unit: item.unit,
-        serviceId: service?._id
+        serviceId: service?._id,
+        itemCategory: item.category
       }
     };
 
@@ -383,6 +422,10 @@ export default function ServiceOrderPage() {
     setShowContactModal(false);
   };
 
+  const handleBackToShopping = () => {
+    router.push('/services');
+  };
+
   const getCurrentItems = (): ServiceItem[] => {
     if (serviceItems.length > 0) {
       const filtered = serviceItems.filter(item => item.category === activeCategory);
@@ -396,18 +439,8 @@ export default function ServiceOrderPage() {
     return cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   }, [cartItems]);
 
-  const deliveryFee = subtotal > 100 ? 0 : 15;
-  const discount = promoApplied ? subtotal * 0.1 : 0;
-  const total = subtotal + deliveryFee - discount;
-
-  const handleApplyPromo = () => {
-    if (promoCode.toLowerCase() === 'fresh10') {
-      setPromoApplied(true);
-      toast.success('Promo code applied! 10% discount');
-    } else {
-      toast.error('Invalid promo code');
-    }
-  };
+  // NO DELIVERY FEE - removed completely
+  const total = subtotal;
 
   const handleProceedToCheckout = () => {
     setIsCheckingOut(true);
@@ -549,7 +582,7 @@ export default function ServiceOrderPage() {
         )}
       </AnimatePresence>
 
-      {/* Hero Section - Using service image properly */}
+      {/* Hero Section */}
       <div className="relative bg-[#00261b] min-h-[400px] flex items-center">
         <div className="absolute inset-0 opacity-20">
           <img
@@ -611,6 +644,7 @@ export default function ServiceOrderPage() {
             <div className="grid md:grid-cols-2 gap-4">
               {currentItems.map((item) => {
                 const cartQty = getCartQuantity(item._id);
+                const requiresContact = shouldShowContactForItem(item);
                 return (
                   <div
                     key={item._id}
@@ -624,7 +658,7 @@ export default function ServiceOrderPage() {
 
                       <div className="flex items-center justify-between mt-4">
                         <div>
-                          {item.contactForPricing || isContactCategory ? (
+                          {requiresContact ? (
                             <div className="flex items-center gap-2">
                               <span className="text-[#00261b] font-medium">Contact for Price</span>
                             </div>
@@ -636,7 +670,7 @@ export default function ServiceOrderPage() {
                           )}
                         </div>
 
-                        {item.contactForPricing || isContactCategory ? (
+                        {requiresContact ? (
                           <Button
                             onClick={() => {
                               setContactItem(item);
@@ -692,7 +726,7 @@ export default function ServiceOrderPage() {
             )}
           </div>
 
-          {/* Order Summary */}
+          {/* Order Summary - WITH TOGGLE BUTTONS INSIDE */}
           <div className="lg:col-span-1">
             <div className="sticky top-24">
               <div className="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100">
@@ -716,7 +750,46 @@ export default function ServiceOrderPage() {
                 </div>
 
                 <div className="p-5">
-                  <div className="max-h-80 overflow-y-auto mb-4">
+                  {/* TOGGLE BUTTONS FOR CARPET AND SHOES */}
+                  <div className="mb-4 space-y-3 pb-4 border-b border-gray-200">
+                    <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-xl">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">🧹</span>
+                        <div>
+                          <p className="text-sm font-medium text-[#00261b]">Carpet Items</p>
+                          <p className="text-xs text-gray-500">Require contact for pricing</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleCarpetToggle(!carpetToggle)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${carpetToggle ? 'bg-[#00261b]' : 'bg-gray-300'}`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${carpetToggle ? 'translate-x-6' : 'translate-x-1'}`}
+                        />
+                      </button>
+                    </div>
+
+                    <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-xl">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">👟</span>
+                        <div>
+                          <p className="text-sm font-medium text-[#00261b]">Shoe Items</p>
+                          <p className="text-xs text-gray-500">Require contact for pricing</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleShoesToggle(!shoesToggle)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${shoesToggle ? 'bg-[#00261b]' : 'bg-gray-300'}`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${shoesToggle ? 'translate-x-6' : 'translate-x-1'}`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="max-h-60 overflow-y-auto mb-4">
                     {cartItemsCount === 0 ? (
                       <div className="text-center py-8">
                         <ShoppingCart className="w-10 h-10 text-gray-300 mx-auto mb-2" />
@@ -730,7 +803,10 @@ export default function ServiceOrderPage() {
                             <div key={item.id} className="flex items-start justify-between border-b border-gray-100 pb-3">
                               <div className="flex-1">
                                 <p className="text-sm font-medium text-[#00261b]">{item.name}</p>
-                                <p className="text-xs text-[#5c5f5e]">AED {item.price} each</p>
+                                {item.metadata?.serviceName && (
+                                  <p className="text-xs text-gray-400">Service: {item.metadata.serviceName}</p>
+                                )}
+                                <p className="text-xs text-gray-400">AED {item.price} each</p>
                               </div>
                               <div className="flex items-center gap-2">
                                 <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
@@ -781,46 +857,11 @@ export default function ServiceOrderPage() {
 
                   {cartItemsCount > 0 && (
                     <>
-                      <div className="mb-4">
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            value={promoCode}
-                            onChange={(e) => setPromoCode(e.target.value)}
-                            placeholder="Promo code"
-                            className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#00261b] focus:ring-1 focus:ring-[#00261b]"
-                            disabled={promoApplied}
-                          />
-                          <Button
-                            onClick={handleApplyPromo}
-                            disabled={promoApplied}
-                            className="bg-[#00261b] hover:bg-emerald-800 text-white px-4 py-2 text-sm rounded-lg"
-                          >
-                            Apply
-                          </Button>
-                        </div>
-                        {promoApplied && (
-                          <p className="text-xs text-emerald-600 mt-1">✓ 10% discount applied</p>
-                        )}
-                      </div>
-
                       <div className="space-y-2 mb-4 pt-2 border-t border-gray-100">
                         <div className="flex justify-between text-sm">
                           <span className="text-[#5c5f5e]">Subtotal</span>
                           <span className="font-medium text-[#00261b]">AED {subtotal.toFixed(2)}</span>
                         </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-[#5c5f5e]">Delivery Fee</span>
-                          <span className="font-medium text-[#00261b]">
-                            {deliveryFee === 0 ? 'FREE' : `AED ${deliveryFee}`}
-                          </span>
-                        </div>
-                        {promoApplied && (
-                          <div className="flex justify-between text-sm text-emerald-600">
-                            <span>Discount (10%)</span>
-                            <span>-AED {discount.toFixed(2)}</span>
-                          </div>
-                        )}
                         <div className="pt-2 border-t border-gray-200">
                           <div className="flex justify-between">
                             <span className="font-semibold text-[#00261b]">Total</span>
@@ -829,39 +870,35 @@ export default function ServiceOrderPage() {
                         </div>
                       </div>
 
-                      {subtotal < 100 && (
-                        <div className="mb-4 p-3 bg-[#bcedd7]/20 rounded-lg">
-                          <p className="text-xs text-[#00261b] mb-2">
-                            Add AED {(100 - subtotal).toFixed(2)} more for free delivery
-                          </p>
-                          <div className="w-full h-1 bg-[#bcedd7] rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-[#00261b] rounded-full transition-all"
-                              style={{ width: `${Math.min((subtotal / 100) * 100, 100)}%` }}
-                            />
-                          </div>
-                        </div>
-                      )}
-
-                      <Button
-                        className="w-full bg-[#00261b] hover:bg-emerald-800 text-white py-3 font-medium rounded-xl transition-all duration-300 hover:shadow-lg"
-                        onClick={handleProceedToCheckout}
-                        disabled={isCheckingOut}
-                      >
-                        {isCheckingOut ? (
-                          <div className="flex items-center justify-center gap-2">
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            Processing...
-                          </div>
-                        ) : (
-                          'Proceed to Checkout'
-                        )}
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          className="flex-1 bg-[#00261b] hover:bg-emerald-800 text-white py-3 font-medium rounded-xl transition-all duration-300 hover:shadow-lg"
+                          onClick={handleProceedToCheckout}
+                          disabled={isCheckingOut}
+                        >
+                          {isCheckingOut ? (
+                            <div className="flex items-center justify-center gap-2">
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                              Processing...
+                            </div>
+                          ) : (
+                            'Checkout'
+                          )}
+                        </Button>
+                        <Button
+                          onClick={handleBackToShopping}
+                          variant="outline"
+                          className="border-[#00261b] text-[#00261b] hover:bg-[#bcedd7] py-3 font-medium rounded-xl"
+                        >
+                          <ShoppingBag className="w-4 h-4 mr-1" />
+                          Shop More
+                        </Button>
+                      </div>
 
                       <div className="grid grid-cols-4 gap-2 mt-4">
                         {[
                           { icon: Shield, label: 'Secure' },
-                          { icon: Truck, label: 'Free*' },
+                          { icon: Truck, label: 'Free' },
                           { icon: Clock, label: '24-48h' },
                           { icon: Leaf, label: 'Eco' },
                         ].map((badge, idx) => (
@@ -875,7 +912,7 @@ export default function ServiceOrderPage() {
                       <div className="mt-3 p-2 bg-[#bcedd7]/20 rounded-lg flex items-start gap-2">
                         <MapPin className="w-3.5 h-3.5 text-[#00261b] mt-0.5" />
                         <p className="text-[11px] text-[#5c5f5e]">
-                          Free delivery on orders AED 100+. Estimated 24-48 hours.
+                          Free delivery. Estimated 24-48 hours.
                         </p>
                       </div>
                     </>

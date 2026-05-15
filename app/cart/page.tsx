@@ -1,4 +1,3 @@
-// app/cart/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -13,7 +12,7 @@ import { useSession } from '@/context/session-context';
 import {
   Minus, Plus, Trash2, ShoppingBag, ArrowLeft,
   Truck, Shield, Leaf, CreditCard, MapPin, Sparkles,
-  CheckCircle, Clock, Award, ChevronRight
+  CheckCircle, Clock, Award
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -22,22 +21,39 @@ export default function CartPage() {
   const { sessionId } = useSession();
   const router = useRouter();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
-  const [promoCode, setPromoCode] = useState('');
-  const [promoApplied, setPromoApplied] = useState(false);
   const [isRemoving, setIsRemoving] = useState<string | null>(null);
   const [lastVisitedSlug, setLastVisitedSlug] = useState<string | null>(null);
 
+  // Toggle switches for carpet and shoes - store in localStorage
+  const [carpetToggle, setCarpetToggle] = useState(false);
+  const [shoesToggle, setShoesToggle] = useState(false);
+
+  // Load toggle states from localStorage on mount
   useEffect(() => {
+    const savedCarpet = localStorage.getItem('carpetContactToggle');
+    const savedShoes = localStorage.getItem('shoesContactToggle');
     const savedSlug = localStorage.getItem('lastVisitedServiceSlug');
-    if (savedSlug) {
-      setLastVisitedSlug(savedSlug);
-    }
+
+    if (savedCarpet) setCarpetToggle(savedCarpet === 'true');
+    if (savedShoes) setShoesToggle(savedShoes === 'true');
+    if (savedSlug) setLastVisitedSlug(savedSlug);
   }, []);
 
+  // Save toggle states to localStorage
+  const handleCarpetToggle = (value: boolean) => {
+    setCarpetToggle(value);
+    localStorage.setItem('carpetContactToggle', String(value));
+    toast.success(value ? 'Carpet: Contact required for pricing' : 'Carpet: Items can be added directly');
+  };
+
+  const handleShoesToggle = (value: boolean) => {
+    setShoesToggle(value);
+    localStorage.setItem('shoesContactToggle', String(value));
+    toast.success(value ? 'Shoes: Contact required for pricing' : 'Shoes: Items can be added directly');
+  };
+
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const deliveryFee = subtotal > 100 ? 0 : 15;
-  const discount = promoApplied ? subtotal * 0.1 : 0;
-  const total = subtotal + deliveryFee - discount;
+  const total = subtotal;
 
   const handleUpdateQuantity = async (id: string, newQuantity: number) => {
     if (newQuantity < 1) {
@@ -81,15 +97,6 @@ export default function CartPage() {
     } catch (err) {
       console.error('Error clearing cart:', err);
       toast.error('Failed to clear cart');
-    }
-  };
-
-  const handleApplyPromo = () => {
-    if (promoCode.toLowerCase() === 'fresh10') {
-      setPromoApplied(true);
-      toast.success('Promo code applied! 10% discount');
-    } else {
-      toast.error('Invalid promo code');
     }
   };
 
@@ -171,10 +178,20 @@ export default function CartPage() {
             <div className="lg:col-span-2">
               <div className="bg-white rounded-2xl shadow-md overflow-hidden">
                 <div className="p-6 border-b border-gray-100">
-                  <h2 className="text-xl font-semibold text-[#00261b] flex items-center gap-2">
-                    <ShoppingBag className="w-5 h-5 text-emerald-600" />
-                    Cart Items ({cartItems.length})
-                  </h2>
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-xl font-semibold text-[#00261b] flex items-center gap-2">
+                      <ShoppingBag className="w-5 h-5 text-emerald-600" />
+                      Cart Items ({cartItems.length})
+                    </h2>
+                    <Button
+                      variant="outline"
+                      onClick={handleClearCart}
+                      className="text-red-500 hover:text-red-700 border-red-200 hover:border-red-300 rounded-lg px-3 py-1 h-8 text-sm"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 mr-1" />
+                      Clear All
+                    </Button>
+                  </div>
                 </div>
                 <div className="p-6">
                   <AnimatePresence>
@@ -193,7 +210,9 @@ export default function CartPage() {
 
                         <div className="flex-1">
                           <h3 className="font-semibold text-[#00261b] text-lg mb-1">{item.name}</h3>
-                          <p className="text-sm text-gray-500 mb-1">{item.description}</p>
+                          {item.metadata?.serviceName && (
+                            <p className="text-xs text-gray-500 mb-1">Service: {item.metadata.serviceName}</p>
+                          )}
                           <p className="text-xs text-gray-400 capitalize">{item.category}</p>
                         </div>
 
@@ -257,7 +276,7 @@ export default function CartPage() {
               </div>
             </div>
 
-            {/* Order Summary - Premium Card */}
+            {/* Order Summary - WITH TOGGLE BUTTONS */}
             <div className="lg:col-span-1">
               <div className="sticky top-24">
                 <div className="bg-white rounded-2xl shadow-md overflow-hidden">
@@ -269,34 +288,43 @@ export default function CartPage() {
                   </div>
 
                   <div className="p-6">
-                    {/* Promo Code */}
-                    <div className="mb-6">
-                      <label className="text-sm font-medium text-[#00261b] mb-2 block">
-                        Promo Code
-                      </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={promoCode}
-                          onChange={(e) => setPromoCode(e.target.value)}
-                          placeholder="Enter code"
-                          className="flex-1 px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-[#00261b] focus:ring-1 focus:ring-[#00261b]"
-                          disabled={promoApplied}
-                        />
-                        <Button
-                          onClick={handleApplyPromo}
-                          disabled={promoApplied}
-                          className="bg-[#00261b] hover:bg-emerald-800 text-white px-5 text-sm rounded-xl"
+                    {/* TOGGLE BUTTONS FOR CARPET AND SHOES */}
+                    <div className="mb-4 space-y-3 pb-4 border-b border-gray-200">
+                      <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-xl">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">🧹</span>
+                          <div>
+                            <p className="text-sm font-medium text-[#00261b]">Carpet Items</p>
+                            <p className="text-xs text-gray-500">Require contact for pricing</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleCarpetToggle(!carpetToggle)}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${carpetToggle ? 'bg-[#00261b]' : 'bg-gray-300'}`}
                         >
-                          Apply
-                        </Button>
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${carpetToggle ? 'translate-x-6' : 'translate-x-1'}`}
+                          />
+                        </button>
                       </div>
-                      {promoApplied && (
-                        <p className="text-sm text-emerald-600 mt-2 flex items-center gap-1">
-                          <CheckCircle className="w-4 h-4" />
-                          Promo code applied: 10% discount
-                        </p>
-                      )}
+
+                      <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-xl">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">👟</span>
+                          <div>
+                            <p className="text-sm font-medium text-[#00261b]">Shoe Items</p>
+                            <p className="text-xs text-gray-500">Require contact for pricing</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleShoesToggle(!shoesToggle)}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${shoesToggle ? 'bg-[#00261b]' : 'bg-gray-300'}`}
+                        >
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${shoesToggle ? 'translate-x-6' : 'translate-x-1'}`}
+                          />
+                        </button>
+                      </div>
                     </div>
 
                     {/* Summary Details */}
@@ -305,44 +333,13 @@ export default function CartPage() {
                         <span>Subtotal</span>
                         <span className="font-medium">AED {subtotal.toFixed(2)}</span>
                       </div>
-                      <div className="flex justify-between text-gray-600 py-2 border-b border-gray-100">
-                        <span>Delivery Fee</span>
-                        <span className="font-medium">
-                          {deliveryFee === 0 ? (
-                            <span className="text-emerald-600">FREE</span>
-                          ) : (
-                            `AED ${deliveryFee}`
-                          )}
-                        </span>
-                      </div>
-                      {promoApplied && (
-                        <div className="flex justify-between text-emerald-600 py-2">
-                          <span>Discount (10%)</span>
-                          <span className="font-medium">-AED {discount.toFixed(2)}</span>
-                        </div>
-                      )}
-                      <div className="pt-4">
+                      <div className="pt-4 border-t border-gray-200">
                         <div className="flex justify-between items-center">
                           <span className="text-lg font-semibold text-[#00261b]">Total</span>
                           <span className="text-2xl font-bold text-emerald-700">AED {total.toFixed(2)}</span>
                         </div>
                       </div>
                     </div>
-
-                    {/* Free Delivery Progress */}
-                    {subtotal < 100 && (
-                      <div className="mb-6 p-4 bg-[#bcedd7]/20 rounded-xl">
-                        <p className="text-sm text-[#00261b] font-medium mb-2">
-                          Add AED {(100 - subtotal).toFixed(2)} more for free delivery
-                        </p>
-                        <div className="w-full h-2 bg-[#bcedd7] rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-[#00261b] rounded-full transition-all duration-500"
-                            style={{ width: `${Math.min((subtotal / 100) * 100, 100)}%` }}
-                          />
-                        </div>
-                      </div>
-                    )}
 
                     {/* Checkout Button */}
                     <Button
@@ -364,7 +361,7 @@ export default function CartPage() {
                     <div className="grid grid-cols-3 gap-3 mt-6">
                       {[
                         { icon: Shield, label: 'Secure Payment', color: 'bg-blue-50' },
-                        { icon: Truck, label: 'Free Delivery*', color: 'bg-emerald-50' },
+                        { icon: Truck, label: 'Free Delivery', color: 'bg-emerald-50' },
                         { icon: Leaf, label: 'Eco-Friendly', color: 'bg-green-50' },
                       ].map((badge, idx) => (
                         <div key={idx} className={`text-center py-3 ${badge.color} rounded-xl`}>
@@ -380,7 +377,7 @@ export default function CartPage() {
                       <div>
                         <p className="text-sm font-medium text-[#00261b]">Delivery Information</p>
                         <p className="text-xs text-gray-500 mt-1">
-                          Estimated delivery: 24-48 hours. Free delivery on orders above AED 100.
+                          Free delivery. Estimated 24-48 hours.
                         </p>
                       </div>
                     </div>
