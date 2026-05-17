@@ -45,7 +45,7 @@ function TrustStrip() {
   ];
 
   return (
-    <section className="bg-[#edeeeb] py-10">
+    <section className="bg-[#014421] py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-wrap justify-between items-center gap-6">
           {trustItems.map((item, index) => (
@@ -53,9 +53,10 @@ function TrustStrip() {
               key={index}
               whileHover={{ y: -5, scale: 1.05 }}
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
-              className="group flex items-center gap-2 text-sm font-medium text-[#00261b] hover:text-green-700 transition-colors duration-300 cursor-default"
+              className="group flex items-center gap-2 text-sm font-medium text-white hover:text-gray-300 transition-colors duration-300 cursor-default"
             >
-              <item.icon className="text-2xl transition-all duration-300 group-hover:text-green-600 group-hover:scale-110" />
+              <item.icon className="text-2xl text-white transition-all duration-300 group-hover:text-gray-300 group-hover:scale-110" />
+
               <span className="transition-colors duration-300">
                 {item.label}
               </span>
@@ -413,7 +414,7 @@ function AboutSection() {
 function TestimonialsSection() {
   const testimonials = [
     { text: '"The most reliable service I\'ve found in Marina. My suits return looking better than when I bought them. Truly premium."', name: 'James Kensington', role: 'Marina Resident' },
-    { text: '"Laundrica handles our boutique hotel linens with incredible care. Their commercial service is unmatched in Dubai."', name: 'Sarah Al-Maktoum', role: 'Hospitality Manager' },
+    { text: '"Laundrica handles our boutique hotel linens with incredible care. Their commercial service is unmatched in Dubai."', name: 'Sarah ', role: 'Hospitality Manager' },
     { text: '"Finally, a dry cleaner that understands silk. The pickup process is so easy, I never have to worry about my weekend wear."', name: 'Elena Rodriguez', role: 'Fashion Designer' },
   ];
 
