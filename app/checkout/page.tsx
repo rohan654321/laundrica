@@ -191,6 +191,9 @@ export default function CheckoutPage() {
           city: formData.city || 'Dubai',
           notes: formData.notes || '',
         },
+        // ADD THESE LINES - Send toggle states to backend
+        carpetContactEnabled: carpetToggle,
+        shoesContactEnabled: shoesToggle,
       };
 
       console.log('Sending order data:', JSON.stringify(orderData, null, 2));

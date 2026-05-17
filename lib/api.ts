@@ -180,7 +180,7 @@ export const cartAPI = {
     }
   },
 
-  // In lib/api.ts, update the addToCart function
+  // Add to cart with better error handling
   addToCart: async (sessionId: string, item: any) => {
     if (!sessionId) {
       return { success: false, error: 'Session ID required' };
@@ -199,7 +199,7 @@ export const cartAPI = {
       return response;
     } catch (error: any) {
       // Handle duplicate key error specifically
-      if (error?.message?.includes('E11000') || error?.message?.includes('duplicate')) {
+      if (isDuplicateKeyError(error)) {
         console.log('Duplicate key error - cart may already exist, fetching existing cart');
         try {
           // Try to get existing cart
@@ -218,6 +218,11 @@ export const cartAPI = {
               });
             }
             saveLocalCart(sessionId, items);
+
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('cart-updated', { detail: { items } }));
+            }
+
             return { success: true, cart: { items }, fromLocalStorage: true };
           }
         } catch (e) {
@@ -226,7 +231,38 @@ export const cartAPI = {
       }
 
       console.log(`Backend add to cart failed, using localStorage for session ${sessionId}`);
-      // Rest of your localStorage fallback code...
+
+      // Use localStorage fallback
+      const items = getLocalCart(sessionId);
+      const existingIndex = items.findIndex((i: LocalCartItem) => i.productId === item.productId);
+
+      if (existingIndex >= 0) {
+        items[existingIndex].quantity += (item.quantity || 1);
+      } else {
+        items.push({
+          id: `cart_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          productId: item.productId,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity || 1,
+          category: item.category || 'general',
+          description: item.description || '',
+          image: item.image,
+          serviceItems: item.serviceItems || [],
+          selectedColor: item.selectedColor || null,
+          selectedSize: item.selectedSize || null,
+          designImage: item.designImage || null,
+          metadata: item.metadata || {},
+        });
+      }
+
+      saveLocalCart(sessionId, items);
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('cart-updated', { detail: { items } }));
+      }
+
+      return { success: true, cart: { items }, fromLocalStorage: true };
     }
   },
 
@@ -375,6 +411,7 @@ export const cartAPI = {
 
 // ============ ORDER API ============
 export const orderAPI = {
+  // UPDATED: Create order with carpet and shoes toggle states
   createOrder: async (orderData: any) => {
     if (!orderData) {
       throw new Error('Order data is required');
@@ -382,10 +419,22 @@ export const orderAPI = {
 
     const sessionId = orderData.sessionId;
 
+    // Ensure carpetContactEnabled and shoesContactEnabled are included
+    const enrichedOrderData = {
+      ...orderData,
+      carpetContactEnabled: orderData.carpetContactEnabled || false,
+      shoesContactEnabled: orderData.shoesContactEnabled || false,
+    };
+
+    console.log('📦 Creating order with preferences:', {
+      carpetContactEnabled: enrichedOrderData.carpetContactEnabled,
+      shoesContactEnabled: enrichedOrderData.shoesContactEnabled,
+    });
+
     try {
       const response = await apiCall('/orders', {
         method: 'POST',
-        body: JSON.stringify(orderData),
+        body: JSON.stringify(enrichedOrderData),
       }, sessionId);
       return response;
     } catch (error) {
@@ -394,7 +443,8 @@ export const orderAPI = {
     }
   },
 
-  trackOrder: async (orderNumber: string) => {
+  // UPDATED: Get order by number with better error handling
+  getOrderByNumber: async (orderNumber: string) => {
     if (!orderNumber) {
       throw new Error('Order number is required');
     }
@@ -408,6 +458,7 @@ export const orderAPI = {
     }
   },
 
+  // UPDATED: Get orders by session with better error handling
   getOrdersBySession: async (sessionId: string) => {
     if (!sessionId) {
       return { success: false, orders: [] };
@@ -422,6 +473,7 @@ export const orderAPI = {
     }
   },
 
+  // UPDATED: Get order by ID with session validation
   getOrderById: async (orderId: string, sessionId?: string) => {
     if (!orderId) {
       throw new Error('Order ID is required');
@@ -436,6 +488,7 @@ export const orderAPI = {
     }
   },
 
+  // UPDATED: Cancel order with proper session
   cancelOrder: async (orderId: string, sessionId: string) => {
     if (!orderId || !sessionId) {
       throw new Error('Order ID and Session ID are required');
@@ -448,6 +501,24 @@ export const orderAPI = {
       return response;
     } catch (error) {
       console.error('Cancel order error:', error);
+      throw error;
+    }
+  },
+
+  // NEW: Update order status (for admin use)
+  updateOrderStatus: async (orderNumber: string, status: string, sessionId?: string) => {
+    if (!orderNumber || !status) {
+      throw new Error('Order number and status are required');
+    }
+
+    try {
+      const response = await apiCall(`/orders/${orderNumber}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status }),
+      }, sessionId);
+      return response;
+    } catch (error) {
+      console.error('Update order status error:', error);
       throw error;
     }
   },
