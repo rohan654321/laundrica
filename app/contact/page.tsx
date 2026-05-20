@@ -64,13 +64,13 @@ export default function ContactPage() {
               Have questions about our services? Need a custom quote? Our team is here to help you 7 days a week.
             </p>
             <div className="flex flex-wrap gap-4 mb-10">
-              <a href="tel:+971509259667">
+              <a href="tel:">
                 <button className="px-8 py-3.5 bg-[#00261b] text-white rounded-xl font-semibold hover:opacity-90 transition flex items-center gap-2">
                   <Phone className="w-4 h-4" />
                   Call Us Now
                 </button>
               </a>
-              <a href="https://wa.me/971509259667" target="_blank" rel="noopener noreferrer">
+              <a href="#" target="_blank" rel="noopener noreferrer">
                 <button className="px-8 py-3.5 bg-white border border-gray-200 text-[#00261b] rounded-xl font-semibold hover:bg-gray-50 transition flex items-center gap-2">
                   <MessageCircle className="w-4 h-4 text-green-600" />
                   WhatsApp Chat

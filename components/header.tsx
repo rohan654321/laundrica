@@ -7,7 +7,7 @@ import { useCart } from '@/context/cart-context';
 import { ShoppingCart, Menu, X, Sparkles, ChevronDown } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 export function Header() {
   const { cartItems } = useCart();
@@ -15,6 +15,7 @@ export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const pathname = usePathname();
+  const router = useRouter();
 
   const servicesDropdownRef = useRef<HTMLDivElement>(null);
   const bookDropdownRef = useRef<HTMLDivElement>(null);
@@ -42,6 +43,24 @@ export function Header() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [openDropdown]);
 
+  // Handle hash navigation after page load
+  const handleHashNavigation = (sectionId: string) => {
+    // Small delay to ensure DOM is ready
+    setTimeout(() => {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        const headerOffset = 80; // Height of sticky header
+        const elementPosition = element.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
+      }
+    }, 100);
+  };
+
   // Smooth scroll function
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -58,26 +77,39 @@ export function Header() {
   };
 
   // Handle navigation with smooth scrolling for homepage links
-  const handleNavClick = (href: string, sectionId?: string) => {
+  const handleNavClick = async (href: string, sectionId?: string) => {
     setIsMenuOpen(false);
     setOpenDropdown(null);
 
     if (pathname === '/') {
-      // If on homepage, scroll to section or navigate
+      // If on homepage, directly scroll to section
       if (sectionId) {
         scrollToSection(sectionId);
       } else {
-        window.location.href = href;
+        router.push(href);
       }
     } else {
-      // If on another page, navigate to homepage with section hash
+      // If on another page, navigate to homepage with hash
       if (sectionId) {
-        window.location.href = `/#${sectionId}`;
+        // Navigate to homepage with hash
+        router.push(`/#${sectionId}`);
+        // The scrolling will be handled by the useEffect below
       } else {
-        window.location.href = href;
+        router.push(href);
       }
     }
   };
+
+  // Effect to handle hash navigation when coming from another page
+  useEffect(() => {
+    // Check if we're on the homepage and have a hash in the URL
+    if (pathname === '/' && window.location.hash) {
+      const sectionId = window.location.hash.slice(1); // Remove the # character
+      handleHashNavigation(sectionId);
+      // Clear the hash from URL without causing page jump
+      window.history.pushState(null, '', '/');
+    }
+  }, [pathname]);
 
   // Updated service links with your actual services and slugs
   const serviceLinks = [
