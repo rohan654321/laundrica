@@ -1,29 +1,38 @@
-// app/pricing/page.tsx
 'use client';
 
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
-import { PricingCards } from '@/components/pricing/pricing-cards';
-import { PricingToggle } from '@/components/pricing/pricing-toggle';
-import { FeatureComparison } from '@/components/pricing/feature-comparison';
-import { ServiceMenu } from '@/components/pricing/service-menu';
 import { motion, useInView } from 'framer-motion';
-import { useRef, useState } from 'react';
-import { FAQAccordionMinimal } from '@/components/pricing/faq-accordion-minimal';
-
-import {
-  Sparkles, Shirt, Home, Crown, Download, FileText,
-  Check, Clock, Heart, Leaf, Zap, Award, ArrowRight,
-  Phone, MessageCircle, Shield, Truck, Star, Calendar,
-  Gem, ThumbsUp, Droplets, Wind, WashingMachine
-} from 'lucide-react';
+import { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import { productAPI } from '@/lib/api';
+
+import {
+  Shirt, Home, Crown, Download,
+  Heart, Leaf, Zap, Award,
+  Phone, MessageCircle, Shield, Truck,
+  Gem, ThumbsUp,
+  Clock
+} from 'lucide-react';
+
+interface ServiceItem {
+  _id: string;
+  name: string;
+  price: number;
+  unit: string;
+  description: string;
+  category: string;
+  serviceId: string;
+  serviceName?: string;
+  contactForPricing?: boolean;
+}
 
 export default function PricingPage() {
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
-  const [activeCategory, setActiveCategory] = useState<'men' | 'women' | 'household' | 'other'>('men');
+  const [activeCategory, setActiveCategory] = useState<'men' | 'women' | 'children' | 'household'>('men');
+  const [serviceItems, setServiceItems] = useState<ServiceItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const heroRef = useRef(null);
   const isHeroInView = useInView(heroRef, { once: true });
 
@@ -40,6 +49,53 @@ export default function PricingPage() {
     }
   };
 
+  // Fetch all service items from backend
+  useEffect(() => {
+    fetchAllServiceItems();
+  }, []);
+
+  const fetchAllServiceItems = async () => {
+    try {
+      setIsLoading(true);
+
+      // Get all products first
+      const productsResponse = await productAPI.getAllProducts();
+
+      if (productsResponse.success && productsResponse.products) {
+        let allItems: ServiceItem[] = [];
+
+        // Fetch items for each product
+        for (const product of productsResponse.products) {
+          // Skip carpet and shoe cleaning as they are contact-based
+          if (product.category === 'carpet-cleaning' || product.category === 'shoe-cleaning') {
+            continue;
+          }
+
+          try {
+            const itemsResponse = await productAPI.getServiceItemsForProduct(product._id);
+            if (itemsResponse.success && itemsResponse.items) {
+              // Add service name to each item
+              const itemsWithService = itemsResponse.items.map((item: ServiceItem) => ({
+                ...item,
+                serviceName: product.name
+              }));
+              allItems = [...allItems, ...itemsWithService];
+            }
+          } catch (error) {
+            console.log(`No items for product: ${product.name}`);
+          }
+        }
+
+        setServiceItems(allItems);
+        console.log(`Loaded ${allItems.length} service items for pricing`);
+      }
+    } catch (error) {
+      console.error('Error fetching service items:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleDownloadPDF = () => {
     const pdfUrl = '/pricing-menu.pdf';
     const link = document.createElement('a');
@@ -49,6 +105,16 @@ export default function PricingPage() {
     link.click();
     document.body.removeChild(link);
   };
+
+  // Get items for current category
+  const getCurrentItems = () => {
+    const filtered = serviceItems.filter(item => item.category === activeCategory);
+    // Sort by name
+    filtered.sort((a, b) => a.name.localeCompare(b.name));
+    return filtered;
+  };
+
+  const currentItems = getCurrentItems();
 
   return (
     <main className="flex flex-col min-h-screen bg-[#f9faf7]">
@@ -105,20 +171,14 @@ export default function PricingPage() {
             transition={{ duration: 0.7, delay: 0.2 }}
             className="relative"
           >
-            <div className="aspect-[4/5] rounded-3xl overflow-hidden shadow-xl bg-gradient-to-br from-[#bcedd7]/30 to-[#00261b]/10 flex items-center justify-center p-8">
-              <div className="text-center">
-                <div className="w-32 h-32 mx-auto bg-[#bcedd7] rounded-full flex items-center justify-center mb-6">
-                  <Image
-                    src="/images/wash&fold.png"
-                    alt="Laundry"
-                    fill
-                    className="object-container rounded-xl"
-                  />
-                </div>
-                <h3 className="text-2xl font-bold text-[#00261b]">Starting from</h3>
-                <p className="text-5xl font-bold text-emerald-700 mt-2">AED 6</p>
-                <p className="text-[#5c5f5e] mt-2">per garment</p>
-              </div>
+            <div className="aspect-[4/5] rounded-3xl overflow-hidden shadow-xl">
+              <Image
+                src="/images/wash&fold.png"
+                alt="Laundry Service"
+                width={500}
+                height={600}
+                className="w-full h-full object-cover"
+              />
             </div>
             <div className="absolute -bottom-6 -right-6 bg-white p-5 rounded-2xl shadow-xl max-w-[200px]">
               <div className="flex items-center gap-2">
@@ -132,8 +192,6 @@ export default function PricingPage() {
           </motion.div>
         </div>
       </section>
-
-
 
       {/* Service Menu Section with Category Tabs */}
       <section className="py-16 bg-[#edeeeb]">
@@ -157,15 +215,15 @@ export default function PricingPage() {
             {[
               { id: 'men', label: 'Men\'s Clothing', icon: Shirt },
               { id: 'women', label: 'Women\'s Clothing', icon: Heart },
+              { id: 'children', label: 'Children\'s Clothing', icon: Crown },
               { id: 'household', label: 'Household Items', icon: Home },
-              { id: 'other', label: 'Special Items', icon: Star }
             ].map((category) => (
               <button
                 key={category.id}
                 onClick={() => setActiveCategory(category.id as any)}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all duration-300 ${activeCategory === category.id
-                    ? 'bg-[#00261b] text-white shadow-lg'
-                    : 'bg-white text-[#00261b] hover:bg-[#bcedd7] border border-gray-200'
+                  ? 'bg-[#00261b] text-white shadow-lg'
+                  : 'bg-white text-[#00261b] hover:bg-[#bcedd7] border border-gray-200'
                   }`}
               >
                 <category.icon className="w-4 h-4" />
@@ -174,10 +232,55 @@ export default function PricingPage() {
             ))}
           </div>
 
-          <ServiceMenu activeCategory={activeCategory} />
+          {/* Pricing Table - Single table per category */}
+          {isLoading ? (
+            <div className="text-center py-12">
+              <div className="relative w-16 h-16 mx-auto mb-4">
+                <div className="absolute inset-0 border-2 border-[#bcedd7] rounded-full"></div>
+                <div className="absolute inset-0 border-2 border-t-[#00261b] rounded-full animate-spin"></div>
+              </div>
+              <p className="text-[#5c5f5e]">Loading price list...</p>
+            </div>
+          ) : currentItems.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-xl">
+              <p className="text-[#5c5f5e]">No items found for this category.</p>
+            </div>
+          ) : (
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="text-left px-6 py-4 text-sm font-semibold text-[#00261b]">Item</th>
+                      <th className="text-left px-6 py-4 text-sm font-semibold text-[#00261b]">Service Type</th>
+                      <th className="text-left px-6 py-4 text-sm font-semibold text-[#00261b]">Unit</th>
+                      <th className="text-right px-6 py-4 text-sm font-semibold text-[#00261b]">Price (AED)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {currentItems.map((item) => (
+                      <tr key={item._id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4 text-sm text-[#00261b] font-medium">
+                          {item.name}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600">
+                          {item.serviceName || 'Standard'}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500">
+                          {item.unit}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-right">
+                          <span className="font-semibold text-emerald-700">AED {item.price}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
       </section>
-
 
       {/* Why Choose Us Section - Premium */}
       <section className="py-16 bg-[#f9faf7]">
@@ -221,8 +324,6 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* FAQ Section */}
-      {/* <FAQAccordionMinimal /> */}
       <Footer />
     </main>
   );

@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useCart } from '@/context/cart-context';
 import { useSession } from '@/context/session-context';
-import { serviceAPI } from '@/lib/api';
+import { productAPI, serviceAPI } from '@/lib/api';
 import { Minus, Plus, ShoppingCart, ArrowLeft, Check, Clock, Shield, Truck, Leaf, AlertCircle, Phone, MessageCircle, Trash2, MapPin, X, Sparkles, ShoppingBag } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -196,41 +196,58 @@ export default function ServiceOrderPage() {
     fetchServiceAndItems();
   }, [slug]);
 
+
   const fetchServiceAndItems = async () => {
     try {
       setIsLoading(true);
       setError(null);
 
-      const servicesData = await serviceAPI.getAllServices();
-      let foundService = null;
+      // Use productAPI instead of serviceAPI
+      const response = await productAPI.getProductBySlug(slug);
 
-      if (servicesData.success && servicesData.services) {
-        foundService = servicesData.services.find((s: any) => s.slug === slug);
-      } else if (Array.isArray(servicesData)) {
-        foundService = servicesData.find((s: any) => s.slug === slug);
-      }
+      if (response.success && response.product) {
+        const foundService = response.product;
+        setService(foundService);
 
-      if (!foundService) {
-        const localService = getLocalServiceBySlug(slug);
-        if (localService) {
-          setService(localService);
+        // Fetch service items using the product API
+        try {
+          const itemsResponse = await productAPI.getServiceItemsForProduct(foundService._id);
+          if (itemsResponse.success && itemsResponse.items && itemsResponse.items.length > 0) {
+            setServiceItems(itemsResponse.items);
+            console.log(`Loaded ${itemsResponse.items.length} items for ${foundService.name}`);
+          } else {
+            console.log('No service items found in database');
+            setServiceItems([]);
+          }
+        } catch (itemsError) {
+          console.log('Error fetching service items:', itemsError);
+          setServiceItems([]);
+        }
+      } else {
+        // Try serviceAPI as fallback
+        const servicesData = await serviceAPI.getAllServices();
+        let foundService = null;
+
+        if (servicesData.success && servicesData.services) {
+          foundService = servicesData.services.find((s: any) => s.slug === slug);
+        }
+
+        if (foundService) {
+          setService(foundService);
+          // Fetch items similarly
+          const itemsResponse = await serviceAPI.getServiceItems(foundService._id);
+          if (itemsResponse.success && itemsResponse.items) {
+            setServiceItems(itemsResponse.items);
+          }
         } else {
-          setError('Service not found');
+          const localService = getLocalServiceBySlug(slug);
+          if (localService) {
+            setService(localService);
+          } else {
+            setError('Service not found');
+          }
         }
-        return;
       }
-
-      setService(foundService);
-
-      try {
-        const itemsData = await serviceAPI.getServiceItems(foundService._id);
-        if (itemsData && itemsData.success && itemsData.items && itemsData.items.length > 0) {
-          setServiceItems(itemsData.items);
-        }
-      } catch (itemsError) {
-        console.log('No service items found, using defaults');
-      }
-
     } catch (err: any) {
       console.error('Error fetching service:', err);
       const localService = getLocalServiceBySlug(slug);
