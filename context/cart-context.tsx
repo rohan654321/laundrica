@@ -23,6 +23,7 @@ export interface CartItem {
     serviceName?: string;
     unit?: string;
     serviceId?: string;
+    minQuantity?: number;  // ✅ ADD THIS
   };
 }
 
@@ -93,7 +94,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
-  const pendingSync = useRef<Set<string>>(new Set());
   const { sessionId } = useSession();
 
   // Load cart from localStorage first (instant), then sync with backend
@@ -158,30 +158,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [sessionId]);
 
-  // Optimistic add to cart - updates UI instantly
+  // ✅ FIXED: Add to cart with minQuantity support
   const addToCart = async (item: Omit<CartItem, 'id'> & { id?: string; productId?: string }) => {
     if (!sessionId) {
       console.error('No session ID available');
       return;
     }
 
-    // Create unique key for deduplication
-    const uniqueKey = item.metadata?.originalItemId || item.productId || item.name;
-    const syncKey = `${sessionId}_${uniqueKey}`;
-
-    // Prevent duplicate rapid clicks
-    if (pendingSync.current.has(syncKey)) {
-      console.log('Duplicate add prevented');
-      return;
-    }
-
-    pendingSync.current.add(syncKey);
-
     // Generate IDs
     const newId = generateUniqueId();
-    const productId = item.productId || uniqueKey || newId;
+    const productId = item.productId || item.metadata?.originalItemId || item.name;
 
-    // OPTIMISTIC UPDATE: Update UI immediately
+    // ✅ Check for minQuantity
+    const minQty = item.metadata?.minQuantity || 1;
+    const quantityToAdd = item.quantity || 1;
+
+    // ✅ IMMEDIATE UI UPDATE - No waiting, no blocking
     const currentItems = [...cartItems];
     const existingItemIndex = currentItems.findIndex(
       (i) => i.productId === productId || i.metadata?.originalItemId === item.metadata?.originalItemId
@@ -190,32 +182,56 @@ export function CartProvider({ children }: { children: ReactNode }) {
     let optimisticItems: CartItem[];
     if (existingItemIndex >= 0) {
       // Update existing item quantity
+      const currentQty = currentItems[existingItemIndex].quantity;
+      let newQty = currentQty + quantityToAdd;
+
+      // ✅ If it's first time adding and minQuantity > 1, ensure minimum
+      if (currentQty === 0 && minQty > 1 && quantityToAdd === 1) {
+        newQty = minQty;
+      }
+
       optimisticItems = [...currentItems];
       optimisticItems[existingItemIndex] = {
         ...optimisticItems[existingItemIndex],
-        quantity: optimisticItems[existingItemIndex].quantity + (item.quantity || 1),
+        quantity: newQty,
       };
     } else {
       // Add new item
+      let finalQuantity = quantityToAdd;
+      // ✅ If it's a new item and minQuantity > 1, use minQuantity
+      if (minQty > 1 && quantityToAdd === 1) {
+        finalQuantity = minQty;
+      }
+
       const newItem: CartItem = {
         id: newId,
         ...item,
         productId: productId,
-        quantity: item.quantity || 1,
+        quantity: finalQuantity,
       };
       optimisticItems = [...currentItems, newItem];
     }
 
-    // Immediately update UI and localStorage
+    // ✅ Update UI and localStorage IMMEDIATELY
     setCartItems(optimisticItems);
     saveToLocalStorage(sessionId, optimisticItems);
 
-    // Then try to sync with backend (don't wait for response)
+    // ✅ Calculate final quantity for API
+    let apiQuantity = item.quantity || 1;
+    const existingItem = currentItems.find(
+      (i) => i.productId === productId || i.metadata?.originalItemId === item.metadata?.originalItemId
+    );
+
+    if (!existingItem && minQty > 1 && apiQuantity === 1) {
+      apiQuantity = minQty;
+    }
+
+    // ✅ Fire and forget - don't await, don't block
     cartAPI.addToCart(sessionId, {
       productId: productId,
       name: item.name,
       price: item.price,
-      quantity: item.quantity || 1,
+      quantity: apiQuantity,
       category: item.category,
       description: item.description || '',
       image: item.image || '',
@@ -223,71 +239,79 @@ export function CartProvider({ children }: { children: ReactNode }) {
       selectedColor: item.selectedColor || null,
       selectedSize: item.selectedSize || null,
       designImage: item.designImage || null,
-      metadata: item.metadata || {},
+      metadata: {
+        ...item.metadata,
+        minQuantity: minQty,  // ✅ Store minQuantity in metadata
+      },
     }).catch(error => {
       console.log('Backend sync failed, but cart is saved locally');
-      // Item already saved in localStorage, no need to revert
-    }).finally(() => {
-      pendingSync.current.delete(syncKey);
     });
   };
 
-  // Optimistic update quantity
+  // ✅ FIXED: Update quantity with minQuantity validation
   const updateQuantity = async (id: string, quantity: number) => {
     if (!sessionId) return;
 
-    const syncKey = `${sessionId}_update_${id}`;
-    if (pendingSync.current.has(syncKey)) return;
-    pendingSync.current.add(syncKey);
+    // Find the item to check minQuantity
+    const item = cartItems.find(i => i.id === id || i.cartItemId === id);
+    const minQty = item?.metadata?.minQuantity || 1;
 
-    // OPTIMISTIC UPDATE: Update UI immediately
+    // ✅ Don't allow quantity below minQuantity for kg items
+    let finalQuantity = quantity;
+    if (minQty > 1 && quantity < minQty && quantity > 0) {
+      finalQuantity = minQty;
+      // Show toast notification
+      if (typeof window !== 'undefined') {
+        const { toast } = require('sonner');
+        toast.info(`Minimum ${minQty} ${item?.metadata?.unit || 'kg'} required`);
+      }
+    }
+
+    // If quantity is 0, remove the item
+    if (finalQuantity === 0) {
+      await removeFromCart(id);
+      return;
+    }
+
+    // ✅ Update UI immediately
     const updatedItems = cartItems.map(item =>
-      (item.id === id || item.cartItemId === id) ? { ...item, quantity } : item
+      (item.id === id || item.cartItemId === id) ? { ...item, quantity: finalQuantity } : item
     );
 
     setCartItems(updatedItems);
     saveToLocalStorage(sessionId, updatedItems);
 
-    // Background sync with backend
-    cartAPI.updateCartItem(sessionId, id, quantity).catch(error => {
+    // Fire and forget
+    cartAPI.updateCartItem(sessionId, id, finalQuantity).catch(error => {
       console.log('Backend update failed, but UI already updated');
-      // If backend fails, we keep the local change
-    }).finally(() => {
-      pendingSync.current.delete(syncKey);
     });
   };
 
-  // Optimistic remove from cart
+  // ✅ FIXED: Remove from cart - instant
   const removeFromCart = async (id: string) => {
     if (!sessionId) return;
 
-    const syncKey = `${sessionId}_remove_${id}`;
-    if (pendingSync.current.has(syncKey)) return;
-    pendingSync.current.add(syncKey);
-
-    // OPTIMISTIC UPDATE: Update UI immediately
+    // ✅ Update UI immediately
     const updatedItems = cartItems.filter(item => item.id !== id && item.cartItemId !== id);
 
     setCartItems(updatedItems);
     saveToLocalStorage(sessionId, updatedItems);
 
-    // Background sync with backend
+    // Fire and forget
     cartAPI.removeFromCart(sessionId, id).catch(error => {
       console.log('Backend remove failed, but UI already updated');
-    }).finally(() => {
-      pendingSync.current.delete(syncKey);
     });
   };
 
-  // Optimistic clear cart
+  // ✅ FIXED: Clear cart - instant
   const clearCart = async () => {
     if (!sessionId) return;
 
-    // OPTIMISTIC UPDATE: Clear UI immediately
+    // ✅ Clear UI immediately
     setCartItems([]);
     clearLocalStorageCart(sessionId);
 
-    // Background sync with backend
+    // Fire and forget
     cartAPI.clearCart(sessionId).catch(error => {
       console.log('Backend clear failed, but UI already cleared');
     });

@@ -45,6 +45,7 @@ interface ServiceItem {
   category: string;
   image?: string;
   contactForPricing?: boolean;
+  minQuantity?: number;
 }
 
 interface Service {
@@ -68,6 +69,7 @@ const SERVICE_CATEGORY_MAP: Record<string, CategoryType[]> = {
   'shoe-cleaning': ['shoes'],
   'curtain-cleaning': ['household'],
   'commercial': ['men', 'women', 'household'],
+  'wash-and-fold': ['household'],// ✅ ADD THIS LINE
 };
 
 const ALL_CATEGORIES: Record<CategoryType, Category> = {
@@ -347,6 +349,49 @@ export default function ServiceOrderPage() {
       return;
     }
 
+    // ✅ CHECK MINIMUM QUANTITY FOR WASH & FOLD
+    const currentQty = getCartQuantity(item._id);
+    const minQty = item.minQuantity || 1;
+
+    // If it's a Wash & Fold item (unit is 'kg') and current quantity is 0
+    if (item.unit === 'kg' && currentQty === 0 && minQty > 1) {
+      // Show toast that minimum quantity is required
+      toast.info(`${item.name}: Minimum ${minQty} kg required`);
+
+      const cartItem = {
+        productId: `${service?._id}-${item._id}`,
+        name: item.name,
+        price: item.price,
+        quantity: minQty,  // ✅ ADD MINIMUM QUANTITY
+        category: activeCategory,
+        description: item.description,
+        image: getServiceImage(),
+        serviceItems: [],
+        slug,
+        metadata: {
+          originalItemId: item._id,
+          serviceName: service?.name,
+          unit: item.unit,
+          serviceId: service?._id,
+          itemCategory: item.category,
+          minQuantity: minQty  // ✅ ADD THIS - PASS MIN QUANTITY TO CART
+        }
+      };
+
+      setSuccessMessage(`${minQty} kg ${item.name} added to cart (minimum order)`);
+      setShowSuccessToast(true);
+      setTimeout(() => setShowSuccessToast(false), 1500);
+
+      try {
+        await addToCart(cartItem);
+      } catch (err) {
+        console.error('Error adding to cart:', err);
+        toast.error('Failed to add to cart');
+      }
+      return;
+    }
+
+    // Normal increment for other items
     const cartItem = {
       productId: `${service?._id}-${item._id}`,
       name: item.name,
@@ -362,15 +407,17 @@ export default function ServiceOrderPage() {
         serviceName: service?.name,
         unit: item.unit,
         serviceId: service?._id,
-        itemCategory: item.category
+        itemCategory: item.category,
+        minQuantity: minQty  // ✅ ADD THIS - PASS MIN QUANTITY TO CART
       }
     };
 
+    setSuccessMessage(`${item.name} added to cart`);
+    setShowSuccessToast(true);
+    setTimeout(() => setShowSuccessToast(false), 1500);
+
     try {
       await addToCart(cartItem);
-      setSuccessMessage(`${item.name} added to cart`);
-      setShowSuccessToast(true);
-      setTimeout(() => setShowSuccessToast(false), 1500);
     } catch (err) {
       console.error('Error adding to cart:', err);
       toast.error('Failed to add to cart');
@@ -389,16 +436,21 @@ export default function ServiceOrderPage() {
     const currentQty = currentCartItem.quantity;
     const newQty = currentQty - 1;
 
+    // ✅ Show immediate feedback
+    if (newQty === 0) {
+      setSuccessMessage(`${item.name} removed from cart`);
+    } else {
+      setSuccessMessage(`${item.name} quantity updated`);
+    }
+    setShowSuccessToast(true);
+    setTimeout(() => setShowSuccessToast(false), 1500);
+
     try {
       if (newQty === 0) {
         await removeFromCart(currentCartItem.id);
-        setSuccessMessage(`${item.name} removed from cart`);
       } else {
         await updateQuantity(currentCartItem.id, newQty);
-        setSuccessMessage(`${item.name} quantity updated`);
       }
-      setShowSuccessToast(true);
-      setTimeout(() => setShowSuccessToast(false), 1500);
     } catch (err) {
       console.error('Error updating cart:', err);
       toast.error('Failed to update cart');
@@ -414,11 +466,13 @@ export default function ServiceOrderPage() {
     const currentCartItem = getCartItemByOriginalId(item._id);
     if (!currentCartItem || !currentCartItem.id) return;
 
+    // ✅ Show immediate feedback
+    setSuccessMessage(`${item.name} removed from cart`);
+    setShowSuccessToast(true);
+    setTimeout(() => setShowSuccessToast(false), 1500);
+
     try {
       await removeFromCart(currentCartItem.id);
-      setSuccessMessage(`${item.name} removed from cart`);
-      setShowSuccessToast(true);
-      setTimeout(() => setShowSuccessToast(false), 1500);
     } catch (err) {
       console.error('Error removing from cart:', err);
       toast.error('Failed to remove from cart');
@@ -445,9 +499,24 @@ export default function ServiceOrderPage() {
 
   const getCurrentItems = (): ServiceItem[] => {
     if (serviceItems.length > 0) {
-      const filtered = serviceItems.filter(item => item.category === activeCategory);
-      if (filtered.length > 0) return filtered;
+      // ✅ FILTER BY BOTH CATEGORY AND SERVICE NAME
+      // Only show items that belong to the current service's name
+      return serviceItems.filter(item => {
+        // First filter by active category
+        if (item.category !== activeCategory) return false;
+
+        // For Wash & Fold, only show items that are actually Wash & Fold items
+        // (they don't have 'men', 'women', 'children' as category)
+        if (service?.name === 'Wash & Fold') {
+          // Only show household items that are specifically for Wash & Fold
+          // These items have unit 'kg' and are from this service
+          return item.unit === 'kg' || item.name.includes('Laundry Bag');
+        }
+
+        return true;
+      });
     }
+    // Default items - keep original order
     return DEFAULT_ITEMS[activeCategory] || [];
   };
 
@@ -683,6 +752,12 @@ export default function ServiceOrderPage() {
                             <div>
                               <span className="text-xl font-bold text-[#00261b]">AED {item.price}</span>
                               <span className="text-sm text-[#5c5f5e] ml-1">/{item.unit}</span>
+                              {/* ✅ SHOW MINIMUM QUANTITY FOR KG ITEMS */}
+                              {item.unit === 'kg' && item.minQuantity && item.minQuantity > 1 && (
+                                <div className="text-xs text-amber-600 mt-1">
+                                  Min {item.minQuantity} {item.unit}
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
@@ -823,7 +898,15 @@ export default function ServiceOrderPage() {
                                 {item.metadata?.serviceName && (
                                   <p className="text-xs text-gray-400">Service: {item.metadata.serviceName}</p>
                                 )}
-                                <p className="text-xs text-gray-400">AED {item.price} each</p>
+                                <p className="text-xs text-gray-400">
+                                  AED {item.price} per {item.metadata?.unit || 'piece'}
+                                </p>
+                                {/* ✅ SHOW TOTAL WEIGHT FOR KG ITEMS */}
+                                {item.metadata?.unit === 'kg' && (
+                                  <p className="text-xs text-emerald-600 font-medium">
+                                    Total: {item.quantity} kg = AED {(item.price * item.quantity).toFixed(2)}
+                                  </p>
+                                )}
                               </div>
                               <div className="flex items-center gap-2">
                                 <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
