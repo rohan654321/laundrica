@@ -43,9 +43,9 @@ export function Header() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [openDropdown]);
 
-  // Handle hash navigation after page load
-  const handleHashNavigation = (sectionId: string) => {
-    // Small delay to ensure DOM is ready
+  // Improved scroll to section function
+  const scrollToSection = (sectionId: string) => {
+    // Wait a bit for any DOM updates
     setTimeout(() => {
       const element = document.getElementById(sectionId);
       if (element) {
@@ -57,23 +57,22 @@ export function Header() {
           top: offsetPosition,
           behavior: 'smooth'
         });
+      } else {
+        // If element not found, try again after a short delay
+        setTimeout(() => {
+          const retryElement = document.getElementById(sectionId);
+          if (retryElement) {
+            const headerOffset = 80;
+            const elementPosition = retryElement.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+            window.scrollTo({
+              top: offsetPosition,
+              behavior: 'smooth'
+            });
+          }
+        }, 100);
       }
-    }, 100);
-  };
-
-  // Smooth scroll function
-  const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      const headerOffset = 80; // Height of sticky header
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      });
-    }
+    }, 50);
   };
 
   // Handle navigation with smooth scrolling for homepage links
@@ -89,25 +88,41 @@ export function Header() {
         router.push(href);
       }
     } else {
-      // If on another page, navigate to homepage with hash
+      // If on another page, navigate to homepage
       if (sectionId) {
-        // Navigate to homepage with hash
-        router.push(`/#${sectionId}`);
-        // The scrolling will be handled by the useEffect below
+        // Store the section ID in sessionStorage before navigation
+        sessionStorage.setItem('scrollToSection', sectionId);
+        router.push('/');
       } else {
         router.push(href);
       }
     }
   };
 
-  // Effect to handle hash navigation when coming from another page
+  // Effect to handle scrolling when coming from another page
   useEffect(() => {
-    // Check if we're on the homepage and have a hash in the URL
-    if (pathname === '/' && window.location.hash) {
-      const sectionId = window.location.hash.slice(1); // Remove the # character
-      handleHashNavigation(sectionId);
-      // Clear the hash from URL without causing page jump
-      window.history.pushState(null, '', '/');
+    // Check if we're on the homepage
+    if (pathname === '/') {
+      // Check sessionStorage first
+      const sectionToScroll = sessionStorage.getItem('scrollToSection');
+      if (sectionToScroll) {
+        // Clear it immediately
+        sessionStorage.removeItem('scrollToSection');
+        // Small delay to ensure page is fully loaded
+        setTimeout(() => {
+          scrollToSection(sectionToScroll);
+        }, 100);
+      }
+
+      // Also check URL hash
+      if (window.location.hash) {
+        const sectionId = window.location.hash.slice(1);
+        setTimeout(() => {
+          scrollToSection(sectionId);
+          // Clear the hash from URL
+          window.history.pushState(null, '', '/');
+        }, 100);
+      }
     }
   }, [pathname]);
 

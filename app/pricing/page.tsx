@@ -3,36 +3,102 @@
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { motion, useInView } from 'framer-motion';
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { productAPI } from '@/lib/api';
 
 import {
   Shirt, Home, Crown, Download,
   Heart, Leaf, Zap, Award,
   Phone, MessageCircle, Shield, Truck,
   Gem, ThumbsUp,
-  Clock
+  Clock, Star, Flame
 } from 'lucide-react';
 
-interface ServiceItem {
-  _id: string;
+interface PricingItem {
+  id: string;
   name: string;
-  price: number;
-  unit: string;
-  description: string;
-  category: string;
-  serviceId: string;
-  serviceName?: string;
-  contactForPricing?: boolean;
+  washPress: number | string;
+  pressOnly: number | string;
+  dryClean: number | string;
+  category: 'men' | 'women' | 'kids' | 'household' | 'popular';
 }
 
+// Static pricing data
+const pricingData: PricingItem[] = [
+  // MEN'S CLOTHING (10 items)
+  { id: 'men-1', name: 'T-Shirt', washPress: 7, pressOnly: 4, dryClean: 10, category: 'men' },
+  { id: 'men-2', name: 'Shirt', washPress: 7, pressOnly: 4, dryClean: 10, category: 'men' },
+  { id: 'men-3', name: 'Trousers', washPress: 7, pressOnly: 4, dryClean: 10, category: 'men' },
+  { id: 'men-4', name: 'Jeans', washPress: 8, pressOnly: 5, dryClean: 12, category: 'men' },
+  { id: 'men-5', name: 'Kandoora / Thobe', washPress: 12, pressOnly: 6, dryClean: 15, category: 'men' },
+  { id: 'men-6', name: 'Suit 2 Piece', washPress: 'N/A', pressOnly: 12, dryClean: 28, category: 'men' },
+  { id: 'men-7', name: 'Blazer', washPress: 'N/A', pressOnly: 12, dryClean: 18, category: 'men' },
+  { id: 'men-8', name: 'Jacket / Coat', washPress: 'N/A', pressOnly: 12, dryClean: 20, category: 'men' },
+  { id: 'men-9', name: 'Sweater / Hoodie', washPress: 12, pressOnly: 6, dryClean: 15, category: 'men' },
+  { id: 'men-10', name: 'Gym Wear', washPress: 8, pressOnly: 'N/A', dryClean: 'N/A', category: 'men' },
+
+  // WOMEN'S CLOTHING (10 items)
+  { id: 'women-1', name: 'T-Shirt / Top', washPress: 7, pressOnly: 4, dryClean: 10, category: 'women' },
+  { id: 'women-2', name: 'Trousers / Pants', washPress: 7, pressOnly: 4, dryClean: 10, category: 'women' },
+  { id: 'women-3', name: 'Jeans', washPress: 8, pressOnly: 5, dryClean: 12, category: 'women' },
+  { id: 'women-4', name: 'Abaya', washPress: 15, pressOnly: 10, dryClean: 20, category: 'women' },
+  { id: 'women-5', name: 'Saree', washPress: 'N/A', pressOnly: 15, dryClean: 30, category: 'women' },
+  { id: 'women-6', name: 'Full Dress (Normal)', washPress: 12, pressOnly: 6, dryClean: 15, category: 'women' },
+  { id: 'women-7', name: 'Skirt', washPress: 8, pressOnly: 5, dryClean: 12, category: 'women' },
+  { id: 'women-8', name: 'Blouse / Kameez', washPress: 8, pressOnly: 4, dryClean: 12, category: 'women' },
+  { id: 'women-9', name: 'Evening Gown', washPress: 'N/A', pressOnly: 10, dryClean: 20, category: 'women' },
+  { id: 'women-10', name: 'Hijab / Scarf', washPress: 10, pressOnly: 8, dryClean: 15, category: 'women' },
+
+  // KIDS CLOTHING (10 items)
+  { id: 'kids-1', name: 'T-Shirt', washPress: 5, pressOnly: 3, dryClean: 8, category: 'kids' },
+  { id: 'kids-2', name: 'Shirt', washPress: 5, pressOnly: 3, dryClean: 8, category: 'kids' },
+  { id: 'kids-3', name: 'Trousers / Pants', washPress: 6, pressOnly: 4, dryClean: 8, category: 'kids' },
+  { id: 'kids-4', name: 'Jeans', washPress: 7, pressOnly: 4, dryClean: 8, category: 'kids' },
+  { id: 'kids-5', name: 'Dress', washPress: 8, pressOnly: 5, dryClean: 10, category: 'kids' },
+  { id: 'kids-6', name: 'School Shirt', washPress: 6, pressOnly: 3, dryClean: 'N/A', category: 'kids' },
+  { id: 'kids-7', name: 'School Trousers / Skirt', washPress: 6, pressOnly: 3, dryClean: 'N/A', category: 'kids' },
+  { id: 'kids-8', name: 'School Blazer', washPress: 'N/A', pressOnly: 6, dryClean: 20, category: 'kids' },
+  { id: 'kids-9', name: 'Onesie / Romper', washPress: 8, pressOnly: 4, dryClean: 10, category: 'kids' },
+  { id: 'kids-10', name: 'Swimwear', washPress: 7, pressOnly: 'N/A', dryClean: 'N/A', category: 'kids' },
+
+  // HOUSEHOLD ITEMS (10 items)
+  { id: 'household-1', name: 'Bed Sheet Single', washPress: 12, pressOnly: 6, dryClean: 'N/A', category: 'household' },
+  { id: 'household-2', name: 'Bed Sheet Double', washPress: 16, pressOnly: 8, dryClean: 'N/A', category: 'household' },
+  { id: 'household-3', name: 'Duvet Cover Single', washPress: 12, pressOnly: 6, dryClean: 'N/A', category: 'household' },
+  { id: 'household-4', name: 'Duvet Cover Double', washPress: 16, pressOnly: 8, dryClean: 'N/A', category: 'household' },
+  { id: 'household-5', name: 'Bath Towel Large', washPress: 12, pressOnly: 'N/A', dryClean: 16, category: 'household' },
+  { id: 'household-6', name: 'Bath Robe', washPress: 15, pressOnly: 8, dryClean: 20, category: 'household' },
+  { id: 'household-7', name: 'Duvet Medium', washPress: 20, pressOnly: 'N/A', dryClean: 25, category: 'household' },
+  { id: 'household-8', name: 'Blanket Single', washPress: 12, pressOnly: 'N/A', dryClean: 20, category: 'household' },
+  { id: 'household-9', name: 'Pillow Cover', washPress: 6, pressOnly: 4, dryClean: 'N/A', category: 'household' },
+  { id: 'household-10', name: 'Table Cloth', washPress: 6, pressOnly: 3, dryClean: 10, category: 'household' },
+
+  // MOST POPULAR ITEMS (Top 10 most requested services)
+  { id: 'popular-1', name: 'Shirt (Men)', washPress: 7, pressOnly: 4, dryClean: 10, category: 'popular' },
+  { id: 'popular-2', name: 'Trousers (Men)', washPress: 7, pressOnly: 4, dryClean: 10, category: 'popular' },
+  { id: 'popular-3', name: 'Abaya', washPress: 15, pressOnly: 10, dryClean: 20, category: 'popular' },
+  { id: 'popular-4', name: 'Kandoora / Thobe', washPress: 12, pressOnly: 6, dryClean: 15, category: 'popular' },
+  { id: 'popular-5', name: 'Suit 2 Piece', washPress: 'N/A', pressOnly: 12, dryClean: 28, category: 'popular' },
+  { id: 'popular-6', name: 'Bed Sheet Double', washPress: 16, pressOnly: 8, dryClean: 'N/A', category: 'popular' },
+  { id: 'popular-7', name: 'Jeans', washPress: 8, pressOnly: 5, dryClean: 12, category: 'popular' },
+  { id: 'popular-8', name: 'Saree', washPress: 'N/A', pressOnly: 15, dryClean: 30, category: 'popular' },
+  { id: 'popular-9', name: 'School Uniform Set', washPress: 20, pressOnly: 10, dryClean: 25, category: 'popular' },
+  { id: 'popular-10', name: 'Bath Towel', washPress: 12, pressOnly: 'N/A', dryClean: 16, category: 'popular' },
+];
+
+// Category configuration
+const categories = [
+  { id: 'popular', label: 'Most Popular', icon: Flame, color: 'bg-orange-50', activeColor: 'bg-orange-600' },
+  { id: 'men', label: 'Men\'s Clothing', icon: Shirt, color: 'bg-blue-50', activeColor: 'bg-[#00261b]' },
+  { id: 'women', label: 'Women\'s Clothing', icon: Heart, color: 'bg-rose-50', activeColor: 'bg-[#00261b]' },
+  { id: 'kids', label: 'Children\'s Clothing', icon: Crown, color: 'bg-purple-50', activeColor: 'bg-[#00261b]' },
+  { id: 'household', label: 'Household Items', icon: Home, color: 'bg-emerald-50', activeColor: 'bg-[#00261b]' },
+];
+
 export default function PricingPage() {
-  const [activeCategory, setActiveCategory] = useState<'men' | 'women' | 'children' | 'household'>('men');
-  const [serviceItems, setServiceItems] = useState<ServiceItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [activeCategory, setActiveCategory] = useState<'men' | 'women' | 'kids' | 'household' | 'popular'>('popular');
   const heroRef = useRef(null);
   const isHeroInView = useInView(heroRef, { once: true });
 
@@ -49,53 +115,6 @@ export default function PricingPage() {
     }
   };
 
-  // Fetch all service items from backend
-  useEffect(() => {
-    fetchAllServiceItems();
-  }, []);
-
-  const fetchAllServiceItems = async () => {
-    try {
-      setIsLoading(true);
-
-      // Get all products first
-      const productsResponse = await productAPI.getAllProducts();
-
-      if (productsResponse.success && productsResponse.products) {
-        let allItems: ServiceItem[] = [];
-
-        // Fetch items for each product
-        for (const product of productsResponse.products) {
-          // Skip carpet and shoe cleaning as they are contact-based
-          if (product.category === 'carpet-cleaning' || product.category === 'shoe-cleaning') {
-            continue;
-          }
-
-          try {
-            const itemsResponse = await productAPI.getServiceItemsForProduct(product._id);
-            if (itemsResponse.success && itemsResponse.items) {
-              // Add service name to each item
-              const itemsWithService = itemsResponse.items.map((item: ServiceItem) => ({
-                ...item,
-                serviceName: product.name
-              }));
-              allItems = [...allItems, ...itemsWithService];
-            }
-          } catch (error) {
-            console.log(`No items for product: ${product.name}`);
-          }
-        }
-
-        setServiceItems(allItems);
-        console.log(`Loaded ${allItems.length} service items for pricing`);
-      }
-    } catch (error) {
-      console.error('Error fetching service items:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleDownloadPDF = () => {
     const pdfUrl = '/pricing-menu.pdf';
     const link = document.createElement('a');
@@ -108,13 +127,11 @@ export default function PricingPage() {
 
   // Get items for current category
   const getCurrentItems = () => {
-    const filtered = serviceItems.filter(item => item.category === activeCategory);
-    // Sort by name
-    filtered.sort((a, b) => a.name.localeCompare(b.name));
-    return filtered;
+    return pricingData.filter(item => item.category === activeCategory);
   };
 
   const currentItems = getCurrentItems();
+  const currentCategory = categories.find(c => c.id === activeCategory);
 
   return (
     <main className="flex flex-col min-h-screen bg-[#f9faf7]">
@@ -212,18 +229,13 @@ export default function PricingPage() {
 
           {/* Category Tabs */}
           <div className="flex flex-wrap justify-center gap-3 mb-10">
-            {[
-              { id: 'men', label: 'Men\'s Clothing', icon: Shirt },
-              { id: 'women', label: 'Women\'s Clothing', icon: Heart },
-              { id: 'children', label: 'Children\'s Clothing', icon: Crown },
-              { id: 'household', label: 'Household Items', icon: Home },
-            ].map((category) => (
+            {categories.map((category) => (
               <button
                 key={category.id}
                 onClick={() => setActiveCategory(category.id as any)}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all duration-300 ${activeCategory === category.id
-                  ? 'bg-[#00261b] text-white shadow-lg'
-                  : 'bg-white text-[#00261b] hover:bg-[#bcedd7] border border-gray-200'
+                    ? 'bg-[#00261b] text-white shadow-lg'
+                    : 'bg-white text-[#00261b] hover:bg-[#bcedd7] border border-gray-200'
                   }`}
               >
                 <category.icon className="w-4 h-4" />
@@ -232,51 +244,94 @@ export default function PricingPage() {
             ))}
           </div>
 
-          {/* Pricing Table - Single table per category */}
-          {isLoading ? (
-            <div className="text-center py-12">
-              <div className="relative w-16 h-16 mx-auto mb-4">
-                <div className="absolute inset-0 border-2 border-[#bcedd7] rounded-full"></div>
-                <div className="absolute inset-0 border-2 border-t-[#00261b] rounded-full animate-spin"></div>
+          {/* Category Header with Icon */}
+          <div className="mb-6 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${activeCategory === 'popular' ? 'bg-orange-100' :
+                  activeCategory === 'men' ? 'bg-blue-100' :
+                    activeCategory === 'women' ? 'bg-rose-100' :
+                      activeCategory === 'kids' ? 'bg-purple-100' : 'bg-emerald-100'
+                }`}>
+                {currentCategory && <currentCategory.icon className="w-5 h-5 text-[#00261b]" />}
               </div>
-              <p className="text-[#5c5f5e]">Loading price list...</p>
+              <h3 className="text-xl font-bold text-[#00261b]">
+                {currentCategory?.label} Price List
+              </h3>
             </div>
-          ) : currentItems.length === 0 ? (
-            <div className="text-center py-12 bg-white rounded-xl">
-              <p className="text-[#5c5f5e]">No items found for this category.</p>
+            <div className="text-xs text-gray-400">
+              * Prices in AED
             </div>
-          ) : (
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="text-left px-6 py-4 text-sm font-semibold text-[#00261b]">Item</th>
-                      <th className="text-left px-6 py-4 text-sm font-semibold text-[#00261b]">Service Type</th>
-                      <th className="text-left px-6 py-4 text-sm font-semibold text-[#00261b]">Unit</th>
-                      <th className="text-right px-6 py-4 text-sm font-semibold text-[#00261b]">Price (AED)</th>
+          </div>
+
+          {/* Pricing Table */}
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[600px]">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="text-left px-6 py-4 text-sm font-semibold text-[#00261b]">Item</th>
+                    <th className="text-left px-6 py-4 text-sm font-semibold text-[#00261b]">Wash & Press</th>
+                    <th className="text-left px-6 py-4 text-sm font-semibold text-[#00261b]">Press Only</th>
+                    <th className="text-left px-6 py-4 text-sm font-semibold text-[#00261b]">Dry Cleaning</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {currentItems.map((item) => (
+                    <tr key={item.id} className="hover:bg-gray-50 transition-colors group">
+                      <td className="px-6 py-4 text-sm text-[#00261b] font-medium group-hover:text-emerald-700 transition-colors">
+                        {item.name}
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        {typeof item.washPress === 'number' ? (
+                          <span className="font-semibold text-emerald-700">AED {item.washPress}</span>
+                        ) : (
+                          <span className="text-gray-400">{item.washPress}</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        {typeof item.pressOnly === 'number' ? (
+                          <span className="font-semibold text-emerald-700">AED {item.pressOnly}</span>
+                        ) : (
+                          <span className="text-gray-400">{item.pressOnly}</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        {typeof item.dryClean === 'number' ? (
+                          <span className="font-semibold text-emerald-700">AED {item.dryClean}</span>
+                        ) : (
+                          <span className="text-gray-400">{item.dryClean}</span>
+                        )}
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {currentItems.map((item) => (
-                      <tr key={item._id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-4 text-sm text-[#00261b] font-medium">
-                          {item.name}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-600">
-                          {item.serviceName || 'Standard'}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-500">
-                          {item.unit}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-right">
-                          <span className="font-semibold text-emerald-700">AED {item.price}</span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Special Notes for Popular Tab */}
+          {activeCategory === 'popular' && (
+            <div className="mt-6 p-4 bg-orange-50 rounded-xl border border-orange-100">
+              <div className="flex items-start gap-3">
+                <Star className="w-5 h-5 text-orange-500 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-orange-800 mb-1">Most Requested Services</p>
+                  <p className="text-xs text-orange-700">
+                    These are our most popular services based on customer orders.
+                    All prices include free pickup and delivery across Dubai.
+                  </p>
+                </div>
               </div>
+            </div>
+          )}
+
+          {/* Note for Household Items */}
+          {activeCategory === 'household' && (
+            <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
+              <p className="text-xs text-blue-700">
+                * For heavy curtains, sofa covers, and large rugs, pricing may vary based on size and material.
+                Please contact us for a custom quote.
+              </p>
             </div>
           )}
         </div>

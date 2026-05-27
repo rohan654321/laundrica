@@ -99,7 +99,7 @@ export default function ContactPage() {
                 </div>
                 <h3 className="text-2xl font-bold text-[#00261b]">24/7 Support</h3>
                 <p className="text-[#5c5f5e] mt-2">support@laundrica.com</p>
-                <p className="text-[#5c5f5e]">+971 050 820 3555</p>
+                <p className="text-[#5c5f5e]">+971 50 820 3555</p>
               </div>
             </div>
             <div className="absolute -bottom-6 -right-6 bg-white p-5 rounded-2xl shadow-xl max-w-[200px]">
@@ -126,7 +126,7 @@ export default function ContactPage() {
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 place-items-center"
           >
             {[
-              { icon: Phone, title: 'Phone', details: ['+971 050 820 3555'], subtitle: 'Mon-Sat, 10AM - 10PM', color: 'bg-blue-50', iconColor: 'text-blue-600' },
+              { icon: Phone, title: 'Phone', details: ['+971 50 820 3555'], subtitle: 'Mon-Sat, 10AM - 10PM', color: 'bg-blue-50', iconColor: 'text-blue-600' },
               { icon: Mail, title: 'Email', details: ['support@laundrica.com',], subtitle: '24/7 Support', color: 'bg-emerald-50', iconColor: 'text-emerald-600' },
               // { icon: MapPin, title: 'Visit Us', details: ['Azizi Riviera 42', 'Meydan, Dubai'], subtitle: 'Get Directions →', color: 'bg-amber-50', iconColor: 'text-amber-600' },
               { icon: Clock, title: 'Business Hours', details: ['Mon-Sat: 10AM - 10PM', 'Sun: 12PM - 10PM'], subtitle: 'Open 7 Days a Week', color: 'bg-purple-50', iconColor: 'text-purple-600' },
