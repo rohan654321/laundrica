@@ -172,9 +172,9 @@ export default function ContactPage() {
               {/* Social Links */}
               <div className="grid grid-cols-2 gap-4 mb-8">
                 {[
-                  { icon: Instagram, name: 'Instagram', handle: '@laundrica', color: 'hover:text-pink-600', bgColor: 'bg-pink-50' },
-                  { icon: Facebook, name: 'Facebook', handle: '/laundrica', color: 'hover:text-blue-600', bgColor: 'bg-blue-50' },
-                  { icon: Music2, name: 'TikTok', handle: '@laundrica', color: 'hover:text-black', bgColor: 'bg-gray-100' },
+                  { icon: Instagram, name: 'Instagram', handle: 'https://www.instagram.com/laundricauae/', color: 'hover:text-pink-600', bgColor: 'bg-pink-50' },
+                  { icon: Facebook, name: 'Facebook', handle: 'https://www.facebook.com/profile.php?id=61588883551033', color: 'hover:text-blue-600', bgColor: 'bg-blue-50' },
+                  { icon: Music2, name: 'TikTok', handle: 'https://www.tiktok.com/@laundricauae', color: 'hover:text-black', bgColor: 'bg-gray-100' },
                   { icon: Globe, name: 'Website', handle: 'laundrica.com', color: 'hover:text-emerald-600', bgColor: 'bg-emerald-50' },
                 ].map((social, idx) => (
                   <a

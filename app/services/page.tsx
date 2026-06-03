@@ -1,7 +1,7 @@
 // app/services/page.tsx - Premium Redesign (Fixed Images)
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -46,6 +46,9 @@ export default function ServicesPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'website' | 'whatsapp'>('website');
 
+  // Create a ref for the content container
+  const contentRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     fetchServices();
   }, []);
@@ -65,6 +68,24 @@ export default function ServicesPage() {
       setError(err.message || 'Failed to load services');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Function to handle service selection with auto-scroll on mobile
+  const handleServiceSelect = (service: Service) => {
+    setSelectedService(service);
+
+    // Check if it's mobile view (screen width less than 1024px)
+    const isMobile = window.innerWidth < 1024;
+
+    if (isMobile && contentRef.current) {
+      // Add a small delay to ensure the DOM has updated with the new content
+      setTimeout(() => {
+        contentRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }, 100);
     }
   };
 
@@ -151,7 +172,7 @@ export default function ServicesPage() {
               Choose from our premium laundry, dry cleaning, and specialty care services.
               Free pickup & delivery across Dubai.
             </p>
-    
+
           </motion.div>
         </div>
       </section>
@@ -165,7 +186,11 @@ export default function ServicesPage() {
               <div className="bg-[#00261b] p-5"><h2 className="font-semibold text-white">All Services</h2><p className="text-xs text-emerald-200 mt-0.5">{services.length} premium services</p></div>
               <div className="divide-y divide-gray-100 max-h-[500px] overflow-y-auto">
                 {services.map((service) => (
-                  <button key={service._id} onClick={() => setSelectedService(service)} className={`w-full text-left p-4 transition-all duration-200 group ${selectedService?._id === service._id ? 'bg-[#bcedd7]/30 border-l-4 border-l-[#00261b]' : 'hover:bg-gray-50'}`}>
+                  <button
+                    key={service._id}
+                    onClick={() => handleServiceSelect(service)}
+                    className={`w-full text-left p-4 transition-all duration-200 group ${selectedService?._id === service._id ? 'bg-[#bcedd7]/30 border-l-4 border-l-[#00261b]' : 'hover:bg-gray-50'}`}
+                  >
                     <div className="flex items-start gap-3">
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${selectedService?._id === service._id ? 'bg-[#00261b] text-white' : 'bg-gray-100 text-gray-500 group-hover:bg-[#bcedd7] group-hover:text-[#00261b]'}`}>
                         {getCategoryIcon(service.category, "w-5 h-5")}
@@ -182,8 +207,8 @@ export default function ServicesPage() {
             </div>
           </div>
 
-          {/* RIGHT CONTENT */}
-          <div className="flex-1">
+          {/* RIGHT CONTENT - Added ref here */}
+          <div className="flex-1" ref={contentRef}>
             <AnimatePresence mode="wait">
               {selectedService && (
                 <motion.div key={selectedService._id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.3 }} className="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100">
