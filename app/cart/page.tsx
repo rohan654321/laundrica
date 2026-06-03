@@ -43,13 +43,21 @@ export default function CartPage() {
   const handleCarpetToggle = (value: boolean) => {
     setCarpetToggle(value);
     localStorage.setItem('carpetContactToggle', String(value));
-    toast.success(value ? 'Carpet: Contact required for pricing' : 'Carpet: Items can be added directly');
+    if (value) {
+      toast.success('Our agent will get in touch with you soon for Carpet');
+    } else {
+      toast.success('Carpet: Items can be added directly');
+    }
   };
 
   const handleShoesToggle = (value: boolean) => {
     setShoesToggle(value);
     localStorage.setItem('shoesContactToggle', String(value));
-    toast.success(value ? 'Shoes: Contact required for pricing' : 'Shoes: Items can be added directly');
+    if (value) {
+      toast.success('Our agent will get in touch with you soon for Shoes');
+    } else {
+      toast.success('Shoes: Items can be added directly');
+    }
   };
 
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
