@@ -116,7 +116,7 @@ export default function PricingPage() {
   };
 
   const handleDownloadPDF = () => {
-    const pdfUrl = '/pricing-menu.pdf';
+    const pdfUrl = '/Laundrica Price List Final.pdf';
     const link = document.createElement('a');
     link.href = pdfUrl;
     link.download = 'laundrica-price-list.pdf';

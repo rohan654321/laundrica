@@ -3,8 +3,7 @@
 
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
-import { Mail, Phone, MapPin, Clock, Globe, Instagram, Facebook, Twitter, ArrowRight, Sparkles, CheckCircle, MessageCircle, Send, Music2 } from 'lucide-react';
-import Link from 'next/link';
+import { Mail, Phone, Clock, Globe, Instagram, Facebook, CheckCircle, MessageCircle, Send, Music2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, useInView } from 'framer-motion';
 import { useRef, useState } from 'react';
@@ -35,12 +34,31 @@ export default function ContactPage() {
       toast.error('Please enter your email address');
       return;
     }
+
     setIsSubscribing(true);
-    setTimeout(() => {
-      toast.success('Subscribed! Check your inbox for updates.');
-      setEmail('');
+    try {
+      const response = await fetch('/api/contact/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success('Subscribed! Check your inbox for updates.');
+        setEmail('');
+      } else {
+        toast.error(data.error || 'Subscription failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('Subscription error:', error);
+      toast.error('Network error. Please try again.');
+    } finally {
       setIsSubscribing(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -64,13 +82,13 @@ export default function ContactPage() {
               Have questions about our services? Need a custom quote? Our team is here to help you 7 days a week.
             </p>
             <div className="flex flex-wrap gap-4 mb-10">
-              <a href="tel:">
+              <a href="tel:+971508203555">
                 <button className="px-8 py-3.5 bg-[#00261b] text-white rounded-xl font-semibold hover:opacity-90 transition flex items-center gap-2">
                   <Phone className="w-4 h-4" />
                   Call Us Now
                 </button>
               </a>
-              <a href="#" target="_blank" rel="noopener noreferrer">
+              <a href="https://wa.me/971508203555" target="_blank" rel="noopener noreferrer">
                 <button className="px-8 py-3.5 bg-white border border-gray-200 text-[#00261b] rounded-xl font-semibold hover:bg-gray-50 transition flex items-center gap-2">
                   <MessageCircle className="w-4 h-4 text-green-600" />
                   WhatsApp Chat
@@ -82,7 +100,6 @@ export default function ContactPage() {
                 <p className="text-xs uppercase tracking-wider text-gray-400 font-bold mb-2">Response Time</p>
                 <p className="text-sm font-medium text-[#00261b]/70">Our team will get back to you within 24 hours</p>
               </div>
-    
             </div>
           </motion.div>
 
@@ -127,8 +144,7 @@ export default function ContactPage() {
           >
             {[
               { icon: Phone, title: 'Phone', details: ['+971 50 820 3555'], subtitle: 'Mon-Sat, 10AM - 10PM', color: 'bg-blue-50', iconColor: 'text-blue-600' },
-              { icon: Mail, title: 'Email', details: ['support@laundrica.com',], subtitle: '24/7 Support', color: 'bg-emerald-50', iconColor: 'text-emerald-600' },
-              // { icon: MapPin, title: 'Visit Us', details: ['Azizi Riviera 42', 'Meydan, Dubai'], subtitle: 'Get Directions →', color: 'bg-amber-50', iconColor: 'text-amber-600' },
+              { icon: Mail, title: 'Email', details: ['support@laundrica.com'], subtitle: '24/7 Support', color: 'bg-emerald-50', iconColor: 'text-emerald-600' },
               { icon: Clock, title: 'Business Hours', details: ['Mon-Sat: 10AM - 10PM', 'Sun: 12PM - 10PM'], subtitle: 'Open 7 Days a Week', color: 'bg-purple-50', iconColor: 'text-purple-600' },
             ].map((item, idx) => (
               <motion.div
@@ -150,13 +166,10 @@ export default function ContactPage() {
         </div>
       </section>
 
-      {/* Map and Social Section */}
+      {/* Social Section */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto">
-
-
-            {/* Connect With Us */}
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -179,11 +192,13 @@ export default function ContactPage() {
                 ].map((social, idx) => (
                   <a
                     key={idx}
-                    href="#"
+                    href={social.name === "Website" ? `https://${social.handle}` : social.handle}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="flex items-center gap-4 p-4 border border-gray-100 rounded-xl hover:shadow-lg transition-all group bg-white"
                   >
                     <div className={`w-12 h-12 ${social.bgColor} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                      <social.icon className={`w-6 h-6 text-gray-600 group-hover:${social.color} transition-colors`} />
+                      <social.icon className={`w-6 h-6 text-gray-600 ${social.color} transition-colors`} />
                     </div>
                     <div>
                       <p className="font-semibold text-[#00261b]">{social.name}</p>
@@ -230,8 +245,6 @@ export default function ContactPage() {
           </div>
         </div>
       </section>
-
-
 
       <Footer />
     </main>

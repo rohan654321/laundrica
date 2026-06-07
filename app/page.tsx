@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, useInView } from 'framer-motion';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
@@ -33,6 +33,8 @@ import {
 } from 'react-icons/tb';
 import { FaWhatsapp } from 'react-icons/fa';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+import { X } from 'lucide-react';
 
 // Trust Strip Component - Icons only with hover
 function TrustStrip() {
@@ -229,8 +231,208 @@ function ServicesGrid() {
   );
 }
 
-// Commercial Section with hover effects
+
+// Business Request Modal Component
+function BusinessRequestModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const [formData, setFormData] = useState({
+    name: '',
+    businessName: '',
+    businessType: '',
+    phone: '',
+    email: '',
+    message: '',
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const businessTypes = [
+    { value: 'hotel', label: 'Hotel / Resort' },
+    { value: 'restaurant', label: 'Restaurant / Cafe' },
+    { value: 'event', label: 'Event Management' },
+    { value: 'corporate', label: 'Corporate Office' },
+    { value: 'other', label: 'Other' },
+  ];
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.name || !formData.businessType || !formData.phone || !formData.email) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch('/api/contact/business-request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success('Request submitted! Our team will contact you within 24 hours.');
+        setFormData({
+          name: '',
+          businessName: '',
+          businessType: '',
+          phone: '',
+          email: '',
+          message: '',
+        });
+        onClose();
+      } else {
+        toast.error(data.error || 'Submission failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('Submission error:', error);
+      toast.error('Network error. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <>
+      <div className="fixed inset-0 bg-black/50 z-50" onClick={onClose} />
+      <div className="fixed inset-x-4 top-1/2 -translate-y-1/2 max-w-2xl mx-auto bg-white rounded-2xl shadow-2xl z-50 max-h-[90vh] overflow-y-auto">
+        <div className="sticky top-0 bg-white border-b border-gray-100 p-6 flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold text-[#00261b]">Business Service Request</h2>
+            <p className="text-gray-600 text-sm mt-1">Get a customized quote for your business</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-full transition"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Full Name *
+            </label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#00261b] focus:ring-1 focus:ring-[#00261b]"
+              placeholder="John Doe"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Business Name
+            </label>
+            <input
+              type="text"
+              name="businessName"
+              value={formData.businessName}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#00261b] focus:ring-1 focus:ring-[#00261b]"
+              placeholder="Your Business Name"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Business Type *
+            </label>
+            <select
+              name="businessType"
+              value={formData.businessType}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#00261b] focus:ring-1 focus:ring-[#00261b]"
+            >
+              <option value="">Select business type</option>
+              {businessTypes.map((type) => (
+                <option key={type.value} value={type.label}>
+                  {type.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Phone Number *
+            </label>
+            <input
+              type="tel"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#00261b] focus:ring-1 focus:ring-[#00261b]"
+              placeholder="+971 XX XXX XXXX"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Email Address *
+            </label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#00261b] focus:ring-1 focus:ring-[#00261b]"
+              placeholder="you@example.com"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Message / Requirements
+            </label>
+            <textarea
+              name="message"
+              value={formData.message}
+              onChange={handleChange}
+              rows={4}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#00261b] focus:ring-1 focus:ring-[#00261b]"
+              placeholder="Tell us about your business requirements..."
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full bg-[#00261b] text-white py-3 rounded-lg font-semibold hover:bg-emerald-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? (
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Submitting...
+              </div>
+            ) : (
+              'Submit Request'
+            )}
+          </button>
+        </form>
+      </div>
+    </>
+  );
+}
+
 function CommercialSection() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, amount: 0.2 });
 
@@ -242,57 +444,62 @@ function CommercialSection() {
   ];
 
   return (
-    <section ref={sectionRef} className="py-20 bg-[#00261b] text-white overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-        <motion.div
-          initial={{ opacity: 0, x: -30 }}
-          animate={isInView ? { opacity: 1, x: 0 } : {}}
-          transition={{ duration: 0.6 }}
-        >
-          <h2 className="text-3xl sm:text-4xl font-bold mb-6 leading-tight">COMMERCIAL CARE SOLUTIONS</h2>
-          <p className="text-[#79a894] text-lg mb-8 leading-relaxed">Scalable garment and fabric care solutions for businesses across Dubai. Laundrica supports hospitality, corporate, and commercial requirements with reliable pickup, delivery, and professionally managed care services designed to maintain consistent quality and presentation.</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10">
-            {features.map((feature, idx) => (
-              <motion.div
-                key={feature.title}
-                className="flex items-start gap-3 group cursor-pointer"
-                whileHover={{ x: 5 }}
-                transition={{ duration: 0.2 }}
-              >
-                <feature.icon className="text-[#bcedd7] text-xl group-hover:scale-110 transition-transform" />
-                <div>
-                  <p className="font-bold group-hover:text-[#bcedd7] transition-colors">{feature.title}</p>
-                  <p className="text-sm text-[#79a894] group-hover:text-white/80 transition-colors">{feature.desc}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-          <motion.button
-            className="px-8 py-3.5 bg-white text-[#00261b] rounded-xl font-bold hover:bg-[#bcedd7] transition-all duration-300 cursor-pointer"
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            Request Business Service
-          </motion.button>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, x: 30 }}
-          animate={isInView ? { opacity: 1, x: 0 } : {}}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="relative rounded-2xl overflow-hidden aspect-video lg:aspect-square group cursor-pointer"
-          whileHover={{ scale: 1.02 }}
-        >
-          <img
-            src="/images/requestbuisnessservice.jpeg"
-            alt="Commercial Laundry"
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-          />
+    <>
+      <section ref={sectionRef} className="py-20 bg-[#00261b] text-white overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <motion.div
-            className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-          />
-        </motion.div>
-      </div>
-    </section>
+            initial={{ opacity: 0, x: -30 }}
+            animate={isInView ? { opacity: 1, x: 0 } : {}}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="text-3xl sm:text-4xl font-bold mb-6 leading-tight">COMMERCIAL CARE SOLUTIONS</h2>
+            <p className="text-[#79a894] text-lg mb-8 leading-relaxed">Scalable garment and fabric care solutions for businesses across Dubai. Laundrica supports hospitality, corporate, and commercial requirements with reliable pickup, delivery, and professionally managed care services designed to maintain consistent quality and presentation.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10">
+              {features.map((feature, idx) => (
+                <motion.div
+                  key={feature.title}
+                  className="flex items-start gap-3 group cursor-pointer"
+                  whileHover={{ x: 5 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <feature.icon className="text-[#bcedd7] text-xl group-hover:scale-110 transition-transform" />
+                  <div>
+                    <p className="font-bold group-hover:text-[#bcedd7] transition-colors">{feature.title}</p>
+                    <p className="text-sm text-[#79a894] group-hover:text-white/80 transition-colors">{feature.desc}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+            <motion.button
+              onClick={() => setIsModalOpen(true)}
+              className="px-8 py-3.5 bg-white text-[#00261b] rounded-xl font-bold hover:bg-[#bcedd7] transition-all duration-300 cursor-pointer"
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Request Business Service
+            </motion.button>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            animate={isInView ? { opacity: 1, x: 0 } : {}}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="relative rounded-2xl overflow-hidden aspect-video lg:aspect-square group cursor-pointer"
+            whileHover={{ scale: 1.02 }}
+          >
+            <img
+              src="/images/requestbuisnessservice.jpeg"
+              alt="Commercial Laundry"
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            />
+            <motion.div
+              className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            />
+          </motion.div>
+        </div>
+      </section>
+
+      <BusinessRequestModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+    </>
   );
 }
 
@@ -620,3 +827,4 @@ export default function Home() {
     </main>
   );
 }
+
