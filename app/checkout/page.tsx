@@ -1,3 +1,4 @@
+// app/checkout/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -22,6 +23,49 @@ interface CheckoutFormData {
   city: string;
   notes: string;
 }
+
+// Zoho Flow Webhook URL
+const ZOHO_WEBHOOK_URL = "https://flow.zoho.com/925120593/flow/webhook/incoming?zapikey=1001.a459dc2423c0615b04b76478d2f93b6a.aa50edf0a55826432e8724376b48564d&isdebug=false";
+
+// WhatsApp number
+const WHATSAPP_NUMBER = "971508203555";
+
+// Function to send data to Zoho Flow
+const sendToZohoFlow = async (orderData: {
+  name: string;
+  phone: string;
+  email: string;
+  address: string;
+  source: string;
+  orderTotal?: number;
+  itemsCount?: number;
+  orderNumber?: string;
+  notes?: string;
+  carpetContact?: boolean;
+  shoesContact?: boolean;
+}) => {
+  try {
+    const response = await fetch(ZOHO_WEBHOOK_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(orderData)
+    });
+
+    if (!response.ok) {
+      console.error('Zoho webhook failed with status:', response.status);
+      return false;
+    }
+
+    const result = await response.json();
+    console.log('Zoho webhook response:', result);
+    return true;
+  } catch (error) {
+    console.error('Error sending to Zoho:', error);
+    return false;
+  }
+};
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -181,6 +225,7 @@ export default function CheckoutPage() {
       }
 
       const transformedItems = groupCartItems();
+      const cartItemsCount = cartItems?.reduce((sum, item) => sum + (item?.quantity || 0), 0) || 0;
 
       const orderData = {
         sessionId,
@@ -199,7 +244,6 @@ export default function CheckoutPage() {
           city: formData.city || 'Dubai',
           notes: formData.notes || '',
         },
-        // ADD THESE LINES - Send toggle states to backend
         carpetContactEnabled: carpetToggle,
         shoesContactEnabled: shoesToggle,
       };
@@ -210,7 +254,24 @@ export default function CheckoutPage() {
       console.log('Order response:', response);
 
       if (response.success || response.order || response._id) {
-        setOrderResult(response);
+        const orderNumber = response.orderNumber || response.order?.orderNumber || `ORD-${Date.now()}`;
+
+        // Send to Zoho Flow
+        sendToZohoFlow({
+          name: `${formData.firstName} ${formData.lastName}`.trim(),
+          phone: formattedPhone,
+          email: formData.email || '',
+          address: `${formData.address}, ${formData.city}`,
+          source: "WB",
+          orderTotal: finalTotal,
+          itemsCount: cartItemsCount,
+          orderNumber: orderNumber,
+          notes: formData.notes || '',
+          carpetContact: carpetToggle,
+          shoesContact: shoesToggle,
+        }).catch(err => console.error('Zoho webhook error (non-critical):', err));
+
+        setOrderResult({ ...response, orderNumber });
         setOrderPlaced(true);
         toast.success('Order placed successfully!');
         await clearCart();
@@ -232,8 +293,8 @@ export default function CheckoutPage() {
   if (orderPlaced && orderResult) {
     const order = orderResult.order || orderResult;
     const orderNumber = order?.orderNumber || orderResult.orderNumber || `ORD-${Date.now()}`;
-    const whatsappLink = orderResult.whatsappLink ||
-      `https://wa.me/${formData.phone.replace(/^\+/, '').replace(/\s/g, '')}?text=${encodeURIComponent(`Hello, I've placed order #${orderNumber}. Please confirm.`)}`;
+    const whatsappMessage = `Hello! I've placed an order with Laundrica.%0A%0A📋 Order #: ${orderNumber}%0A💰 Total: AED ${(order.total || finalTotal).toFixed(2)}%0A👤 Name: ${formData.firstName} ${formData.lastName}%0A📞 Phone: ${formData.phone}%0A📍 Address: ${formData.address}, ${formData.city}%0A%0APlease confirm my order. Thank you!`;
+    const whatsappLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${whatsappMessage}`;
 
     return (
       <main className="flex flex-col min-h-screen bg-[#f9faf7]">
@@ -252,7 +313,6 @@ export default function CheckoutPage() {
                   <p className="text-sm text-[#5c5f5e] mb-1">Order Number</p>
                   <p className="text-xl font-bold text-[#00261b] font-mono">{orderNumber}</p>
                 </div>
-
                 <div>
                   <p className="text-sm text-[#5c5f5e] mb-1">Total Amount</p>
                   <p className="text-2xl font-bold text-[#00261b]">AED {(order.total || finalTotal).toFixed(2)}</p>
@@ -323,7 +383,6 @@ export default function CheckoutPage() {
               </div>
             )}
 
-            {/* Contact Information */}
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
               <h2 className="text-xl font-bold mb-6 text-[#00261b] flex items-center gap-2">
                 <User className="w-5 h-5 text-[#00261b]" />
@@ -454,7 +513,6 @@ export default function CheckoutPage() {
             </div>
           </form>
 
-          {/* Order Summary - WITH TOGGLE BUTTONS */}
           <div className="lg:col-span-1">
             <div className="sticky top-24">
               <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
@@ -467,7 +525,6 @@ export default function CheckoutPage() {
                 </div>
 
                 <div className="p-6">
-                  {/* TOGGLE BUTTONS FOR CARPET AND SHOES */}
                   <div className="mb-4 space-y-3 pb-4 border-b border-gray-200">
                     <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-xl">
                       <div className="flex items-center gap-2">
@@ -478,6 +535,7 @@ export default function CheckoutPage() {
                         </div>
                       </div>
                       <button
+                        type="button"
                         onClick={() => handleCarpetToggle(!carpetToggle)}
                         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${carpetToggle ? 'bg-[#00261b]' : 'bg-gray-300'}`}
                       >
@@ -496,6 +554,7 @@ export default function CheckoutPage() {
                         </div>
                       </div>
                       <button
+                        type="button"
                         onClick={() => handleShoesToggle(!shoesToggle)}
                         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${shoesToggle ? 'bg-[#00261b]' : 'bg-gray-300'}`}
                       >

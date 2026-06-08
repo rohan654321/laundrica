@@ -9,6 +9,8 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname, useRouter } from 'next/navigation';
 
+const WHATSAPP_NUMBER = "971508203555";
+
 export function Header() {
   const { cartItems } = useCart();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -43,22 +45,18 @@ export function Header() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [openDropdown]);
 
-  // Improved scroll to section function
   const scrollToSection = (sectionId: string) => {
-    // Wait a bit for any DOM updates
     setTimeout(() => {
       const element = document.getElementById(sectionId);
       if (element) {
-        const headerOffset = 80; // Height of sticky header
+        const headerOffset = 80;
         const elementPosition = element.getBoundingClientRect().top;
         const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-
         window.scrollTo({
           top: offsetPosition,
           behavior: 'smooth'
         });
       } else {
-        // If element not found, try again after a short delay
         setTimeout(() => {
           const retryElement = document.getElementById(sectionId);
           if (retryElement) {
@@ -75,22 +73,18 @@ export function Header() {
     }, 50);
   };
 
-  // Handle navigation with smooth scrolling for homepage links
   const handleNavClick = async (href: string, sectionId?: string) => {
     setIsMenuOpen(false);
     setOpenDropdown(null);
 
     if (pathname === '/') {
-      // If on homepage, directly scroll to section
       if (sectionId) {
         scrollToSection(sectionId);
       } else {
         router.push(href);
       }
     } else {
-      // If on another page, navigate to homepage
       if (sectionId) {
-        // Store the section ID in sessionStorage before navigation
         sessionStorage.setItem('scrollToSection', sectionId);
         router.push('/');
       } else {
@@ -99,34 +93,26 @@ export function Header() {
     }
   };
 
-  // Effect to handle scrolling when coming from another page
   useEffect(() => {
-    // Check if we're on the homepage
     if (pathname === '/') {
-      // Check sessionStorage first
       const sectionToScroll = sessionStorage.getItem('scrollToSection');
       if (sectionToScroll) {
-        // Clear it immediately
         sessionStorage.removeItem('scrollToSection');
-        // Small delay to ensure page is fully loaded
         setTimeout(() => {
           scrollToSection(sectionToScroll);
         }, 100);
       }
 
-      // Also check URL hash
       if (window.location.hash) {
         const sectionId = window.location.hash.slice(1);
         setTimeout(() => {
           scrollToSection(sectionId);
-          // Clear the hash from URL
           window.history.pushState(null, '', '/');
         }, 100);
       }
     }
   }, [pathname]);
 
-  // Updated service links with your actual services and slugs
   const serviceLinks = [
     { href: '/services/wash-and-press-services-in-dubai/orders', label: 'Wash & Press' },
     { href: '/services/dry-cleaning-services-in-dubai/orders', label: 'Dry Cleaning' },
@@ -136,9 +122,14 @@ export function Header() {
     { href: '/services/carpet-care-services-in-dubai/orders', label: 'Carpet Care' },
   ];
 
+  const handleWhatsApp = () => {
+    const message = encodeURIComponent("Hello! I'd like to book a laundry service. Can you help me?");
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`, '_blank');
+  };
+
   const bookOptions = [
-    { href: '/services', label: 'Online Booking', icon: '🌐' },
-    { href: 'https://wa.me/971XXXXXXXXX', label: 'WhatsApp Booking', icon: '💬', external: true },
+    { href: '/services', label: 'Online Booking', icon: '🌐', action: null },
+    { label: 'WhatsApp Booking', icon: '💬', action: handleWhatsApp, external: true },
   ];
 
   const navLinks = [
@@ -152,7 +143,6 @@ export function Header() {
       <header className={`sticky top-0 z-50 w-full transition-all duration-300 ${scrolled ? 'bg-white/90 backdrop-blur-md shadow-md' : 'bg-white/90 backdrop-blur-md'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 lg:h-20">
-            {/* Logo */}
             <div className="flex-shrink-0 min-w-[90px]">
               <Link href="/" className="flex">
                 <div className="relative w-24 h-10 sm:w-28 sm:h-11 lg:w-32 lg:h-12">
@@ -167,9 +157,7 @@ export function Header() {
               </Link>
             </div>
 
-            {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center gap-8">
-              {/* Services Dropdown */}
               <div ref={servicesDropdownRef} className="relative">
                 <button
                   onClick={() => setOpenDropdown(openDropdown === 'services' ? null : 'services')}
@@ -224,9 +212,7 @@ export function Header() {
               ))}
             </nav>
 
-            {/* Right Section */}
             <div className="flex items-center gap-3">
-              {/* Cart Button */}
               <Link href="/cart">
                 <button className="relative w-10 h-10 rounded-full bg-white border border-gray-200 hover:border-emerald-900 transition-all duration-300 group flex items-center justify-center">
                   <ShoppingCart size={18} className="text-gray-600 group-hover:text-emerald-900 transition-colors" />
@@ -238,7 +224,6 @@ export function Header() {
                 </button>
               </Link>
 
-              {/* Book a Wash Dropdown */}
               <div ref={bookDropdownRef} className="relative">
                 <button
                   onClick={() => setOpenDropdown(openDropdown === 'book' ? null : 'book')}
@@ -259,22 +244,22 @@ export function Header() {
                     >
                       <div className="py-2">
                         {bookOptions.map((option) => (
-                          option.external ? (
-                            <a
-                              key={option.href}
-                              href={option.href}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-900 transition-colors"
-                              onClick={() => setOpenDropdown(null)}
+                          option.action ? (
+                            <button
+                              key={option.label}
+                              onClick={() => {
+                                setOpenDropdown(null);
+                                option.action();
+                              }}
+                              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-900 transition-colors"
                             >
                               <span className="text-lg">{option.icon}</span>
                               <span>{option.label}</span>
-                            </a>
+                            </button>
                           ) : (
                             <Link
                               key={option.href}
-                              href={option.href}
+                              href={option.href!}
                               className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-900 transition-colors"
                               onClick={() => setOpenDropdown(null)}
                             >
@@ -289,7 +274,6 @@ export function Header() {
                 </AnimatePresence>
               </div>
 
-              {/* Mobile Menu Button */}
               <button
                 className="lg:hidden relative w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center"
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -300,7 +284,6 @@ export function Header() {
           </div>
         </div>
 
-        {/* Mobile Menu */}
         <AnimatePresence>
           {isMenuOpen && (
             <motion.nav
@@ -331,7 +314,6 @@ export function Header() {
                   )
                 ))}
 
-                {/* Mobile Services Section */}
                 <div className="px-4 py-2">
                   <p className="text-xs uppercase tracking-wider text-gray-400 font-semibold mb-2">Our Services</p>
                   <div className="space-y-1">
@@ -355,11 +337,9 @@ export function Header() {
                     Online Booking
                   </button>
                 </Link>
-                <a href="https://wa.me/971XXXXXXXXX" target="_blank" rel="noopener noreferrer">
-                  <button className="w-full h-11 border border-emerald-900 text-emerald-900 rounded-full font-semibold">
-                    WhatsApp Booking
-                  </button>
-                </a>
+                <button onClick={handleWhatsApp} className="w-full h-11 border border-emerald-900 text-emerald-900 rounded-full font-semibold">
+                  WhatsApp Booking
+                </button>
               </div>
             </motion.nav>
           )}
