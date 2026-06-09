@@ -1,3 +1,4 @@
+// app/page.tsx
 'use client';
 
 import { motion, useInView } from 'framer-motion';
@@ -35,6 +36,7 @@ import { FaWhatsapp } from 'react-icons/fa';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { X } from 'lucide-react';
+import { WhatsAppButton } from '@/components/whatsapp-button';
 
 // Trust Strip Component - Icons only with hover
 function TrustStrip() {
@@ -140,7 +142,7 @@ function ServicesGrid() {
       name: 'Wash & Fold',
       icon: TbFold,
       description: 'Convenient everyday laundry care, neatly folded and returned fresh, clean, and ready for your wardrobe.',
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDP4Fl1mcL71ms-0aDco1bos4KJFJEZx5OQnJIOBWlWluJMOTU3XhoRrxAQvDa2yackx6UDbMN2aeY0HX3vJrKxXZZvOxDngQlZRCw6IC4qNlNInPtj13VA8r8kN-3-D0Jxrt44nDI5JAqB96hap1m-Sa8t_3oq6LroL8Ag9vqpd38eVyGtjT49EfXZUUUEmpo9H8CJRr1964I_IjjhCECEuvi3KYyJIWnmLx6Um420B0z6GG4nyB3DmF5ORn7DB6p1qP9FsFWioqH3',      slug: 'wash-and-fold-services-in-dubai'
+      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDP4Fl1mcL71ms-0aDco1bos4KJFJEZx5OQnJIOBWlWluJMOTU3XhoRrxAQvDa2yackx6UDbMN2aeY0HX3vJrKxXZZvOxDngQlZRCw6IC4qNlNInPtj13VA8r8kN-3-D0Jxrt44nDI5JAqB96hap1m-Sa8t_3oq6LroL8Ag9vqpd38eVyGtjT49EfXZUUUEmpo9H8CJRr1964I_IjjhCECEuvi3KYyJIWnmLx6Um420B0z6GG4nyB3DmF5ORn7DB6p1qP9FsFWioqH3', slug: 'wash-and-fold-services-in-dubai'
     },
     {
       name: 'Steam Ironing',
@@ -599,7 +601,7 @@ function AboutSection() {
                   Online Booking
                 </motion.button>
               </Link>
-              <a href="https://wa.me/971XXXXXXXXX" target="_blank" rel="noopener noreferrer">
+              <a href="https://wa.me/971508203555?text=Hi%20I%20need%20Laundrica%20to%20sort%20my%20laundry%20WB" target="_blank" rel="noopener noreferrer">
                 <motion.button
                   className="px-6 sm:px-8 py-3.5 bg-white border border-gray-200 text-[#00261b] rounded-xl font-semibold hover:bg-gray-50 transition flex items-center gap-2 cursor-pointer"
                   whileHover={{ scale: 1.05, y: -3 }}
@@ -706,7 +708,7 @@ function CTASection() {
                   Online Booking
                 </motion.button>
               </Link>
-              <a href="https://wa.me/971XXXXXXXXX" target="_blank" rel="noopener noreferrer">
+              <a href="https://wa.me/971508203555?text=Hi%20I%20need%20Laundrica%20to%20sort%20my%20laundry%20WB" target="_blank" rel="noopener noreferrer">
                 <motion.button
                   className="px-8 py-3.5 border border-white/30 bg-white/5 backdrop-blur-md text-white rounded-xl font-semibold hover:bg-white/10 transition-all duration-300 flex items-center gap-2 cursor-pointer"
                   whileHover={{ scale: 1.05, y: -3 }}
@@ -756,7 +758,7 @@ function HeroSection() {
                 Online Booking
               </motion.button>
             </Link>
-            <a href="https://wa.me/971XXXXXXXXX" target="_blank" rel="noopener noreferrer">
+            <a href="https://wa.me/971508203555?text=Hi%20I%20need%20Laundrica%20to%20sort%20my%20laundry%20WB" target="_blank" rel="noopener noreferrer">
               <motion.button
                 className="px-6 sm:px-8 py-3.5 bg-white border border-gray-200 text-[#00261b] rounded-xl font-semibold hover:bg-gray-50 transition flex items-center gap-2 cursor-pointer"
                 whileHover={{ scale: 1.05, y: -3 }}
@@ -824,7 +826,14 @@ export default function Home() {
       <TestimonialsSection />
       <CTASection />
       <Footer />
+      <WhatsAppButton
+        phoneNumber="971508203555"
+        message="Hi I need Laundrica to sort my laundry WB"
+        position="bottom-right"
+        size="medium"
+        showTooltip={true}
+        tooltipText="Chat with us on WhatsApp"
+      />
     </main>
   );
 }
-

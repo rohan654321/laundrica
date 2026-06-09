@@ -1,4 +1,3 @@
-// app/checkout/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -24,48 +23,8 @@ interface CheckoutFormData {
   notes: string;
 }
 
-// Zoho Flow Webhook URL
-const ZOHO_WEBHOOK_URL = "https://flow.zoho.com/925120593/flow/webhook/incoming?zapikey=1001.a459dc2423c0615b04b76478d2f93b6a.aa50edf0a55826432e8724376b48564d&isdebug=false";
-
 // WhatsApp number
 const WHATSAPP_NUMBER = "971508203555";
-
-// Function to send data to Zoho Flow
-const sendToZohoFlow = async (orderData: {
-  name: string;
-  phone: string;
-  email: string;
-  address: string;
-  source: string;
-  orderTotal?: number;
-  itemsCount?: number;
-  orderNumber?: string;
-  notes?: string;
-  carpetContact?: boolean;
-  shoesContact?: boolean;
-}) => {
-  try {
-    const response = await fetch(ZOHO_WEBHOOK_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(orderData)
-    });
-
-    if (!response.ok) {
-      console.error('Zoho webhook failed with status:', response.status);
-      return false;
-    }
-
-    const result = await response.json();
-    console.log('Zoho webhook response:', result);
-    return true;
-  } catch (error) {
-    console.error('Error sending to Zoho:', error);
-    return false;
-  }
-};
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -250,30 +209,25 @@ export default function CheckoutPage() {
 
       console.log('Sending order data:', JSON.stringify(orderData, null, 2));
 
+      // Backend will now handle Zoho Flow automatically
       const response = await orderAPI.createOrder(orderData);
       console.log('Order response:', response);
 
       if (response.success || response.order || response._id) {
-        const orderNumber = response.orderNumber || response.order?.orderNumber || `ORD-${Date.now()}`;
+        const orderNumber =
+          response.orderNumber ||
+          response.order?.orderNumber ||
+          `ORD-${Date.now()}`;
 
-        // Send to Zoho Flow
-        sendToZohoFlow({
-          name: `${formData.firstName} ${formData.lastName}`.trim(),
-          phone: formattedPhone,
-          email: formData.email || '',
-          address: `${formData.address}, ${formData.city}`,
-          source: "WB",
-          orderTotal: finalTotal,
-          itemsCount: cartItemsCount,
-          orderNumber: orderNumber,
-          notes: formData.notes || '',
-          carpetContact: carpetToggle,
-          shoesContact: shoesToggle,
-        }).catch(err => console.error('Zoho webhook error (non-critical):', err));
+        console.log("=================================");
+        console.log("ORDER CREATED SUCCESSFULLY");
+        console.log("Order Number:", orderNumber);
+        console.log("Zoho Flow will be triggered by backend");
+        console.log("=================================");
 
         setOrderResult({ ...response, orderNumber });
         setOrderPlaced(true);
-        toast.success('Order placed successfully!');
+        toast.success("Order placed successfully!");
         await clearCart();
       } else {
         throw new Error(response.message || response.error || 'Failed to create order');
@@ -318,32 +272,12 @@ export default function CheckoutPage() {
                   <p className="text-2xl font-bold text-[#00261b]">AED {(order.total || finalTotal).toFixed(2)}</p>
                 </div>
               </div>
-
-              <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
-                <Button className="w-full bg-[#25D366] hover:bg-[#20b859] text-white mb-3 py-6 text-lg gap-2 rounded-xl">
-                  <MessageCircle className="w-5 h-5" />
-                  Confirm Order via WhatsApp
-                </Button>
-              </a>
-
               <div className="space-y-3">
-                <Link href={`/track/${orderNumber}`} className="block">
-                  <Button variant="outline" size="lg" className="w-full border-[#00261b] text-[#00261b] hover:bg-[#bcedd7] rounded-xl">
-                    Track Your Order
-                  </Button>
-                </Link>
                 <Link href="/services" className="block">
                   <Button variant="outline" size="lg" className="w-full rounded-xl">
                     Continue Shopping
                   </Button>
                 </Link>
-              </div>
-
-              <div className="mt-6 p-4 bg-[#bcedd7]/20 rounded-xl">
-                <p className="text-sm text-[#00261b] flex items-start gap-2">
-                  <span>📱</span>
-                  <span>Please click the WhatsApp button above to confirm your order. Our team will contact you shortly.</span>
-                </p>
               </div>
             </div>
           </div>

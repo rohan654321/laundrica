@@ -27,6 +27,10 @@ interface Service {
   image?: string;
 }
 
+// WhatsApp Configuration
+const WHATSAPP_NUMBER = "971508203555";
+const WHATSAPP_MESSAGE = "Hi I need Laundrica to sort my laundry WB";
+
 // Fixed Service images mapping - using the working URLs from ServicesGrid
 const SERVICE_IMAGES: Record<string, string> = {
   'laundry': 'https://lh3.googleusercontent.com/aida-public/AB6AXuBaHDEQVLbQfnwFR9_VyvfLd-ko007XGQDbe8hwTsWY87HzOxSF5OEi1VIUhphuEPzTyIEYGuar_lQbl5IcLFr6Dnz7X7Z7pctJxklYiZfa-c9MxeiY35ivv9-1g0LOse4jxv133UHtIinIC088t7NfjZ_PC9rleHHBGmlsZ69ybT_UKrJ4utQTtvinL1UeEgulkfcg2nUWiJ2DIJYYhlitbNGfkogR5s0XfbMFFqM3gQtqlpbRweKf5r0np3KX1dvRGk_0eUCe4tVi',
@@ -133,7 +137,9 @@ export default function ServicesPage() {
   };
 
   const handleWhatsAppOrder = () => {
-    window.open(`https://wa.me/971509259667?text=${encodeURIComponent(`Hello! I'm interested in ${selectedService?.name} service.`)}`, '_blank');
+    const message = `Hi I need Laundrica to sort my laundry WB`;
+    const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   if (isLoading) {
@@ -341,7 +347,12 @@ export default function ServicesPage() {
               <h2 className="text-2xl sm:text-3xl text-white font-bold mb-4">Not sure which service to choose?</h2>
               <p className="text-[#79a894] mb-8">Our experts are here to help you find the perfect care solution.</p>
               <div className="flex flex-wrap justify-center gap-4">
-                <a href="https://wa.me/971509259667" target="_blank" className="bg-[#25D366] text-white px-8 py-3 rounded-xl font-semibold flex items-center gap-2">
+                <a
+                  href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-[#25D366] text-white px-8 py-3 rounded-xl font-semibold flex items-center gap-2 hover:opacity-90 transition"
+                >
                   <MessageCircle className="w-4 h-4" /> WhatsApp Us
                 </a>
                 <Link href="/contact">

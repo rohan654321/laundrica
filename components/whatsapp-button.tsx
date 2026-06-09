@@ -13,8 +13,8 @@ interface WhatsAppButtonProps {
     tooltipText?: string;
 }
 
-const DEFAULT_PHONE_NUMBER = "971509259667"; // Your business WhatsApp number
-const DEFAULT_MESSAGE = "Hello! I'm interested in your laundry services. Can you please help me?";
+const DEFAULT_PHONE_NUMBER = "971508203555";
+const DEFAULT_MESSAGE = "Hi I need Laundrica to sort my laundry WB";
 
 export function WhatsAppButton({
     phoneNumber = DEFAULT_PHONE_NUMBER,
