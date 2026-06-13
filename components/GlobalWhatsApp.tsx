@@ -16,18 +16,18 @@ export function GlobalWhatsApp() {
     // Dynamic message based on current page
     const getMessage = () => {
         if (pathname?.includes('/services')) {
-            return "Hello! I'm interested in your laundry services. Can you please help me?";
+            return "Hi I need Laundrica to sort my laundry WB";
         }
         if (pathname?.includes('/contact')) {
-            return "Hello! I came from the contact page. Can you help me?";
+            return "Hi I need Laundrica to sort my laundry WB";
         }
-        return "Hello! I'm interested in your laundry services. Can you please help me?";
+        return "Hi I need Laundrica to sort my laundry WB";
     };
 
     return (
         <WhatsAppButton
-            phoneNumber="971509259667"
-            message={getMessage()}
+            phoneNumber="971508203555"  // Changed this to your number
+            message={getMessage()}       // Using your custom message
             position="bottom-right"
             size="medium"
             showTooltip={true}

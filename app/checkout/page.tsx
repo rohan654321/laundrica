@@ -9,28 +9,28 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/context/cart-context';
 import { useSession } from '@/context/session-context';
-import { orderAPI } from '@/lib/api';
-import { ArrowLeft, Check, AlertCircle, Truck, Clock, Shield, MessageCircle, Phone, Mail, User, Home, CreditCard } from 'lucide-react';
+import { ArrowLeft, Check, AlertCircle, Shield, Truck, User, Home, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface CheckoutFormData {
-  firstName: string;
-  lastName: string;
+  fullName: string;  // Changed from firstName + lastName
   email: string;
   phone: string;
-  address: string;
-  city: string;
-  notes: string;
+  address: string;   // This will combine street address + city
+  specialInstructions: string; // Changed from 'notes'
 }
 
 // WhatsApp number
 const WHATSAPP_NUMBER = "971508203555";
+// Zoho Webhook URL
+const ZOHO_WEBHOOK_URL = "https://flow.zoho.com/925120593/flow/webhook/incoming?zapikey=1001.a459dc2423c0615b04b76478d2f93b6a.aa50edf0a55826432e8724376b48564d&isdebug=false";
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { cartItems = [], getTotalPrice, clearCart } = useCart();
   const { sessionId } = useSession();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); // New state to track submission
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderResult, setOrderResult] = useState<any>(null);
   const [error, setError] = useState('');
@@ -69,13 +69,16 @@ export default function CheckoutPage() {
   };
 
   const [formData, setFormData] = useState<CheckoutFormData>({
-    firstName: '',
-    lastName: '',
+    fullName: '',
     email: '',
     phone: '',
     address: '',
-    city: 'Dubai',
-    notes: '',
+    specialInstructions: '',
+  });
+
+  const [addressFields, setAddressFields] = useState({
+    streetAddress: '',
+    city: 'Dubai'
   });
 
   const totalPrice = getTotalPrice();
@@ -89,7 +92,16 @@ export default function CheckoutPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === 'streetAddress' || name === 'city') {
+      setAddressFields((prev) => ({ ...prev, [name]: value }));
+      // Update the combined address field
+      const combinedAddress = name === 'streetAddress'
+        ? `${value}, ${addressFields.city}`
+        : `${addressFields.streetAddress}, ${value}`;
+      setFormData((prev) => ({ ...prev, address: combinedAddress }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const formatPhoneNumber = (phone: string): string => {
@@ -131,6 +143,26 @@ export default function CheckoutPage() {
     return isValid;
   };
 
+  // Send data to Zoho Webhook
+  const sendToZohoWebhook = async (data: any) => {
+    try {
+      console.log('📤 Sending to Zoho Webhook:', data);
+      const response = await fetch(ZOHO_WEBHOOK_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      console.log('✅ Zoho Webhook response status:', response.status);
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Zoho Webhook error:', error);
+      return { success: false, error };
+    }
+  };
+
   const groupCartItems = () => {
     const grouped = new Map();
     cartItems.forEach(item => {
@@ -159,11 +191,19 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Prevent duplicate submissions
+    if (isSubmitting || isProcessing) {
+      console.log('⚠️ Submission already in progress, ignoring duplicate click');
+      return;
+    }
+
     setIsProcessing(true);
+    setIsSubmitting(true); // Disable button immediately
     setError('');
 
     try {
-      if (!formData.firstName || !formData.lastName) {
+      if (!formData.fullName) {
         throw new Error('Please enter your full name');
       }
       if (!formData.phone) {
@@ -175,7 +215,7 @@ export default function CheckoutPage() {
         throw new Error('Please enter a valid UAE mobile number starting with 5 (e.g., 501234567 or +971501234567)');
       }
 
-      if (!formData.address) {
+      if (!addressFields.streetAddress) {
         throw new Error('Please enter your delivery address');
       }
 
@@ -183,6 +223,22 @@ export default function CheckoutPage() {
         throw new Error('Your cart is empty');
       }
 
+      // Combine address for Zoho webhook
+      const fullAddress = `${addressFields.streetAddress}, ${addressFields.city}`;
+
+      // Step 1: Send to Zoho Webhook first
+      const zohoPayload = {
+        full_name: formData.fullName,
+        mobile: formData.phone, // Send exactly as customer types it
+        email: formData.email || '',
+        address: fullAddress,
+        special_instructions: formData.specialInstructions || '',
+      };
+
+      console.log('📤 Sending to Zoho Webhook:', zohoPayload);
+      await sendToZohoWebhook(zohoPayload);
+
+      // Step 2: Create order in your backend
       const transformedItems = groupCartItems();
       const cartItemsCount = cartItems?.reduce((sum, item) => sum + (item?.quantity || 0), 0) || 0;
 
@@ -196,41 +252,46 @@ export default function CheckoutPage() {
         total: finalTotal,
         status: 'pending',
         customerInfo: {
-          name: `${formData.firstName} ${formData.lastName}`.trim(),
+          name: formData.fullName,
           phone: formattedPhone,
           email: formData.email || '',
-          address: formData.address,
-          city: formData.city || 'Dubai',
-          notes: formData.notes || '',
+          address: fullAddress,
+          city: addressFields.city,
+          notes: formData.specialInstructions || '',
         },
         carpetContactEnabled: carpetToggle,
         shoesContactEnabled: shoesToggle,
       };
 
-      console.log('Sending order data:', JSON.stringify(orderData, null, 2));
+      console.log('📦 Creating order in backend:', JSON.stringify(orderData, null, 2));
 
-      // Backend will now handle Zoho Flow automatically
-      const response = await orderAPI.createOrder(orderData);
-      console.log('Order response:', response);
+      // Call your existing backend API
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData),
+      });
 
-      if (response.success || response.order || response._id) {
-        const orderNumber =
-          response.orderNumber ||
-          response.order?.orderNumber ||
-          `ORD-${Date.now()}`;
+      const responseData = await response.json();
+      console.log('Order response:', responseData);
+
+      if (responseData.success || responseData.order) {
+        const orderNumber = responseData.order?.orderNumber || `ORD-${Date.now()}`;
 
         console.log("=================================");
-        console.log("ORDER CREATED SUCCESSFULLY");
+        console.log("✅ ORDER CREATED SUCCESSFULLY");
         console.log("Order Number:", orderNumber);
-        console.log("Zoho Flow will be triggered by backend");
+        console.log("Zoho Webhook Sent:", zohoPayload);
         console.log("=================================");
 
-        setOrderResult({ ...response, orderNumber });
+        setOrderResult({ ...responseData, orderNumber });
         setOrderPlaced(true);
         toast.success("Order placed successfully!");
         await clearCart();
       } else {
-        throw new Error(response.message || response.error || 'Failed to create order');
+        throw new Error(responseData.message || responseData.error || 'Failed to create order');
       }
 
     } catch (err: any) {
@@ -239,6 +300,7 @@ export default function CheckoutPage() {
       toast.error(err.message || 'Failed to place order');
     } finally {
       setIsProcessing(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -247,7 +309,7 @@ export default function CheckoutPage() {
   if (orderPlaced && orderResult) {
     const order = orderResult.order || orderResult;
     const orderNumber = order?.orderNumber || orderResult.orderNumber || `ORD-${Date.now()}`;
-    const whatsappMessage = `Hello! I've placed an order with Laundrica.%0A%0A📋 Order #: ${orderNumber}%0A💰 Total: AED ${(order.total || finalTotal).toFixed(2)}%0A👤 Name: ${formData.firstName} ${formData.lastName}%0A📞 Phone: ${formData.phone}%0A📍 Address: ${formData.address}, ${formData.city}%0A%0APlease confirm my order. Thank you!`;
+    const whatsappMessage = `Hello! I've placed an order with Laundrica.%0A%0A📋 Order #: ${orderNumber}%0A💰 Total: AED ${(order.total || finalTotal).toFixed(2)}%0A👤 Name: ${formData.fullName}%0A📞 Phone: ${formData.phone}%0A📍 Address: ${formData.address}%0A%0APlease confirm my order. Thank you!`;
     const whatsappLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${whatsappMessage}`;
 
     return (
@@ -322,51 +384,34 @@ export default function CheckoutPage() {
                 <User className="w-5 h-5 text-[#00261b]" />
                 Contact Information
               </h2>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-[#00261b] mb-2">First Name *</label>
-                  <Input
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    required
-                    className="rounded-xl border-gray-200 focus:border-[#00261b] focus:ring-[#00261b]"
-                    placeholder="John"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#00261b] mb-2">Last Name *</label>
-                  <Input
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                    required
-                    className="rounded-xl border-gray-200 focus:border-[#00261b] focus:ring-[#00261b]"
-                    placeholder="Doe"
-                  />
-                </div>
+
+              {/* Full Name field - single field */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-[#00261b] mb-2">Full Name *</label>
+                <Input
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleInputChange}
+                  required
+                  className="rounded-xl border-gray-200 focus:border-[#00261b] focus:ring-[#00261b]"
+                  placeholder="Ahmed Al Mansoori"
+                />
               </div>
 
-              <div className="mt-4 grid md:grid-cols-2 gap-4">
+              <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-[#00261b] mb-2 flex items-center gap-2">
-                    <Mail className="w-4 h-4" />
-                    Email
-                  </label>
+                  <label className="block text-sm font-medium text-[#00261b] mb-2">Email</label>
                   <Input
                     name="email"
                     type="email"
                     value={formData.email}
                     onChange={handleInputChange}
                     className="rounded-xl border-gray-200 focus:border-[#00261b] focus:ring-[#00261b]"
-                    placeholder="john@example.com"
+                    placeholder="ahmed@example.com"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#00261b] mb-2 flex items-center gap-2">
-                    <Phone className="w-4 h-4" />
-                    Mobile Number * (UAE)
-                  </label>
+                  <label className="block text-sm font-medium text-[#00261b] mb-2">Mobile Number * (UAE)</label>
                   <Input
                     name="phone"
                     type="tel"
@@ -385,15 +430,15 @@ export default function CheckoutPage() {
               <div className="mt-4">
                 <label className="block text-sm font-medium text-[#00261b] mb-2 flex items-center gap-2">
                   <Home className="w-4 h-4" />
-                  Delivery Address *
+                  Street Address *
                 </label>
                 <Input
-                  name="address"
-                  value={formData.address}
+                  name="streetAddress"
+                  value={addressFields.streetAddress}
                   onChange={handleInputChange}
                   required
                   className="rounded-xl border-gray-200 focus:border-[#00261b] focus:ring-[#00261b]"
-                  placeholder="Street name, building, apartment number"
+                  placeholder="Building name, apartment number, street name"
                 />
               </div>
 
@@ -401,7 +446,7 @@ export default function CheckoutPage() {
                 <label className="block text-sm font-medium text-[#00261b] mb-2">City / Area *</label>
                 <Input
                   name="city"
-                  value={formData.city}
+                  value={addressFields.city}
                   onChange={handleInputChange}
                   required
                   className="rounded-xl border-gray-200 focus:border-[#00261b] focus:ring-[#00261b]"
@@ -412,8 +457,8 @@ export default function CheckoutPage() {
               <div className="mt-4">
                 <label className="block text-sm font-medium text-[#00261b] mb-2">Special Instructions (Optional)</label>
                 <textarea
-                  name="notes"
-                  value={formData.notes}
+                  name="specialInstructions"
+                  value={formData.specialInstructions}
                   onChange={handleInputChange}
                   rows={3}
                   placeholder="Any special requests? (e.g., delicate items, allergies, etc.)"
@@ -433,9 +478,9 @@ export default function CheckoutPage() {
                 type="submit"
                 size="lg"
                 className="flex-1 bg-[#00261b] hover:bg-emerald-800 text-white rounded-xl"
-                disabled={isProcessing}
+                disabled={isProcessing || isSubmitting}
               >
-                {isProcessing ? (
+                {(isProcessing || isSubmitting) ? (
                   <div className="flex items-center justify-center gap-2">
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     Processing...
@@ -539,7 +584,7 @@ export default function CheckoutPage() {
 
                   <div className="mt-6 p-4 bg-[#bcedd7]/20 rounded-xl">
                     <p className="text-xs text-[#00261b]">
-                      💡 <strong>Note:</strong> After placing your order, you'll be redirected to WhatsApp to confirm.
+                      💡 <strong>Note:</strong> After placing your order, our team will contact you for confirmation.
                     </p>
                   </div>
                 </div>
