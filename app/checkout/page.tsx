@@ -9,33 +9,32 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/context/cart-context';
 import { useSession } from '@/context/session-context';
+import { orderAPI } from '@/lib/api'; // Import orderAPI
 import { ArrowLeft, Check, AlertCircle, Shield, Truck, User, Home, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface CheckoutFormData {
-  fullName: string;  // Changed from firstName + lastName
+  fullName: string;
   email: string;
   phone: string;
-  address: string;   // This will combine street address + city
-  specialInstructions: string; // Changed from 'notes'
+  address: string;
+  specialInstructions: string;
 }
 
 // WhatsApp number
 const WHATSAPP_NUMBER = "971508203555";
-// Zoho Webhook URL
-const ZOHO_WEBHOOK_URL = "https://flow.zoho.com/925120593/flow/webhook/incoming?zapikey=1001.a459dc2423c0615b04b76478d2f93b6a.aa50edf0a55826432e8724376b48564d&isdebug=false";
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { cartItems = [], getTotalPrice, clearCart } = useCart();
   const { sessionId } = useSession();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false); // New state to track submission
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderResult, setOrderResult] = useState<any>(null);
   const [error, setError] = useState('');
 
-  // Toggle switches for carpet and shoes - store in localStorage
+  // Toggle switches for carpet and shoes
   const [carpetToggle, setCarpetToggle] = useState(false);
   const [shoesToggle, setShoesToggle] = useState(false);
 
@@ -47,7 +46,6 @@ export default function CheckoutPage() {
     if (savedShoes) setShoesToggle(savedShoes === 'true');
   }, []);
 
-  // Save toggle states to localStorage
   const handleCarpetToggle = (value: boolean) => {
     setCarpetToggle(value);
     localStorage.setItem('carpetContactToggle', String(value));
@@ -94,7 +92,6 @@ export default function CheckoutPage() {
     const { name, value } = e.target;
     if (name === 'streetAddress' || name === 'city') {
       setAddressFields((prev) => ({ ...prev, [name]: value }));
-      // Update the combined address field
       const combinedAddress = name === 'streetAddress'
         ? `${value}, ${addressFields.city}`
         : `${addressFields.streetAddress}, ${value}`;
@@ -143,26 +140,6 @@ export default function CheckoutPage() {
     return isValid;
   };
 
-  // Send data to Zoho Webhook
-  const sendToZohoWebhook = async (data: any) => {
-    try {
-      console.log('📤 Sending to Zoho Webhook:', data);
-      const response = await fetch(ZOHO_WEBHOOK_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
-      console.log('✅ Zoho Webhook response status:', response.status);
-      return { success: true };
-    } catch (error) {
-      console.error('❌ Zoho Webhook error:', error);
-      return { success: false, error };
-    }
-  };
-
   const groupCartItems = () => {
     const grouped = new Map();
     cartItems.forEach(item => {
@@ -192,14 +169,12 @@ export default function CheckoutPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Prevent duplicate submissions
     if (isSubmitting || isProcessing) {
-      console.log('⚠️ Submission already in progress, ignoring duplicate click');
       return;
     }
 
     setIsProcessing(true);
-    setIsSubmitting(true); // Disable button immediately
+    setIsSubmitting(true);
     setError('');
 
     try {
@@ -223,24 +198,8 @@ export default function CheckoutPage() {
         throw new Error('Your cart is empty');
       }
 
-      // Combine address for Zoho webhook
       const fullAddress = `${addressFields.streetAddress}, ${addressFields.city}`;
-
-      // Step 1: Send to Zoho Webhook first
-      const zohoPayload = {
-        full_name: formData.fullName,
-        mobile: formData.phone, // Send exactly as customer types it
-        email: formData.email || '',
-        address: fullAddress,
-        special_instructions: formData.specialInstructions || '',
-      };
-
-      console.log('📤 Sending to Zoho Webhook:', zohoPayload);
-      await sendToZohoWebhook(zohoPayload);
-
-      // Step 2: Create order in your backend
       const transformedItems = groupCartItems();
-      const cartItemsCount = cartItems?.reduce((sum, item) => sum + (item?.quantity || 0), 0) || 0;
 
       const orderData = {
         sessionId,
@@ -265,33 +224,24 @@ export default function CheckoutPage() {
 
       console.log('📦 Creating order in backend:', JSON.stringify(orderData, null, 2));
 
-      // Call your existing backend API
-      const response = await fetch('/api/orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(orderData),
-      });
+      // Use orderAPI to create order (backend will handle Zoho webhook)
+      const response = await orderAPI.createOrder(orderData);
+      console.log('Order response:', response);
 
-      const responseData = await response.json();
-      console.log('Order response:', responseData);
-
-      if (responseData.success || responseData.order) {
-        const orderNumber = responseData.order?.orderNumber || `ORD-${Date.now()}`;
+      if (response.success || response.order) {
+        const orderNumber = response.order?.orderNumber || `ORD-${Date.now()}`;
 
         console.log("=================================");
         console.log("✅ ORDER CREATED SUCCESSFULLY");
         console.log("Order Number:", orderNumber);
-        console.log("Zoho Webhook Sent:", zohoPayload);
         console.log("=================================");
 
-        setOrderResult({ ...responseData, orderNumber });
+        setOrderResult({ ...response, orderNumber });
         setOrderPlaced(true);
         toast.success("Order placed successfully!");
         await clearCart();
       } else {
-        throw new Error(responseData.message || responseData.error || 'Failed to create order');
+        throw new Error(response.message || response.error || 'Failed to create order');
       }
 
     } catch (err: any) {
@@ -385,7 +335,6 @@ export default function CheckoutPage() {
                 Contact Information
               </h2>
 
-              {/* Full Name field - single field */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-[#00261b] mb-2">Full Name *</label>
                 <Input
